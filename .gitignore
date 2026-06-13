@@ -1,0 +1,35 @@
+# Proto source — not shipped publicly (generated stubs in internal/pb are committed)
+proto/
+*.proto
+
+# Go build / test artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/bin/
+/dist/
+
+# Go workspace / module cache
+go.work
+go.work.sum
+vendor/
+
+# Coverage
+*.cover
+coverage.*
+profile.out
+
+# Env / secrets
+.env
+.env.*
+*.local
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

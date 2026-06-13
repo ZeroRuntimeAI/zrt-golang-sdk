@@ -1,0 +1,54 @@
+ZRT Golang SDK — Proprietary License
+
+Copyright (c) 2026 Zujo Tech Pvt Ltd. All rights reserved.
+
+This software, including its source code, object code, and accompanying
+documentation (collectively, the "Software"), is the proprietary and
+confidential property of Zujo Tech Pvt Ltd ("Licensor"). The Software is
+licensed, not sold. No ownership rights are transferred to you. "Zero Runtime"
+and "ZRT" are products and services of Zujo Tech Pvt Ltd.
+
+1. License Grant. Subject to your continued compliance with this License (and
+   with any separate written agreement you have entered into with Licensor),
+   Licensor grants you a limited, non-exclusive, non-transferable, non-
+   sublicensable, revocable license to install and use the Software solely to
+   develop and operate applications that connect to and interoperate with the
+   Zero Runtime service.
+
+2. Restrictions. Except to the extent expressly permitted in Section 1, by a
+   separate written agreement with Licensor, or by applicable law that cannot
+   be contractually waived, you may NOT:
+     (a) copy, modify, adapt, translate, or create derivative works of the
+         Software;
+     (b) distribute, publish, sublicense, sell, rent, lease, lend, or
+         otherwise make the Software available to any third party;
+     (c) reverse engineer, decompile, or disassemble the Software, or attempt
+         to derive its source code where not provided;
+     (d) use the Software to build or operate a product or service that
+         competes with the Zero Runtime service; or
+     (e) remove, obscure, or alter any proprietary notices, labels, or marks
+         on or in the Software.
+
+3. Ownership. The Software is protected by copyright and other intellectual
+   property laws and treaties. Licensor and its licensors retain all right,
+   title, and interest in and to the Software, including all intellectual
+   property rights therein.
+
+4. Termination. This License is effective until terminated. It terminates
+   automatically, without notice, if you breach any of its terms. Upon
+   termination you must cease all use of the Software and destroy all copies
+   in your possession or control.
+
+5. No Warranty. THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT
+   WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+   WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+   NONINFRINGEMENT.
+
+6. Limitation of Liability. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT
+   SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+   CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, OR USE,
+   ARISING OUT OF OR RELATED TO THIS LICENSE OR THE SOFTWARE, WHETHER IN
+   CONTRACT, TORT, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+   DAMAGES.
+
+For licensing inquiries, contact: support@videosdk.live
