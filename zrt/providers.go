@@ -1,5 +1,7 @@
 package zrt
 
+import "cmp"
+
 // ---------------------------------------------------------------------------
 // Response value types
 // ---------------------------------------------------------------------------
@@ -275,10 +277,7 @@ type BaseTTS struct {
 // InitTTS sets TTS audio params (default num_channels = 1).
 func (b *BaseTTS) InitTTS(name, apiKey string, sampleRate int) {
 	b.Init(name, apiKey)
-	if sampleRate == 0 {
-		sampleRate = 24000
-	}
-	b.sampleRate = sampleRate
+	b.sampleRate = cmp.Or(sampleRate, 24000)
 	b.numChannels = 1
 }
 

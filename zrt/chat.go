@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -58,9 +59,7 @@ func (c *ChatContext) Items() []ChatMessage { return c.messages }
 
 // Messages returns a copy of the messages.
 func (c *ChatContext) Messages() []ChatMessage {
-	out := make([]ChatMessage, len(c.messages))
-	copy(out, c.messages)
-	return out
+	return slices.Clone(c.messages)
 }
 
 // TurnCount returns the number of user messages.
@@ -95,9 +94,7 @@ func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string
 
 // Copy returns a shallow copy of the context.
 func (c *ChatContext) Copy() *ChatContext {
-	out := &ChatContext{messages: make([]ChatMessage, len(c.messages))}
-	copy(out.messages, c.messages)
-	return out
+	return &ChatContext{messages: slices.Clone(c.messages)}
 }
 
 // Truncate returns a context keeping at most maxItems most-recent messages

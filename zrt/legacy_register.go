@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -60,9 +61,7 @@ type legacyBackendRegistration struct {
 }
 
 func newLegacyBackendRegistration(authToken, agentID, apiBaseURL string, loadThreshold float64, maxProcesses int, entrypoint EntrypointFunc, jobctxFactory func() *JobContext) *legacyBackendRegistration {
-	if agentID == "" {
-		agentID = "ZeroRuntimeAgent"
-	}
+	agentID = cmp.Or(agentID, "ZeroRuntimeAgent")
 	return &legacyBackendRegistration{
 		authToken:     authToken,
 		agentID:       agentID,
@@ -144,7 +143,7 @@ func (l *legacyBackendRegistration) supervisor() {
 			logger.Errorf("Legacy backend registration gave up after %d attempts (runtime gRPC registration unaffected)", legacyReconnectMaxAttempts)
 			return
 		}
-		delay := time.Duration(minInt(attempt*2, int(legacyReconnectMaxDelay.Seconds()))) * time.Second
+		delay := time.Duration(min(attempt*2, int(legacyReconnectMaxDelay.Seconds()))) * time.Second
 		select {
 		case <-time.After(delay):
 		case <-l.stopCh:
@@ -154,13 +153,7 @@ func (l *legacyBackendRegistration) supervisor() {
 }
 
 func (l *legacyBackendRegistration) fetchAgentInitConfig() (string, error) {
-	base := os.Getenv("ZRT_API_BASE_URL")
-	if base == "" {
-		base = l.apiBaseURL
-	}
-	if base == "" {
-		base = "https://api.videosdk.live"
-	}
+	base := cmp.Or(os.Getenv("ZRT_API_BASE_URL"), l.apiBaseURL, "https://api.videosdk.live")
 	endpoint := strings.TrimRight(base, "/") + "/v2/agent/init-config"
 	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
@@ -205,7 +198,7 @@ func sanitizeAgentID(agentID string) string {
 }
 
 func (l *legacyBackendRegistration) loadCachedWorkerID() string {
-	envKey := "ZRT_WORKER_ID_" + strings.ToUpper(orDefault(l.agentID, "default"))
+	envKey := "ZRT_WORKER_ID_" + strings.ToUpper(cmp.Or(l.agentID, "default"))
 	if v := os.Getenv(envKey); v != "" {
 		return v
 	}
@@ -513,10 +506,7 @@ func (l *legacyBackendRegistration) sendStatusUpdate() {
 	wid := l.workerID
 	draining := l.draining
 	l.mu.Unlock()
-	load := float64(jobCount) / float64(maxInt(1, l.maxProcesses))
-	if load > 1.0 {
-		load = 1.0
-	}
+	load := min(float64(jobCount)/float64(max(1, l.maxProcesses)), 1.0)
 	status := "available"
 	if draining {
 		status = "draining"

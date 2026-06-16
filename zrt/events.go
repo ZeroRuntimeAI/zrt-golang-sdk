@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"math"
@@ -47,7 +48,6 @@ func isUnrecoverableAuthError(component, message string) bool {
 
 func evGenerationStarted(s *AgentSession, gs *pb.GenerationStartedEvent) {
 	for _, h := range s.pipeline.Hooks.generationStarted {
-		h := h
 		safeHook("generation_started", func() { h(gs.GetTurnNumber()) })
 	}
 	s.Emit("generation_started", map[string]any{"turn_number": gs.GetTurnNumber()})
@@ -55,19 +55,14 @@ func evGenerationStarted(s *AgentSession, gs *pb.GenerationStartedEvent) {
 
 func evGenerationComplete(s *AgentSession, gc *pb.GenerationCompleteEvent) {
 	for _, h := range s.pipeline.Hooks.generationComplete {
-		h := h
 		safeHook("generation_complete", func() { h(gc.GetTurnNumber(), gc.GetWasInterrupted()) })
 	}
 	s.Emit("generation_complete", map[string]any{"turn_number": gc.GetTurnNumber(), "was_interrupted": gc.GetWasInterrupted()})
 }
 
 func evGenerationChunk(s *AgentSession, gc *pb.GenerationChunkEvent) {
-	meta := map[string]string{}
-	for k, v := range gc.GetMetadata() {
-		meta[k] = v
-	}
+	meta := copyAnyMap(gc.GetMetadata())
 	for _, h := range s.pipeline.Hooks.generationChunk {
-		h := h
 		safeHook("generation_chunk", func() { h(gc.GetText(), meta) })
 	}
 	s.Emit("generation_chunk", map[string]any{"text": gc.GetText(), "metadata": meta})
@@ -75,7 +70,6 @@ func evGenerationChunk(s *AgentSession, gc *pb.GenerationChunkEvent) {
 
 func evSynthesisStarted(s *AgentSession, ss *pb.SynthesisStartedEvent) {
 	for _, h := range s.pipeline.Hooks.synthesisStarted {
-		h := h
 		safeHook("synthesis_started", func() { h(ss.GetText()) })
 	}
 	s.Emit("synthesis_started", map[string]any{"text": ss.GetText()})
@@ -83,7 +77,6 @@ func evSynthesisStarted(s *AgentSession, ss *pb.SynthesisStartedEvent) {
 
 func evSynthesisInterrupted(s *AgentSession, si *pb.SynthesisInterruptedEvent) {
 	for _, h := range s.pipeline.Hooks.synthesisInterrupted {
-		h := h
 		safeHook("synthesis_interrupted", func() { h(si.GetReason()) })
 	}
 	s.Emit("synthesis_interrupted", map[string]any{"reason": si.GetReason()})
@@ -96,7 +89,6 @@ func evFirstAudioByte(s *AgentSession, fab *pb.FirstAudioByteEvent) {
 		}
 	}
 	for _, h := range s.pipeline.Hooks.firstAudioByte {
-		h := h
 		safeHook("first_audio_byte", func() { h(fab.GetTtfbMs(), fab.GetByteCount()) })
 	}
 	s.Emit("first_audio_byte", map[string]any{"ttfb_ms": fab.GetTtfbMs(), "byte_count": fab.GetByteCount()})
@@ -104,7 +96,6 @@ func evFirstAudioByte(s *AgentSession, fab *pb.FirstAudioByteEvent) {
 
 func evLastAudioByte(s *AgentSession, lab *pb.LastAudioByteEvent) {
 	for _, h := range s.pipeline.Hooks.lastAudioByte {
-		h := h
 		safeHook("last_audio_byte", func() { h(float64(lab.GetDurationSeconds())) })
 	}
 	s.Emit("last_audio_byte", map[string]any{"duration_seconds": lab.GetDurationSeconds()})
@@ -112,7 +103,6 @@ func evLastAudioByte(s *AgentSession, lab *pb.LastAudioByteEvent) {
 
 func evWordTiming(s *AgentSession, wt *pb.WordTimingEvent) {
 	for _, h := range s.pipeline.Hooks.wordTiming {
-		h := h
 		safeHook("word_timing", func() {
 			h(wt.GetWord(), float64(wt.GetStartSeconds()), float64(wt.GetEndSeconds()), wt.GetCumulativeText())
 		})
@@ -130,7 +120,6 @@ func evTTSCapabilities(s *AgentSession, tc *pb.TtsCapabilitiesEvent) {
 
 func evTranscriptPreflight(s *AgentSession, tp *pb.TranscriptPreflightEvent) {
 	for _, h := range s.pipeline.Hooks.transcriptPreflight {
-		h := h
 		safeHook("transcript_preflight", func() { h(tp.GetText()) })
 	}
 	s.Emit("transcript_preflight", map[string]any{"text": tp.GetText()})
@@ -141,7 +130,6 @@ func evEOUDetected(s *AgentSession, ed *pb.EouDetectedEvent) {
 	s.lastEOU = map[string]any{"probability": ed.GetProbability(), "wait_ms": ed.GetWaitMs(), "text": ed.GetText()}
 	s.mu.Unlock()
 	for _, h := range s.pipeline.Hooks.eouDetected {
-		h := h
 		safeHook("eou_detected", func() { h(float64(ed.GetProbability()), ed.GetWaitMs(), ed.GetText()) })
 	}
 	s.Emit("eou_detected", map[string]any{"probability": ed.GetProbability(), "wait_ms": ed.GetWaitMs(), "text": ed.GetText()})
@@ -229,7 +217,6 @@ func dispatchRecordingStatus(s *AgentSession, status map[string]any) {
 		s.pipeline.Emit("recording_failed", status)
 	}
 	for _, h := range hookList {
-		h := h
 		safeHook("recording_status", func() { h(status) })
 	}
 }
@@ -315,6 +302,23 @@ func evA2A(s *AgentSession, a *pb.A2AMessageEvent) {
 	s.Emit("a2a_message", map[string]any{"source_agent_id": a.GetSourceAgentId(), "message_json": a.GetMessageJson()})
 }
 
+func evPubSubMessage(s *AgentSession, m *pb.PubSubMessageEvent) {
+	var payload any
+	if pj := m.GetPayloadJson(); pj != "" {
+		if err := json.Unmarshal([]byte(pj), &payload); err != nil {
+			payload = pj
+		}
+	}
+	s.Emit("pubsub_message", map[string]any{
+		"topic":       m.GetTopic(),
+		"message":     m.GetMessage(),
+		"sender_id":   m.GetSenderId(),
+		"sender_name": m.GetSenderName(),
+		"timestamp":   m.GetTimestamp(),
+		"payload":     payload,
+	})
+}
+
 func evAgentSwitched(s *AgentSession, sw *pb.AgentSwitchedEvent) {
 	s.Emit("agent_switched", map[string]any{"from": sw.GetFrom(), "to": sw.GetTo(), "reason": sw.GetReason()})
 }
@@ -337,10 +341,18 @@ func evParticipant(s *AgentSession, p *pb.ParticipantEventProto) {
 	}
 }
 
+var agentStateMap = map[string]AgentState{
+	"starting": AgentStateIdle, "idle": AgentStateIdle, "listening": AgentStateListening,
+	"thinking": AgentStateThinking, "speaking": AgentStateSpeaking, "closing": AgentStateIdle,
+}
+
+var userStateMap = map[string]UserState{
+	"idle": UserStateIdle, "speaking": UserStateSpeaking, "listening": UserStateListening,
+}
+
 func evAgentStateChanged(s *AgentSession, sc *pb.AgentStateChangedEvent) {
 	st := strings.ToLower(sc.GetState())
-	stateMap := map[string]AgentState{"starting": AgentStateIdle, "idle": AgentStateIdle, "listening": AgentStateListening, "thinking": AgentStateThinking, "speaking": AgentStateSpeaking, "closing": AgentStateIdle}
-	if v, ok := stateMap[st]; ok {
+	if v, ok := agentStateMap[st]; ok {
 		s.updateAgentState(v)
 	}
 	s.Emit("agent_state_changed", map[string]any{"state": st, "reason": sc.GetReason()})
@@ -348,8 +360,7 @@ func evAgentStateChanged(s *AgentSession, sc *pb.AgentStateChangedEvent) {
 
 func evUserStateChanged(s *AgentSession, uc *pb.UserStateChangedEvent) {
 	st := strings.ToLower(uc.GetState())
-	userMap := map[string]UserState{"idle": UserStateIdle, "speaking": UserStateSpeaking, "listening": UserStateListening}
-	if v, ok := userMap[st]; ok {
+	if v, ok := userStateMap[st]; ok {
 		s.updateUserState(v)
 	}
 	s.Emit("user_state_changed", map[string]any{"state": st, "reason": uc.GetReason()})
@@ -357,7 +368,6 @@ func evUserStateChanged(s *AgentSession, uc *pb.UserStateChangedEvent) {
 
 func evLLMCompleted(s *AgentSession, lc *pb.LLMCompletedEvent) {
 	for _, h := range s.pipeline.Hooks.llmCompleted {
-		h := h
 		safeHook("llm_completed", func() { h(lc.GetResponseText(), lc.GetInterrupted()) })
 	}
 	s.Emit("llm_completed", map[string]any{"response_text": lc.GetResponseText(), "interrupted": lc.GetInterrupted()})
@@ -402,7 +412,6 @@ func transcriptRegistered(s *AgentSession, t *pb.TranscriptEvent) {
 	s.pushSTTObservation(resp)
 	if t.GetIsFinal() {
 		for _, h := range s.pipeline.Hooks.userTurnStart {
-			h := h
 			safeHook("user_turn_start", func() { h(t.GetText()) })
 		}
 		s.Emit("user_turn_start", map[string]any{"text": t.GetText()})
@@ -411,7 +420,7 @@ func transcriptRegistered(s *AgentSession, t *pb.TranscriptEvent) {
 }
 
 func agentSpeechDirect(s *AgentSession, a *pb.AgentSpeechEvent) {
-	role := orDefault(a.GetRole(), "assistant")
+	role := cmp.Or(a.GetRole(), "assistant")
 	if a.GetIsFinal() {
 		s.updateAgentState(AgentStateIdle)
 		s.mu.Lock()
@@ -425,7 +434,6 @@ func agentSpeechDirect(s *AgentSession, a *pb.AgentSpeechEvent) {
 func agentSpeechRegistered(s *AgentSession, a *pb.AgentSpeechEvent) {
 	if a.GetIsFinal() {
 		for _, h := range s.pipeline.Hooks.agentTurnEnd {
-			h := h
 			safeHook("agent_turn_end", func() { h() })
 		}
 		s.Emit("agent_turn_end", map[string]any{"text": a.GetText()})
@@ -447,7 +455,6 @@ func turnCompleteDirect(s *AgentSession, tc *pb.TurnComplete) {
 
 func turnCompleteRegistered(s *AgentSession, tc *pb.TurnComplete) {
 	for _, h := range s.pipeline.Hooks.userTurnEnd {
-		h := h
 		safeHook("user_turn_end", func() { h() })
 	}
 	s.Emit("user_turn_end", turnCompletePayload(tc))
@@ -471,7 +478,6 @@ func turnCompletePayload(tc *pb.TurnComplete) map[string]any {
 
 func evUserTurnStart(s *AgentSession, uts *pb.UserTurnStartEvent) {
 	for _, h := range s.pipeline.Hooks.userTurnStart {
-		h := h
 		safeHook("user_turn_start", func() { h(uts.GetTranscript()) })
 	}
 	s.Emit("user_turn_start", map[string]any{"text": uts.GetTranscript()})
@@ -479,7 +485,6 @@ func evUserTurnStart(s *AgentSession, uts *pb.UserTurnStartEvent) {
 
 func evUserTurnEnd(s *AgentSession, ute *pb.UserTurnEndEvent) {
 	for _, h := range s.pipeline.Hooks.userTurnEnd {
-		h := h
 		safeHook("user_turn_end", func() { h() })
 	}
 	s.Emit("user_turn_end", map[string]any{"response_text": ute.GetResponseText(), "interrupted": ute.GetInterrupted()})
@@ -487,7 +492,6 @@ func evUserTurnEnd(s *AgentSession, ute *pb.UserTurnEndEvent) {
 
 func evAgentTurnStart(s *AgentSession, ats *pb.AgentTurnStartEvent) {
 	for _, h := range s.pipeline.Hooks.agentTurnStart {
-		h := h
 		safeHook("agent_turn_start", func() { h() })
 	}
 	s.Emit("agent_turn_start", map[string]any{"turn_number": ats.GetTurnNumber()})
@@ -495,7 +499,6 @@ func evAgentTurnStart(s *AgentSession, ats *pb.AgentTurnStartEvent) {
 
 func evAgentTurnEnd(s *AgentSession, ate *pb.AgentTurnEndEvent) {
 	for _, h := range s.pipeline.Hooks.agentTurnEnd {
-		h := h
 		safeHook("agent_turn_end", func() { h() })
 	}
 	s.mu.Lock()

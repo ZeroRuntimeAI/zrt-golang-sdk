@@ -1,6 +1,10 @@
 package zrt
 
-import "context"
+import (
+	"cmp"
+	"context"
+	"slices"
+)
 
 // Agent is the behavior contract: instructions, tools, and lifecycle hooks.
 //
@@ -73,25 +77,17 @@ type BaseAgent struct {
 
 // NewBaseAgent builds a BaseAgent from opts. Embed the result in your agent type.
 func NewBaseAgent(opts AgentOptions) BaseAgent {
-	appendSuffix := true
-	if opts.AppendVoiceSuffix != nil {
-		appendSuffix = *opts.AppendVoiceSuffix
-	}
-	id := opts.AgentID
-	if id == "" {
-		id = "Agent"
-	}
 	return BaseAgent{
 		instructions:             opts.Instructions,
-		tools:                    append([]*FunctionTool(nil), opts.Tools...),
-		id:                       id,
+		tools:                    slices.Clone(opts.Tools),
+		id:                       cmp.Or(opts.AgentID, "Agent"),
 		mcpServers:               opts.MCPServers,
 		inheritContext:           opts.InheritContext,
 		knowledgeBase:            opts.KnowledgeBase,
 		greeting:                 opts.Greeting,
 		greetingNonInterruptible: opts.GreetingNonInterruptible,
 		voiceSuffix:              opts.VoiceSuffix,
-		appendVoiceSuffix:        appendSuffix,
+		appendVoiceSuffix:        BoolOr(opts.AppendVoiceSuffix, true),
 		alternates:               opts.Alternates,
 		cw:                       opts.ContextWindow,
 		llmStreamHookTimeoutMS:   100,
@@ -119,7 +115,7 @@ func (a *BaseAgent) Tools() []*FunctionTool { return a.tools }
 
 // UpdateTools replaces the local tool set (use AgentSession.UpdateTools to push).
 func (a *BaseAgent) UpdateTools(tools []*FunctionTool) {
-	a.tools = append([]*FunctionTool(nil), tools...)
+	a.tools = slices.Clone(tools)
 }
 
 // Session returns the bound AgentSession (nil before start).

@@ -1,6 +1,9 @@
 package zrt
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 // EventHandler receives a single event payload (usually a map[string]any).
 type EventHandler func(payload any)
@@ -55,7 +58,7 @@ func (e *EventEmitter) Emit(event string, payload any) {
 		e.mu.Unlock()
 		return
 	}
-	regs := append([]*eventReg(nil), e.handlers[event]...)
+	regs := slices.Clone(e.handlers[event])
 	e.mu.Unlock()
 	for _, r := range regs {
 		invokeHandler(r.fn, payload, event)

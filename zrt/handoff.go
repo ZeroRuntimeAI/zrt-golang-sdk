@@ -1,5 +1,7 @@
 package zrt
 
+import "maps"
+
 // AgentSwitchKey is the magic key signalling an in-call agent handoff when
 // returned from a tool.
 const AgentSwitchKey = "__agent_switch__"
@@ -29,8 +31,6 @@ func AgentSwitch(to string, opts AgentSwitchOptions) map[string]any {
 	}
 	payload["inherit_context"] = inherit
 	result := map[string]any{AgentSwitchKey: payload}
-	for k, v := range opts.Extra {
-		result[k] = v
-	}
+	maps.Copy(result, opts.Extra)
 	return result
 }

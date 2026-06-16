@@ -1,7 +1,9 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
+	"slices"
 	"sync"
 )
 
@@ -198,12 +200,9 @@ type PipelineOptions struct {
 func NewPipeline(opts PipelineOptions) *Pipeline {
 	patterns := opts.STTFilterPatterns
 	if patterns == nil {
-		patterns = append([]string(nil), DefaultSTTFilterPatterns...)
+		patterns = slices.Clone(DefaultSTTFilterPatterns)
 	}
-	timeout := opts.LLMStreamHookTimeoutMS
-	if timeout == 0 {
-		timeout = 100
-	}
+	timeout := cmp.Or(opts.LLMStreamHookTimeoutMS, 100)
 	p := &Pipeline{
 		STT:                    opts.STT,
 		LLM:                    opts.LLM,
@@ -404,12 +403,8 @@ func (p *Pipeline) GetLatestFrames(n int) []map[string]any {
 	}
 	p.frameMu.Lock()
 	defer p.frameMu.Unlock()
-	if n > len(p.frameBuffer) {
-		n = len(p.frameBuffer)
-	}
-	out := make([]map[string]any, n)
-	copy(out, p.frameBuffer[len(p.frameBuffer)-n:])
-	return out
+	n = min(n, len(p.frameBuffer))
+	return slices.Clone(p.frameBuffer[len(p.frameBuffer)-n:])
 }
 
 func fireFrameHook(h func(map[string]any), frame map[string]any) {

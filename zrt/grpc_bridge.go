@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -193,13 +194,19 @@ func (b *grpcBridge) sendUpdateInstructions(s string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateInstructions{UpdateInstructions: &pb.UpdateInstructionsCmd{Instructions: s}}})
 }
 func (b *grpcBridge) sendUpdateTools(tools []*FunctionTool) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: toolSchemasFor(tools)}}})
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: buildToolSchemas(tools)}}})
 }
 func (b *grpcBridge) sendUpdateProvider(component, provider string, params map[string]string) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateProvider{UpdateProvider: &pb.UpdateProviderCmd{Component: component, Provider: provider, Params: stringifyMap(params)}}})
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateProvider{UpdateProvider: &pb.UpdateProviderCmd{Component: component, Provider: provider, Params: copyAnyMap(params)}}})
 }
 func (b *grpcBridge) sendCallTransfer(transferTo, token string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_CallTransfer{CallTransfer: &pb.CallTransferCmd{TransferTo: transferTo, Token: token}}})
+}
+func (b *grpcBridge) sendPublishMessage(topic, message, optionsJSON, payloadJSON string) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PublishMessage{PublishMessage: &pb.PublishMessageCmd{Topic: topic, Message: message, OptionsJson: optionsJSON, PayloadJson: payloadJSON}}})
+}
+func (b *grpcBridge) sendSubscribePubSub(topic string) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SubscribePubsub{SubscribePubsub: &pb.SubscribePubSubCmd{Topic: topic}}})
 }
 func (b *grpcBridge) sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PlayBackgroundAudio{PlayBackgroundAudio: &pb.PlayBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), Looping: looping, PlaybackMode: playbackMode}}})
@@ -365,6 +372,8 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		evVoicemail(s, ev.VoicemailDetected)
 	case *pb.RuntimeEvent_A2AMessage:
 		evA2A(s, ev.A2AMessage)
+	case *pb.RuntimeEvent_PubsubMessage:
+		evPubSubMessage(s, ev.PubsubMessage)
 	case *pb.RuntimeEvent_AgentSwitched:
 		evAgentSwitched(s, ev.AgentSwitched)
 	case *pb.RuntimeEvent_KbHits:
@@ -427,7 +436,6 @@ func (b *grpcBridge) handleError(err *pb.ErrorEvent) {
 	}
 	b.session.Emit("runtime_error", payload)
 	for _, h := range b.pipeline.Hooks.errorHooks {
-		h := h
 		safeHook("error", func() { h(payload) })
 	}
 	effectivelyFatal := err.GetIsFatal() || isUnrecoverableAuthError(err.GetComponent(), err.GetMessage())
@@ -438,10 +446,7 @@ func (b *grpcBridge) handleError(err *pb.ErrorEvent) {
 		b.mu.Lock()
 		b.running = false
 		b.mu.Unlock()
-		comp := err.GetComponent()
-		if comp == "" {
-			comp = "runtime"
-		}
+		comp := cmp.Or(err.GetComponent(), "runtime")
 		go b.session.Close(context.Background(), "fatal_error:"+comp)
 	}
 }
@@ -546,30 +551,4 @@ func runLLMTokenReview(p *Pipeline, text string, tokenID uint64) (string, bool) 
 		return "", dropped
 	}
 	return cur, dropped
-}
-
-func toolSchemasFor(tools []*FunctionTool) []*pb.ToolSchemaProto {
-	var protos []*pb.ToolSchemaProto
-	for _, t := range tools {
-		if !IsFunctionTool(t) {
-			continue
-		}
-		schema := t.Info.ParametersSchema
-		js := "{}"
-		if schema != nil {
-			if b, err := json.Marshal(schema); err == nil {
-				js = string(b)
-			}
-		}
-		protos = append(protos, &pb.ToolSchemaProto{Name: t.Info.Name, Description: t.Info.Description, ParametersJsonSchema: js})
-	}
-	return protos
-}
-
-func stringifyMap(m map[string]string) map[string]string {
-	out := make(map[string]string, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
 }

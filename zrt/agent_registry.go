@@ -1,7 +1,9 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -271,10 +273,7 @@ func (r *agentRegistry) handleSessionEnded(ended *pb.SessionEnded) {
 		if signaling != "" {
 			sess.setSignalingSessionID(signaling)
 		}
-		reason := ended.GetReason()
-		if reason == "" {
-			reason = "runtime_session_ended"
-		}
+		reason := cmp.Or(ended.GetReason(), "runtime_session_ended")
 		sess.Close(context.Background(), reason)
 	}
 	if state.customSTTPump != nil {
@@ -337,7 +336,7 @@ func (r *agentRegistry) routeSessionEvent(ctx context.Context, state *registered
 		return
 	case *pb.AgentStreamOut_Participant:
 		t := p.Participant.GetType()
-		if containsFold(t, "join") {
+		if strings.Contains(strings.ToLower(t), "join") {
 			state.mu.Lock()
 			state.participantPresent = true
 			state.mu.Unlock()
@@ -552,7 +551,7 @@ func (r *agentRegistry) sendCancelGeneration(sid string) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_CancelGeneration{CancelGeneration: &pb.CancelGenerationCmd{}}})
 }
 func (r *agentRegistry) sendUpdateTools(sid string, tools []*FunctionTool) {
-	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: toolSchemasFor(tools)}}})
+	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: buildToolSchemas(tools)}}})
 }
 func (r *agentRegistry) sendPlayBackgroundAudio(sid, url string, volume float64, looping, playbackMode bool) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_PlayBackgroundAudio{PlayBackgroundAudio: &pb.PlayBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), Looping: looping, PlaybackMode: playbackMode}}})
@@ -585,8 +584,14 @@ func (r *agentRegistry) sendRecordingStop(sid string) {
 func (r *agentRegistry) sendCallTransfer(sid, transferTo, token string) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_CallTransfer{CallTransfer: &pb.CallTransferCmd{TransferTo: transferTo, Token: token}}})
 }
+func (r *agentRegistry) sendPublishMessage(sid, topic, message, optionsJSON, payloadJSON string) {
+	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_PublishMessage{PublishMessage: &pb.PublishMessageCmd{Topic: topic, Message: message, OptionsJson: optionsJSON, PayloadJson: payloadJSON}}})
+}
+func (r *agentRegistry) sendSubscribePubSub(sid, topic string) {
+	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_SubscribePubsub{SubscribePubsub: &pb.SubscribePubSubCmd{Topic: topic}}})
+}
 func (r *agentRegistry) sendUpdateProvider(sid, component, provider string, params map[string]string) {
-	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_UpdateProvider{UpdateProvider: &pb.UpdateProviderCmd{Component: component, Provider: provider, Params: stringifyMap(params)}}})
+	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_UpdateProvider{UpdateProvider: &pb.UpdateProviderCmd{Component: component, Provider: provider, Params: copyAnyMap(params)}}})
 }
 func (r *agentRegistry) sendModifyLLMToken(sid string, tokenID uint64, replacement string, drop bool) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_ModifyLlmToken{ModifyLlmToken: &pb.ModifyLLMTokenCmd{TokenId: tokenID, Replacement: replacement, Drop: drop}}})
@@ -668,25 +673,16 @@ func (t *registryTransport) sendSendMessageWithFrames(text string, frames []fram
 	t.registry.sendSendMessageWithFrames(t.sid, text, frames)
 	return nil
 }
+func (t *registryTransport) sendPublishMessage(topic, message, optionsJSON, payloadJSON string) error {
+	t.registry.sendPublishMessage(t.sid, topic, message, optionsJSON, payloadJSON)
+	return nil
+}
+func (t *registryTransport) sendSubscribePubSub(topic string) error {
+	t.registry.sendSubscribePubSub(t.sid, topic)
+	return nil
+}
 func (t *registryTransport) stub() pb.AgentRuntimeClient { return t.registry.client }
 func (t *registryTransport) sessionID() string           { return t.sid }
-
-func containsFold(s, sub string) bool {
-	return indexFold(s, sub) >= 0
-}
-
-func indexFold(s, sub string) int {
-	ls, lsub := len(s), len(sub)
-	if lsub == 0 {
-		return 0
-	}
-	for i := 0; i+lsub <= ls; i++ {
-		if equalFold(s[i:i+lsub], sub) {
-			return i
-		}
-	}
-	return -1
-}
 
 func stringMapToAny(m map[string]string) map[string]any {
 	out := make(map[string]any, len(m))

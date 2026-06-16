@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -68,17 +69,20 @@ type ObservabilityOptions struct {
 }
 
 // PubSubPublishConfig configures publishing a message on a room pubsub topic.
+// It mirrors the VideoSDK PubSubPublishConfig; persistence is requested through
+// Options (e.g. {"persist": true}) rather than a dedicated mode field.
 type PubSubPublishConfig struct {
-	Topic    string // e.g. "CHAT", "AGENT_EVENT"
-	Message  any
-	Mode     string // "sendOnly" (default) or "sendAndPersist"
-	SendOnly bool
-	Payload  map[string]any
+	Topic   string // e.g. "CHAT", "AGENT_EVENT"
+	Message string
+	// Options are publish options forwarded to the room (e.g. {"persist": true}).
+	Options map[string]any
+	// Payload is an optional structured payload sent alongside Message.
+	Payload any
 }
 
-// NewPubSubPublishConfig returns a config with default send-only mode applied.
+// NewPubSubPublishConfig returns a config for the given topic.
 func NewPubSubPublishConfig(topic string) *PubSubPublishConfig {
-	return &PubSubPublishConfig{Topic: topic, Message: "", Mode: "sendOnly"}
+	return &PubSubPublishConfig{Topic: topic, Message: ""}
 }
 
 // RoomOptions configures the room/session the agent joins.
@@ -112,10 +116,6 @@ type RoomOptions struct {
 
 // NewRoomOptions returns RoomOptions with the default values.
 func NewRoomOptions() *RoomOptions {
-	signaling := os.Getenv("ZRT_SIGNALING_URL")
-	if signaling == "" {
-		signaling = "api.videosdk.live"
-	}
 	return &RoomOptions{
 		Name:                        "Agent",
 		Playground:                  true,
@@ -123,7 +123,7 @@ func NewRoomOptions() *RoomOptions {
 		AutoEndSession:              true,
 		SessionTimeoutSeconds:       60,
 		NoParticipantTimeoutSeconds: 180,
-		SignalingBaseURL:            signaling,
+		SignalingBaseURL:            cmp.Or(os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live"),
 		SendLogsToDashboard:         true,
 		DashboardLogLevel:           "INFO",
 	}
@@ -153,10 +153,6 @@ type WorkerOptions struct {
 
 // NewWorkerOptions returns WorkerOptions with the default values.
 func NewWorkerOptions() *WorkerOptions {
-	signaling := os.Getenv("ZRT_SIGNALING_URL")
-	if signaling == "" {
-		signaling = "api.videosdk.live"
-	}
 	return &WorkerOptions{
 		NumIdleProcesses:  1,
 		InitializeTimeout: 10 * time.Second,
@@ -165,7 +161,7 @@ func NewWorkerOptions() *WorkerOptions {
 		AgentID:           "ZeroRuntimeAgent",
 		MaxRetry:          16,
 		LoadThreshold:     0.75,
-		SignalingBaseURL:  signaling,
+		SignalingBaseURL:  cmp.Or(os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live"),
 		Host:              "0.0.0.0",
 		Port:              8081,
 		LogLevel:          "INFO",
@@ -280,13 +276,7 @@ func (j *JobContext) GetRoomID() (string, error) {
 }
 
 func createRoomStatic(authToken, signalingBaseURL string) (string, error) {
-	base := signalingBaseURL
-	if base == "" {
-		base = os.Getenv("ZRT_SIGNALING_URL")
-	}
-	if base == "" {
-		base = "api.videosdk.live"
-	}
+	base := cmp.Or(signalingBaseURL, os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live")
 	base = strings.TrimRight(strings.TrimSpace(base), "/")
 	base = strings.TrimPrefix(strings.TrimPrefix(base, "https://"), "http://")
 	url := "https://" + base + "/v2/rooms"
@@ -412,10 +402,7 @@ func (w *WorkerJob) run() error {
 }
 
 func (w *WorkerJob) runRegistered() error {
-	runtimeAddr := os.Getenv("ZRT_RUNTIME_ADDRESS")
-	if runtimeAddr == "" {
-		runtimeAddr = "localhost:50051"
-	}
+	runtimeAddr := cmp.Or(os.Getenv("ZRT_RUNTIME_ADDRESS"), "localhost:50051")
 	// Registration probe: run the entrypoint to capture agent + pipeline.
 	probeCtx := w.buildProbeContext()
 	probeCtx.registrationProbe = true
@@ -434,7 +421,7 @@ func (w *WorkerJob) runRegistered() error {
 	}
 	resolvedToken, _ := ResolveAuthToken(w.options.AuthToken)
 
-	registry := newAgentRegistry(runtimeAddr, w.entrypoint, w.jobctxFactory, agentTemplate, pipeline, orDefault(w.options.AgentID, "ZeroRuntimeAgent"), maxInt(1, w.options.MaxProcesses), map[string]string{}, resolvedToken, defaultRecording, w.options.InitializeTimeout)
+	registry := newAgentRegistry(runtimeAddr, w.entrypoint, w.jobctxFactory, agentTemplate, pipeline, cmp.Or(w.options.AgentID, "ZeroRuntimeAgent"), max(1, w.options.MaxProcesses), map[string]string{}, resolvedToken, defaultRecording, w.options.InitializeTimeout)
 
 	var legacy *legacyBackendRegistration
 	if resolvedToken != "" && w.options.SignalingBaseURL != "" {
@@ -442,7 +429,7 @@ func (w *WorkerJob) runRegistered() error {
 		if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
 			base = "https://" + base
 		}
-		legacy = newLegacyBackendRegistration(resolvedToken, orDefault(w.options.AgentID, "ZeroRuntimeAgent"), base, w.options.LoadThreshold, maxInt(1, w.options.MaxProcesses), w.entrypoint, w.jobctxFactory)
+		legacy = newLegacyBackendRegistration(resolvedToken, cmp.Or(w.options.AgentID, "ZeroRuntimeAgent"), base, w.options.LoadThreshold, max(1, w.options.MaxProcesses), w.entrypoint, w.jobctxFactory)
 		w.mu.Lock()
 		w.legacyReg = legacy
 		w.mu.Unlock()
@@ -498,7 +485,7 @@ func (w *WorkerJob) runRegistered() error {
 			default:
 			}
 			attempt++
-			delay := time.Duration(minInt(attempt*2, 10)) * time.Second
+			delay := time.Duration(min(attempt*2, 10)) * time.Second
 			logger.Warnf("Runtime gRPC stream ended — reconnecting in %.1fs (attempt %d).", delay.Seconds(), attempt)
 			select {
 			case <-time.After(delay):
@@ -530,11 +517,4 @@ func (w *WorkerJob) buildProbeContext() *JobContext {
 		ctx.Metadata = map[string]any{"callId": "__probe__", "sipCallTo": "+0000000000", "sipCallFrom": "+0000000000", "callType": "outbound", "webhook_url": ""}
 	}
 	return ctx
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

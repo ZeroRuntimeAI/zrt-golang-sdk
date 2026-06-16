@@ -1,9 +1,11 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
@@ -28,10 +30,7 @@ type StartOptions struct {
 // RunUntilShutdown is true, Start blocks until the session closes.
 func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts StartOptions) error {
 	logger.Infof("Starting AgentSession...")
-	timeout := opts.WaitForParticipantTimeoutMS
-	if timeout == 0 {
-		timeout = 60000
-	}
+	timeout := cmp.Or(opts.WaitForParticipantTimeoutMS, 60000)
 	s.mu.Lock()
 	s.agentState = AgentStateStarting
 	s.waitForParticipant = opts.WaitForParticipant
@@ -48,7 +47,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		md := jobCtx.Metadata
 		isSIP := md["sipCallTo"] != nil || md["sipCallFrom"] != nil
 		if ct, ok := md["callType"].(string); ok {
-			isSIP = isSIP || hasPrefixFold(ct, "sip")
+			isSIP = isSIP || strings.HasPrefix(strings.ToLower(ct), "sip")
 		}
 		if isSIP && !s.waitForAudioStreamExplicit {
 			s.mu.Lock()
@@ -92,13 +91,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		return s.startBound(ctx, jobCtx, opts.RunUntilShutdown)
 	}
 
-	runtimeAddr := opts.RuntimeAddress
-	if runtimeAddr == "" {
-		runtimeAddr = os.Getenv("ZRT_RUNTIME_ADDRESS")
-	}
-	if runtimeAddr == "" {
-		runtimeAddr = "localhost:50051"
-	}
+	runtimeAddr := cmp.Or(opts.RuntimeAddress, os.Getenv("ZRT_RUNTIME_ADDRESS"), "localhost:50051")
 
 	room, err := s.resolveRoomConfig(jobCtx)
 	if err != nil {
@@ -194,7 +187,7 @@ func (s *AgentSession) resolveRoomConfig(jobCtx *JobContext) (roomConfigData, er
 	return roomConfigData{
 		RoomID:                      opts.RoomID,
 		AuthToken:                   token,
-		AgentName:                   orDefault(opts.Name, "Agent"),
+		AgentName:                   cmp.Or(opts.Name, "Agent"),
 		AutoEndSession:              opts.AutoEndSession,
 		SessionTimeoutSeconds:       opts.SessionTimeoutSeconds,
 		NoParticipantTimeoutSeconds: opts.NoParticipantTimeoutSeconds,
@@ -214,10 +207,7 @@ func (s *AgentSession) maybeAutoRecording(jobCtx *JobContext) error {
 	}
 	bucket := os.Getenv("ZRT_RECORDING_S3_BUCKET")
 	if bucket != "" {
-		region := os.Getenv("ZRT_RECORDING_S3_REGION")
-		if region == "" {
-			region = "us-east-1"
-		}
+		region := cmp.Or(os.Getenv("ZRT_RECORDING_S3_REGION"), "us-east-1")
 		s.recording = &RecordingConfig{
 			Enabled: true, AutoStart: true, Format: "ogg_opus", ChannelMode: "dual_channel",
 			Storage: &S3StorageConfig{
@@ -413,9 +403,7 @@ func (s *AgentSession) PushAudioFrame(ctx context.Context, pcm []byte, sampleRat
 	if len(pcm) == 0 {
 		return nil
 	}
-	if sampleRate == 0 {
-		sampleRate = 48000
-	}
+	sampleRate = cmp.Or(sampleRate, 48000)
 	if t := s.transportRef(); t != nil {
 		return t.sendPushAudioFrame(pcm, sampleRate)
 	}
@@ -427,9 +415,7 @@ func (s *AgentSession) SendImage(ctx context.Context, data []byte, mimeType stri
 	if len(data) == 0 {
 		return nil
 	}
-	if mimeType == "" {
-		mimeType = "image/jpeg"
-	}
+	mimeType = cmp.Or(mimeType, "image/jpeg")
 	if t := s.transportRef(); t != nil {
 		return t.sendSendImage(mimeType, data)
 	}
@@ -446,11 +432,7 @@ type MessageFrame struct {
 func (s *AgentSession) SendMessageWithFrames(ctx context.Context, message string, frames []MessageFrame) error {
 	var fd []frameData
 	for _, f := range frames {
-		mt := f.MimeType
-		if mt == "" {
-			mt = "image/jpeg"
-		}
-		fd = append(fd, frameData{mimeType: mt, data: f.Data})
+		fd = append(fd, frameData{mimeType: cmp.Or(f.MimeType, "image/jpeg"), data: f.Data})
 	}
 	if message == "" && len(fd) == 0 {
 		return nil
@@ -673,7 +655,7 @@ func (s *AgentSession) awaitParticipantIfNeeded(ctx context.Context) {
 	wantAudio := s.waitForAudioStream
 	present := s.participantPresent
 	audioActive := s.audioStreamActive
-	timeout := time.Duration(maxInt(s.waitForParticipantTimeout, 1)) * time.Millisecond
+	timeout := time.Duration(max(s.waitForParticipantTimeout, 1)) * time.Millisecond
 	s.mu.Unlock()
 	if !want {
 		return
@@ -775,39 +757,6 @@ func firstString(m map[string]any, keys ...string) string {
 	return ""
 }
 
-func hasPrefixFold(s, prefix string) bool {
-	if len(s) < len(prefix) {
-		return false
-	}
-	return equalFold(s[:len(prefix)], prefix)
-}
-
-func equalFold(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := 0; i < len(a); i++ {
-		ca, cb := a[i], b[i]
-		if 'A' <= ca && ca <= 'Z' {
-			ca += 'a' - 'A'
-		}
-		if 'A' <= cb && cb <= 'Z' {
-			cb += 'a' - 'A'
-		}
-		if ca != cb {
-			return false
-		}
-	}
-	return true
-}
-
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func printPlaygroundURL(room roomConfigData) {
 	enabled := room.Playground
 	if v := os.Getenv("ZRT_PLAYGROUND"); v == "1" || v == "true" || v == "yes" || v == "on" {
@@ -816,10 +765,7 @@ func printPlaygroundURL(room roomConfigData) {
 	if !enabled || room.RoomID == "" || room.AuthToken == "" {
 		return
 	}
-	base := os.Getenv("ZRT_PLAYGROUND_URL")
-	if base == "" {
-		base = "https://playground.videosdk.live/cli"
-	}
+	base := cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.videosdk.live/cli")
 	logger.Infof("Agent started in playground mode")
 	// Playground mode is an explicit, dev-facing opt-in and the URL is meant to be
 	// opened in a browser, so the full token is printed (it is unusable truncated).

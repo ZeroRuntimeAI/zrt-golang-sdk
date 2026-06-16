@@ -1,6 +1,9 @@
 package zrt
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 // MetricsCollector buffers per-turn metrics snapshots emitted by the runtime.
 type MetricsCollector struct {
@@ -18,9 +21,7 @@ func (m *MetricsCollector) append(payload map[string]any) {
 func (m *MetricsCollector) Turns() []map[string]any {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	out := make([]map[string]any, len(m.turns))
-	copy(out, m.turns)
-	return out
+	return slices.Clone(m.turns)
 }
 
 // Clear empties the buffer.

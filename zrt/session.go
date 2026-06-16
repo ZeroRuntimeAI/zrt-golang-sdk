@@ -49,6 +49,8 @@ type sessionTransport interface {
 	sendPushAudioFrame(pcm []byte, sampleRate int) error
 	sendSendImage(mimeType string, data []byte) error
 	sendSendMessageWithFrames(text string, frames []frameData) error
+	sendPublishMessage(topic, message, optionsJSON, payloadJSON string) error
+	sendSubscribePubSub(topic string) error
 	stub() pb.AgentRuntimeClient
 	sessionID() string
 }

@@ -1,8 +1,10 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -67,7 +69,7 @@ func (s *AgentSession) UpdateInterruptConfig(ctx context.Context, opts UpdateInt
 		params["false_interrupt_pause_duration_ms"] = strconv.Itoa(*opts.FalseInterruptPauseDurationMS)
 	}
 	if opts.ResumeOnFalseInterrupt != nil {
-		params["resume_on_false_interrupt"] = boolString(*opts.ResumeOnFalseInterrupt)
+		params["resume_on_false_interrupt"] = strconv.FormatBool(*opts.ResumeOnFalseInterrupt)
 	}
 	if len(params) == 0 {
 		return nil
@@ -88,17 +90,9 @@ func (s *AgentSession) GetContextHistory(lastN int, includeFunctionCalls, includ
 	if len(source) == 0 && len(s.transcriptMirror) > 0 {
 		source = s.transcriptMirror
 	}
-	snap := make([]map[string]any, len(source))
-	copy(snap, source)
+	snap := slices.Clone(source)
 	s.mu.Unlock()
 	return filterHistory(snap, lastN, includeFunctionCalls, includeSystemMessages)
-}
-
-func boolString(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }
 
 // ---- RecordingManager ----
@@ -228,9 +222,7 @@ func (t *AudioTrack) CanPause() bool {
 
 // AddNewBytes pushes a raw PCM frame to the runtime.
 func (t *AudioTrack) AddNewBytes(ctx context.Context, pcm []byte, sampleRate int) error {
-	if sampleRate == 0 {
-		sampleRate = t.sampleRate
-	}
+	sampleRate = cmp.Or(sampleRate, t.sampleRate)
 	return t.session.PushAudioFrame(ctx, pcm, sampleRate)
 }
 
