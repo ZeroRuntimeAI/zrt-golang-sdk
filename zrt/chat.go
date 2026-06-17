@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+
+	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
 
 // ChatContent is a text content block.
@@ -40,7 +42,12 @@ type ChatMessage struct {
 	Role      ChatRole
 	Content   string
 	MessageID string
+	// ToolCalls the assistant requested on this message.
 	ToolCalls []FunctionCall
+	// ToolCallID, for a tool-result message, is the FunctionCall.CallID it answers.
+	ToolCallID string
+	// Images attached to this message (sent to the runtime as ImageContent values).
+	Images []ImageContent
 }
 
 // ChatContext holds an ordered list of chat messages.
@@ -82,12 +89,16 @@ func (c *ChatContext) EstimatedTokens() int {
 	return total
 }
 
-// AddMessage appends a message and returns it.
-func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string) ChatMessage {
+// AddMessage appends a message and returns it. Optional images are attached to
+// the message. When messageID is empty a fresh UUID is generated.
+func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string, images ...ImageContent) ChatMessage {
 	if messageID == "" {
 		messageID = uuid.NewString()
 	}
 	msg := ChatMessage{Role: role, Content: content, MessageID: messageID}
+	if len(images) > 0 {
+		msg.Images = slices.Clone(images)
+	}
 	c.messages = append(c.messages, msg)
 	return msg
 }
@@ -114,4 +125,53 @@ func (c *ChatContext) ToOpenAIMessages() []map[string]string {
 		out = append(out, map[string]string{"role": string(m.Role), "content": m.Content})
 	}
 	return out
+}
+
+func (c *ChatContext) ToContextMessages() []*pb.ContextMessageProto {
+	out := make([]*pb.ContextMessageProto, 0, len(c.messages))
+	for _, m := range c.messages {
+		pm := &pb.ContextMessageProto{
+			Role:       string(m.Role),
+			Content:    m.Content,
+			MessageId:  m.MessageID,
+			ToolCallId: m.ToolCallID,
+		}
+		for _, img := range m.Images {
+			pm.Images = append(pm.Images, &pb.ImageContentProto{Url: img.URL, Detail: img.Detail})
+		}
+		for _, tc := range m.ToolCalls {
+			pm.ToolCalls = append(pm.ToolCalls, &pb.ToolCallProto{
+				CallId:        tc.CallID,
+				Name:          tc.Name,
+				ArgumentsJson: tc.Arguments,
+			})
+		}
+		out = append(out, pm)
+	}
+	return out
+}
+
+// ChatContextFromContextMessages builds a ChatContext from runtime wire messages
+func ChatContextFromContextMessages(messages []*pb.ContextMessageProto) *ChatContext {
+	c := &ChatContext{}
+	for _, m := range messages {
+		msg := ChatMessage{
+			Role:       ChatRole(m.GetRole()),
+			Content:    m.GetContent(),
+			MessageID:  m.GetMessageId(),
+			ToolCallID: m.GetToolCallId(),
+		}
+		for _, img := range m.GetImages() {
+			msg.Images = append(msg.Images, ImageContent{URL: img.GetUrl(), Detail: img.GetDetail()})
+		}
+		for _, tc := range m.GetToolCalls() {
+			msg.ToolCalls = append(msg.ToolCalls, FunctionCall{
+				CallID:    tc.GetCallId(),
+				Name:      tc.GetName(),
+				Arguments: tc.GetArgumentsJson(),
+			})
+		}
+		c.messages = append(c.messages, msg)
+	}
+	return c
 }

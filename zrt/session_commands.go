@@ -577,6 +577,76 @@ func (s *AgentSession) RemoveMessage(ctx context.Context, messageID string) bool
 	return resp.GetSuccess()
 }
 
+// InjectMessage appends a message to the runtime conversation context via the
+// InjectMessage RPC. Returns true on success.
+func (s *AgentSession) InjectMessage(ctx context.Context, message ChatMessage) bool {
+	if s.SessionID() == "" {
+		logger.Warnf("InjectMessage: no active session id yet; skipping")
+		return false
+	}
+	t := s.transportRef()
+	if t == nil || t.stub() == nil {
+		logger.Warnf("InjectMessage: no runtime stub available; skipping")
+		return false
+	}
+	pm := &pb.ContextMessageProto{Role: string(message.Role), Content: message.Content, MessageId: message.MessageID}
+	for _, img := range message.Images {
+		pm.Images = append(pm.Images, &pb.ImageContentProto{Url: img.URL, Detail: img.Detail})
+	}
+	resp, err := t.stub().InjectMessage(ctx, &pb.InjectMessageRequest{SessionId: s.SessionID(), Message: pm})
+	if err != nil {
+		logger.Errorf("InjectMessage RPC failed: %v", err)
+		return false
+	}
+	if !resp.GetSuccess() {
+		logger.Warnf("InjectMessage rejected by runtime: %s", resp.GetError())
+		return false
+	}
+	logger.Debugf("InjectMessage ok (role=%s, total_messages=%d)", message.Role, resp.GetTotalMessages())
+	return true
+}
+
+// InjectContext appends every message of a ChatContext to the runtime context,
+// in order. Returns true if every message was injected successfully.
+func (s *AgentSession) InjectContext(ctx context.Context, cc *ChatContext) bool {
+	if cc == nil {
+		return true
+	}
+	ok := true
+	for _, m := range cc.Messages() {
+		if !s.InjectMessage(ctx, m) {
+			ok = false
+		}
+	}
+	return ok
+}
+
+// FetchChatContext fetches the latest conversation history from the runtime as a
+// typed *ChatContext. Returns an empty context when no session/runtime is available
+// or the RPC fails.
+func (s *AgentSession) FetchChatContext(ctx context.Context, lastN int) *ChatContext {
+	if s.SessionID() == "" {
+		logger.Warnf("FetchChatContext: no active session id yet; returning empty context")
+		return &ChatContext{}
+	}
+	t := s.transportRef()
+	if t == nil || t.stub() == nil {
+		logger.Warnf("FetchChatContext: no runtime stub available; returning empty context")
+		return &ChatContext{}
+	}
+	var ln uint32
+	if lastN > 0 {
+		ln = uint32(lastN)
+	}
+	resp, err := t.stub().GetContext(ctx, &pb.GetContextRequest{SessionId: s.SessionID(), LastN: ln})
+	if err != nil {
+		logger.Errorf("GetContext RPC failed: %v", err)
+		return &ChatContext{}
+	}
+	logger.Debugf("FetchChatContext: runtime returned %d message(s) (total_messages=%d)", len(resp.GetMessages()), resp.GetTotalMessages())
+	return ChatContextFromContextMessages(resp.GetMessages())
+}
+
 func filterHistory(history []map[string]any, lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
 	var out []map[string]any
 	for _, m := range history {
