@@ -107,13 +107,29 @@ func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string
 func (c *ChatContext) Copy() *ChatContext {
 	return &ChatContext{messages: slices.Clone(c.messages)}
 }
+=
+type TruncateOptions struct {
+	MaxItems  int
+	MaxTokens int
+}
 
-// Truncate returns a context keeping at most maxItems most-recent messages
-// (maxItems <= 0 keeps all).
-func (c *ChatContext) Truncate(maxItems int) *ChatContext {
+
+func (c *ChatContext) Truncate(opts TruncateOptions) *ChatContext {
 	out := c.Copy()
-	if maxItems > 0 && len(out.messages) > maxItems {
-		out.messages = out.messages[len(out.messages)-maxItems:]
+	if opts.MaxItems > 0 && len(out.messages) > opts.MaxItems {
+		out.messages = out.messages[len(out.messages)-opts.MaxItems:]
+	}
+	if opts.MaxTokens > 0 {
+		tokensOf := func(m ChatMessage) int { return len(strings.Fields(m.Content)) * 2 }
+		total := 0
+		for _, m := range out.messages {
+			total += tokensOf(m)
+		}
+		// Drop oldest messages until under the token budget (keep at least one).
+		for len(out.messages) > 1 && total > opts.MaxTokens {
+			total -= tokensOf(out.messages[0])
+			out.messages = out.messages[1:]
+		}
 	}
 	return out
 }

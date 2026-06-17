@@ -301,6 +301,17 @@ func buildToolSchemas(tools []*FunctionTool) []*pb.ToolSchemaProto {
 	}
 	return out
 }
+func resolveContextWindow(agent Agent, p *Pipeline) *ContextWindow {
+	if agent != nil {
+		if cw := agent.base().contextWindow(); cw != nil {
+			return cw
+		}
+	}
+	if p != nil {
+		return p.ContextWindow
+	}
+	return nil
+}
 
 func buildContextWindowConfig(cw *ContextWindow) *pb.ContextWindowConfig {
 	ctx := &pb.ContextWindowConfig{}
@@ -315,6 +326,9 @@ func buildContextWindowConfig(cw *ContextWindow) *pb.ContextWindowConfig {
 	}
 	ctx.KeepRecentTurns = uint32(cw.KeepRecentTurns)
 	ctx.MaxToolCallsPerTurn = uint32(cw.MaxToolCallsPerTurn)
+	if cw.SummaryLLM != nil {
+		ctx.SummaryLlm = buildLLMConfig(cw.SummaryLLM)
+	}
 	return ctx
 }
 
@@ -324,7 +338,7 @@ type inferenceMarked interface {
 	InferenceInfo() InferenceInfo
 }
 
-func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]string {
+func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent) map[string]string {
 	creds := map[string]string{}
 	for envVar, keys := range envKeyMap {
 		if v := os.Getenv(envVar); v != "" {
@@ -340,6 +354,14 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 		}
 		if key := prov.APIKey(); key != "" {
 			if name := prov.ProviderName(); name != "" {
+				creds[name] = key
+			}
+		}
+	}
+	if cw := resolveContextWindow(agent, p); cw != nil && cw.SummaryLLM != nil {
+		sl := cw.SummaryLLM
+		if key := sl.APIKey(); key != "" {
+			if name := sl.ProviderName(); name != "" {
 				creds[name] = key
 			}
 		}
@@ -711,13 +733,14 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	autoLLMStream := autoEnable["llm_stream"]
 	llmStreamEnabled := autoLLMStream || a.llmStreamHookEnabled || (p != nil && p.LLMStreamHookEnabled)
 	timeoutMS := cmp.Or(a.llmStreamHookTimeoutMS, 100)
+	contextWindow := resolveContextWindow(agent, p)
 	return &pb.AgentConfig{
 		AgentId:                  a.id,
 		Instructions:             a.instructions,
 		Tools:                    buildToolSchemas(a.tools),
 		RegisteredHooks:          registeredHooks,
 		BeforeLlmHook:            autoBeforeLLM || a.beforeLLMHook,
-		ContextWindow:            buildContextWindowConfig(a.contextWindow()),
+		ContextWindow:            buildContextWindowConfig(contextWindow),
 		Greeting:                 userGreeting,
 		GreetingNonInterruptible: a.greetingNonInterruptible,
 		AppendVoiceSuffix:        a.appendVoiceSuffix,
@@ -827,7 +850,7 @@ func buildSessionConfig(p *Pipeline, agent Agent, room roomConfigData, recording
 			BackgroundAudioEnabled:      room.BackgroundAudioEnabled,
 			SendLogsToDashboard:         true,
 		},
-		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions)},
+		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions, agent)},
 		Limits:        &pb.SessionLimits{InactivityTimeoutSeconds: 300},
 		ClientVersion: clientVersionInfo(),
 		Recording:     buildRecordingConfig(recording),
@@ -839,7 +862,7 @@ func buildAgentRegistration(agent Agent, p *Pipeline, agentKind string, maxConcu
 		AgentKind:             agentKind,
 		Agent:                 buildAgentConfig(agent, p),
 		Pipeline:              buildPipelineConfig(p),
-		Credentials:           &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions)},
+		Credentials:           &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions, agent)},
 		DefaultRecording:      buildRecordingConfig(defaultRecording),
 		MaxConcurrentSessions: uint32(maxConcurrent),
 		Labels:                labels,

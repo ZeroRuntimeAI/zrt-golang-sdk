@@ -2614,8 +2614,9 @@ type ContextWindowConfig struct {
 	MaxContextItems     uint32                 `protobuf:"varint,2,opt,name=max_context_items,json=maxContextItems,proto3" json:"max_context_items,omitempty"`
 	KeepRecentTurns     uint32                 `protobuf:"varint,3,opt,name=keep_recent_turns,json=keepRecentTurns,proto3" json:"keep_recent_turns,omitempty"`
 	MaxToolCallsPerTurn uint32                 `protobuf:"varint,4,opt,name=max_tool_calls_per_turn,json=maxToolCallsPerTurn,proto3" json:"max_tool_calls_per_turn,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	SummaryLlm    *LLMProviderConfig `protobuf:"bytes,5,opt,name=summary_llm,json=summaryLlm,proto3" json:"summary_llm,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ContextWindowConfig) Reset() {
@@ -2674,6 +2675,13 @@ func (x *ContextWindowConfig) GetMaxToolCallsPerTurn() uint32 {
 		return x.MaxToolCallsPerTurn
 	}
 	return 0
+}
+
+func (x *ContextWindowConfig) GetSummaryLlm() *LLMProviderConfig {
+	if x != nil {
+		return x.SummaryLlm
+	}
+	return nil
 }
 
 type RoomConfig struct {
@@ -13205,13 +13213,15 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x0fToolSchemaProto\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x124\n" +
-	"\x16parameters_json_schema\x18\x03 \x01(\tR\x14parametersJsonSchema\"\xc2\x01\n" +
+	"\x16parameters_json_schema\x18\x03 \x01(\tR\x14parametersJsonSchema\"\x88\x02\n" +
 	"\x13ContextWindowConfig\x12\x1d\n" +
 	"\n" +
 	"max_tokens\x18\x01 \x01(\rR\tmaxTokens\x12*\n" +
 	"\x11max_context_items\x18\x02 \x01(\rR\x0fmaxContextItems\x12*\n" +
 	"\x11keep_recent_turns\x18\x03 \x01(\rR\x0fkeepRecentTurns\x124\n" +
-	"\x17max_tool_calls_per_turn\x18\x04 \x01(\rR\x13maxToolCallsPerTurn\"\xa4\x05\n" +
+	"\x17max_tool_calls_per_turn\x18\x04 \x01(\rR\x13maxToolCallsPerTurn\x12D\n" +
+	"\vsummary_llm\x18\x05 \x01(\v2#.agent_runtime.v1.LLMProviderConfigR\n" +
+	"summaryLlm\"\xa4\x05\n" +
 	"\n" +
 	"RoomConfig\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1d\n" +
@@ -14332,242 +14342,243 @@ var file_zrt_runtime_proto_depIdxs = []int32{
 	134, // 41: agent_runtime.v1.AgentConfig.knowledge_base:type_name -> agent_runtime.v1.KnowledgeBaseConfig
 	32,  // 42: agent_runtime.v1.AgentConfig.alternates:type_name -> agent_runtime.v1.NamedAgentConfig
 	33,  // 43: agent_runtime.v1.NamedAgentConfig.tools:type_name -> agent_runtime.v1.ToolSchemaProto
-	162, // 44: agent_runtime.v1.CredentialsConfig.provider_keys:type_name -> agent_runtime.v1.CredentialsConfig.ProviderKeysEntry
-	44,  // 45: agent_runtime.v1.InjectMessageRequest.message:type_name -> agent_runtime.v1.ContextMessageProto
-	44,  // 46: agent_runtime.v1.GetContextResponse.messages:type_name -> agent_runtime.v1.ContextMessageProto
-	46,  // 47: agent_runtime.v1.ContextMessageProto.images:type_name -> agent_runtime.v1.ImageContentProto
-	45,  // 48: agent_runtime.v1.ContextMessageProto.tool_calls:type_name -> agent_runtime.v1.ToolCallProto
-	52,  // 49: agent_runtime.v1.ClientEvent.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
-	54,  // 50: agent_runtime.v1.ClientEvent.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
-	62,  // 51: agent_runtime.v1.ClientEvent.say:type_name -> agent_runtime.v1.SayCommand
-	64,  // 52: agent_runtime.v1.ClientEvent.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
-	66,  // 53: agent_runtime.v1.ClientEvent.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
-	67,  // 54: agent_runtime.v1.ClientEvent.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
-	68,  // 55: agent_runtime.v1.ClientEvent.keepalive:type_name -> agent_runtime.v1.Keepalive
-	65,  // 56: agent_runtime.v1.ClientEvent.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
-	111, // 57: agent_runtime.v1.ClientEvent.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
-	112, // 58: agent_runtime.v1.ClientEvent.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
-	119, // 59: agent_runtime.v1.ClientEvent.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
-	127, // 60: agent_runtime.v1.ClientEvent.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
-	128, // 61: agent_runtime.v1.ClientEvent.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
-	129, // 62: agent_runtime.v1.ClientEvent.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
-	113, // 63: agent_runtime.v1.ClientEvent.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
-	114, // 64: agent_runtime.v1.ClientEvent.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
-	115, // 65: agent_runtime.v1.ClientEvent.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
-	116, // 66: agent_runtime.v1.ClientEvent.send_image:type_name -> agent_runtime.v1.SendImageCmd
-	69,  // 67: agent_runtime.v1.ClientEvent.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
-	70,  // 68: agent_runtime.v1.ClientEvent.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
-	71,  // 69: agent_runtime.v1.ClientEvent.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
-	72,  // 70: agent_runtime.v1.ClientEvent.generate:type_name -> agent_runtime.v1.GenerateCmd
-	118, // 71: agent_runtime.v1.ClientEvent.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
-	102, // 72: agent_runtime.v1.ClientEvent.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
-	104, // 73: agent_runtime.v1.ClientEvent.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
-	110, // 74: agent_runtime.v1.ClientEvent.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
-	120, // 75: agent_runtime.v1.ClientEvent.publish_message:type_name -> agent_runtime.v1.PublishMessageCmd
-	121, // 76: agent_runtime.v1.ClientEvent.subscribe_pubsub:type_name -> agent_runtime.v1.SubscribePubSubCmd
-	51,  // 77: agent_runtime.v1.RuntimeEvent.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
-	53,  // 78: agent_runtime.v1.RuntimeEvent.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
-	56,  // 79: agent_runtime.v1.RuntimeEvent.turn_complete:type_name -> agent_runtime.v1.TurnComplete
-	63,  // 80: agent_runtime.v1.RuntimeEvent.say_complete:type_name -> agent_runtime.v1.SayComplete
-	57,  // 81: agent_runtime.v1.RuntimeEvent.state_change:type_name -> agent_runtime.v1.SessionStateChange
-	58,  // 82: agent_runtime.v1.RuntimeEvent.participant:type_name -> agent_runtime.v1.ParticipantEventProto
-	55,  // 83: agent_runtime.v1.RuntimeEvent.transcript:type_name -> agent_runtime.v1.TranscriptEvent
-	59,  // 84: agent_runtime.v1.RuntimeEvent.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
-	61,  // 85: agent_runtime.v1.RuntimeEvent.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
-	60,  // 86: agent_runtime.v1.RuntimeEvent.interrupt:type_name -> agent_runtime.v1.InterruptEvent
-	73,  // 87: agent_runtime.v1.RuntimeEvent.error:type_name -> agent_runtime.v1.ErrorEvent
-	75,  // 88: agent_runtime.v1.RuntimeEvent.warning:type_name -> agent_runtime.v1.WarningEvent
-	123, // 89: agent_runtime.v1.RuntimeEvent.dtmf:type_name -> agent_runtime.v1.DTMFEvent
-	131, // 90: agent_runtime.v1.RuntimeEvent.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
-	137, // 91: agent_runtime.v1.RuntimeEvent.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
-	109, // 92: agent_runtime.v1.RuntimeEvent.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
-	76,  // 93: agent_runtime.v1.RuntimeEvent.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
-	77,  // 94: agent_runtime.v1.RuntimeEvent.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
-	78,  // 95: agent_runtime.v1.RuntimeEvent.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
-	79,  // 96: agent_runtime.v1.RuntimeEvent.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
-	93,  // 97: agent_runtime.v1.RuntimeEvent.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
-	94,  // 98: agent_runtime.v1.RuntimeEvent.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
-	95,  // 99: agent_runtime.v1.RuntimeEvent.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
-	96,  // 100: agent_runtime.v1.RuntimeEvent.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
-	98,  // 101: agent_runtime.v1.RuntimeEvent.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
-	126, // 102: agent_runtime.v1.RuntimeEvent.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
-	125, // 103: agent_runtime.v1.RuntimeEvent.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
-	124, // 104: agent_runtime.v1.RuntimeEvent.stream_event:type_name -> agent_runtime.v1.StreamEventProto
-	80,  // 105: agent_runtime.v1.RuntimeEvent.vad_event:type_name -> agent_runtime.v1.VadEventProto
-	81,  // 106: agent_runtime.v1.RuntimeEvent.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
-	82,  // 107: agent_runtime.v1.RuntimeEvent.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
-	83,  // 108: agent_runtime.v1.RuntimeEvent.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
-	84,  // 109: agent_runtime.v1.RuntimeEvent.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
-	85,  // 110: agent_runtime.v1.RuntimeEvent.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
-	86,  // 111: agent_runtime.v1.RuntimeEvent.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
-	87,  // 112: agent_runtime.v1.RuntimeEvent.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
-	88,  // 113: agent_runtime.v1.RuntimeEvent.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
-	90,  // 114: agent_runtime.v1.RuntimeEvent.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
-	91,  // 115: agent_runtime.v1.RuntimeEvent.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
-	92,  // 116: agent_runtime.v1.RuntimeEvent.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
-	99,  // 117: agent_runtime.v1.RuntimeEvent.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
-	100, // 118: agent_runtime.v1.RuntimeEvent.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
-	101, // 119: agent_runtime.v1.RuntimeEvent.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
-	103, // 120: agent_runtime.v1.RuntimeEvent.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
-	74,  // 121: agent_runtime.v1.RuntimeEvent.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
-	97,  // 122: agent_runtime.v1.RuntimeEvent.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
-	122, // 123: agent_runtime.v1.RuntimeEvent.pubsub_message:type_name -> agent_runtime.v1.PubSubMessageEvent
-	33,  // 124: agent_runtime.v1.UpdateToolsCmd.tools:type_name -> agent_runtime.v1.ToolSchemaProto
-	89,  // 125: agent_runtime.v1.KnowledgeBaseUpsertCmd.documents:type_name -> agent_runtime.v1.KbDocument
-	163, // 126: agent_runtime.v1.GenerationChunkEvent.metadata:type_name -> agent_runtime.v1.GenerationChunkEvent.MetadataEntry
-	164, // 127: agent_runtime.v1.KbDocument.metadata:type_name -> agent_runtime.v1.KbDocument.MetadataEntry
-	89,  // 128: agent_runtime.v1.KbHitsEvent.documents:type_name -> agent_runtime.v1.KbDocument
-	0,   // 129: agent_runtime.v1.RecordingConfig.format:type_name -> agent_runtime.v1.RecordingFormat
-	1,   // 130: agent_runtime.v1.RecordingConfig.channel_mode:type_name -> agent_runtime.v1.RecordingChannelMode
-	106, // 131: agent_runtime.v1.RecordingConfig.storage:type_name -> agent_runtime.v1.RecordingStorageConfig
-	108, // 132: agent_runtime.v1.RecordingConfig.transcript:type_name -> agent_runtime.v1.RecordingTranscriptConfig
-	165, // 133: agent_runtime.v1.RecordingConfig.custom_metadata:type_name -> agent_runtime.v1.RecordingConfig.CustomMetadataEntry
-	107, // 134: agent_runtime.v1.RecordingStorageConfig.s3:type_name -> agent_runtime.v1.S3StorageConfig
-	166, // 135: agent_runtime.v1.S3StorageConfig.tags:type_name -> agent_runtime.v1.S3StorageConfig.TagsEntry
-	167, // 136: agent_runtime.v1.S3StorageConfig.user_metadata:type_name -> agent_runtime.v1.S3StorageConfig.UserMetadataEntry
-	2,   // 137: agent_runtime.v1.RecordingTranscriptConfig.format:type_name -> agent_runtime.v1.RecordingTranscriptFormat
-	3,   // 138: agent_runtime.v1.RecordingStatusEvent.state:type_name -> agent_runtime.v1.RecordingState
-	168, // 139: agent_runtime.v1.RecordingStatusEvent.metadata:type_name -> agent_runtime.v1.RecordingStatusEvent.MetadataEntry
-	105, // 140: agent_runtime.v1.RecordingStartCmd.config:type_name -> agent_runtime.v1.RecordingConfig
-	117, // 141: agent_runtime.v1.SendMessageWithFramesCmd.frames:type_name -> agent_runtime.v1.MessageFrame
-	169, // 142: agent_runtime.v1.UpdateProviderCmd.params:type_name -> agent_runtime.v1.UpdateProviderCmd.ParamsEntry
-	170, // 143: agent_runtime.v1.MCPServerConfig.env:type_name -> agent_runtime.v1.MCPServerConfig.EnvEntry
-	171, // 144: agent_runtime.v1.KnowledgeBaseConfig.params:type_name -> agent_runtime.v1.KnowledgeBaseConfig.ParamsEntry
-	140, // 145: agent_runtime.v1.AgentStreamIn.register:type_name -> agent_runtime.v1.AgentRegistration
-	145, // 146: agent_runtime.v1.AgentStreamIn.session_ack:type_name -> agent_runtime.v1.SessionAck
-	146, // 147: agent_runtime.v1.AgentStreamIn.draining:type_name -> agent_runtime.v1.AgentDraining
-	68,  // 148: agent_runtime.v1.AgentStreamIn.keepalive:type_name -> agent_runtime.v1.Keepalive
-	52,  // 149: agent_runtime.v1.AgentStreamIn.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
-	54,  // 150: agent_runtime.v1.AgentStreamIn.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
-	62,  // 151: agent_runtime.v1.AgentStreamIn.say:type_name -> agent_runtime.v1.SayCommand
-	64,  // 152: agent_runtime.v1.AgentStreamIn.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
-	66,  // 153: agent_runtime.v1.AgentStreamIn.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
-	65,  // 154: agent_runtime.v1.AgentStreamIn.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
-	111, // 155: agent_runtime.v1.AgentStreamIn.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
-	112, // 156: agent_runtime.v1.AgentStreamIn.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
-	119, // 157: agent_runtime.v1.AgentStreamIn.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
-	127, // 158: agent_runtime.v1.AgentStreamIn.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
-	67,  // 159: agent_runtime.v1.AgentStreamIn.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
-	128, // 160: agent_runtime.v1.AgentStreamIn.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
-	129, // 161: agent_runtime.v1.AgentStreamIn.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
-	113, // 162: agent_runtime.v1.AgentStreamIn.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
-	114, // 163: agent_runtime.v1.AgentStreamIn.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
-	115, // 164: agent_runtime.v1.AgentStreamIn.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
-	116, // 165: agent_runtime.v1.AgentStreamIn.send_image:type_name -> agent_runtime.v1.SendImageCmd
-	69,  // 166: agent_runtime.v1.AgentStreamIn.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
-	70,  // 167: agent_runtime.v1.AgentStreamIn.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
-	71,  // 168: agent_runtime.v1.AgentStreamIn.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
-	72,  // 169: agent_runtime.v1.AgentStreamIn.generate:type_name -> agent_runtime.v1.GenerateCmd
-	118, // 170: agent_runtime.v1.AgentStreamIn.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
-	102, // 171: agent_runtime.v1.AgentStreamIn.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
-	104, // 172: agent_runtime.v1.AgentStreamIn.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
-	110, // 173: agent_runtime.v1.AgentStreamIn.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
-	120, // 174: agent_runtime.v1.AgentStreamIn.publish_message:type_name -> agent_runtime.v1.PublishMessageCmd
-	121, // 175: agent_runtime.v1.AgentStreamIn.subscribe_pubsub:type_name -> agent_runtime.v1.SubscribePubSubCmd
-	141, // 176: agent_runtime.v1.AgentStreamOut.registered:type_name -> agent_runtime.v1.AgentRegistered
-	143, // 177: agent_runtime.v1.AgentStreamOut.session_started:type_name -> agent_runtime.v1.SessionStarted
-	144, // 178: agent_runtime.v1.AgentStreamOut.session_ended:type_name -> agent_runtime.v1.SessionEnded
-	51,  // 179: agent_runtime.v1.AgentStreamOut.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
-	53,  // 180: agent_runtime.v1.AgentStreamOut.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
-	56,  // 181: agent_runtime.v1.AgentStreamOut.turn_complete:type_name -> agent_runtime.v1.TurnComplete
-	63,  // 182: agent_runtime.v1.AgentStreamOut.say_complete:type_name -> agent_runtime.v1.SayComplete
-	57,  // 183: agent_runtime.v1.AgentStreamOut.state_change:type_name -> agent_runtime.v1.SessionStateChange
-	58,  // 184: agent_runtime.v1.AgentStreamOut.participant:type_name -> agent_runtime.v1.ParticipantEventProto
-	55,  // 185: agent_runtime.v1.AgentStreamOut.transcript:type_name -> agent_runtime.v1.TranscriptEvent
-	59,  // 186: agent_runtime.v1.AgentStreamOut.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
-	61,  // 187: agent_runtime.v1.AgentStreamOut.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
-	60,  // 188: agent_runtime.v1.AgentStreamOut.interrupt:type_name -> agent_runtime.v1.InterruptEvent
-	73,  // 189: agent_runtime.v1.AgentStreamOut.error:type_name -> agent_runtime.v1.ErrorEvent
-	75,  // 190: agent_runtime.v1.AgentStreamOut.warning:type_name -> agent_runtime.v1.WarningEvent
-	123, // 191: agent_runtime.v1.AgentStreamOut.dtmf:type_name -> agent_runtime.v1.DTMFEvent
-	131, // 192: agent_runtime.v1.AgentStreamOut.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
-	137, // 193: agent_runtime.v1.AgentStreamOut.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
-	109, // 194: agent_runtime.v1.AgentStreamOut.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
-	76,  // 195: agent_runtime.v1.AgentStreamOut.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
-	77,  // 196: agent_runtime.v1.AgentStreamOut.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
-	78,  // 197: agent_runtime.v1.AgentStreamOut.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
-	79,  // 198: agent_runtime.v1.AgentStreamOut.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
-	93,  // 199: agent_runtime.v1.AgentStreamOut.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
-	94,  // 200: agent_runtime.v1.AgentStreamOut.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
-	95,  // 201: agent_runtime.v1.AgentStreamOut.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
-	96,  // 202: agent_runtime.v1.AgentStreamOut.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
-	98,  // 203: agent_runtime.v1.AgentStreamOut.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
-	126, // 204: agent_runtime.v1.AgentStreamOut.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
-	125, // 205: agent_runtime.v1.AgentStreamOut.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
-	124, // 206: agent_runtime.v1.AgentStreamOut.stream_event:type_name -> agent_runtime.v1.StreamEventProto
-	80,  // 207: agent_runtime.v1.AgentStreamOut.vad_event:type_name -> agent_runtime.v1.VadEventProto
-	81,  // 208: agent_runtime.v1.AgentStreamOut.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
-	82,  // 209: agent_runtime.v1.AgentStreamOut.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
-	83,  // 210: agent_runtime.v1.AgentStreamOut.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
-	84,  // 211: agent_runtime.v1.AgentStreamOut.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
-	85,  // 212: agent_runtime.v1.AgentStreamOut.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
-	86,  // 213: agent_runtime.v1.AgentStreamOut.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
-	87,  // 214: agent_runtime.v1.AgentStreamOut.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
-	88,  // 215: agent_runtime.v1.AgentStreamOut.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
-	90,  // 216: agent_runtime.v1.AgentStreamOut.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
-	91,  // 217: agent_runtime.v1.AgentStreamOut.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
-	92,  // 218: agent_runtime.v1.AgentStreamOut.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
-	99,  // 219: agent_runtime.v1.AgentStreamOut.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
-	100, // 220: agent_runtime.v1.AgentStreamOut.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
-	101, // 221: agent_runtime.v1.AgentStreamOut.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
-	103, // 222: agent_runtime.v1.AgentStreamOut.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
-	74,  // 223: agent_runtime.v1.AgentStreamOut.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
-	97,  // 224: agent_runtime.v1.AgentStreamOut.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
-	31,  // 225: agent_runtime.v1.AgentRegistration.agent:type_name -> agent_runtime.v1.AgentConfig
-	12,  // 226: agent_runtime.v1.AgentRegistration.pipeline:type_name -> agent_runtime.v1.PipelineConfig
-	36,  // 227: agent_runtime.v1.AgentRegistration.credentials:type_name -> agent_runtime.v1.CredentialsConfig
-	105, // 228: agent_runtime.v1.AgentRegistration.default_recording:type_name -> agent_runtime.v1.RecordingConfig
-	172, // 229: agent_runtime.v1.AgentRegistration.labels:type_name -> agent_runtime.v1.AgentRegistration.LabelsEntry
-	37,  // 230: agent_runtime.v1.AgentRegistration.client_version:type_name -> agent_runtime.v1.VersionInfo
-	35,  // 231: agent_runtime.v1.SessionStarted.room:type_name -> agent_runtime.v1.RoomConfig
-	173, // 232: agent_runtime.v1.SessionStarted.dispatch_metadata:type_name -> agent_runtime.v1.SessionStarted.DispatchMetadataEntry
-	142, // 233: agent_runtime.v1.SessionStarted.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
-	105, // 234: agent_runtime.v1.SessionStarted.recording_override:type_name -> agent_runtime.v1.RecordingConfig
-	11,  // 235: agent_runtime.v1.SessionStarted.limits:type_name -> agent_runtime.v1.SessionLimits
-	56,  // 236: agent_runtime.v1.SessionEnded.final_turn:type_name -> agent_runtime.v1.TurnComplete
-	35,  // 237: agent_runtime.v1.DispatchRequest.room:type_name -> agent_runtime.v1.RoomConfig
-	174, // 238: agent_runtime.v1.DispatchRequest.dispatch_metadata:type_name -> agent_runtime.v1.DispatchRequest.DispatchMetadataEntry
-	142, // 239: agent_runtime.v1.DispatchRequest.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
-	105, // 240: agent_runtime.v1.DispatchRequest.recording_override:type_name -> agent_runtime.v1.RecordingConfig
-	11,  // 241: agent_runtime.v1.DispatchRequest.limits:type_name -> agent_runtime.v1.SessionLimits
-	175, // 242: agent_runtime.v1.DispatchRequest.label_selector:type_name -> agent_runtime.v1.DispatchRequest.LabelSelectorEntry
-	149, // 243: agent_runtime.v1.DispatchResponse.accepted:type_name -> agent_runtime.v1.DispatchAccepted
-	150, // 244: agent_runtime.v1.DispatchResponse.rejected:type_name -> agent_runtime.v1.DispatchRejected
-	153, // 245: agent_runtime.v1.TerminateResponse.accepted:type_name -> agent_runtime.v1.TerminateAccepted
-	154, // 246: agent_runtime.v1.TerminateResponse.rejected:type_name -> agent_runtime.v1.TerminateRejected
-	4,   // 247: agent_runtime.v1.AgentRuntime.CreateSession:input_type -> agent_runtime.v1.SessionConfig
-	8,   // 248: agent_runtime.v1.AgentRuntime.DestroySession:input_type -> agent_runtime.v1.DestroyRequest
-	10,  // 249: agent_runtime.v1.AgentRuntime.GetSessionInfo:input_type -> agent_runtime.v1.SessionInfoRequest
-	47,  // 250: agent_runtime.v1.AgentRuntime.Health:input_type -> agent_runtime.v1.HealthRequest
-	38,  // 251: agent_runtime.v1.AgentRuntime.InjectMessage:input_type -> agent_runtime.v1.InjectMessageRequest
-	39,  // 252: agent_runtime.v1.AgentRuntime.RemoveMessage:input_type -> agent_runtime.v1.RemoveMessageRequest
-	40,  // 253: agent_runtime.v1.AgentRuntime.GetContext:input_type -> agent_runtime.v1.GetContextRequest
-	42,  // 254: agent_runtime.v1.AgentRuntime.ClearContext:input_type -> agent_runtime.v1.ClearContextRequest
-	49,  // 255: agent_runtime.v1.AgentRuntime.EventStream:input_type -> agent_runtime.v1.ClientEvent
-	135, // 256: agent_runtime.v1.AgentRuntime.SendA2AMessage:input_type -> agent_runtime.v1.A2AMessageRequest
-	138, // 257: agent_runtime.v1.AgentRuntime.RegisterAgent:input_type -> agent_runtime.v1.AgentStreamIn
-	147, // 258: agent_runtime.v1.AgentRuntime.Dispatch:input_type -> agent_runtime.v1.DispatchRequest
-	151, // 259: agent_runtime.v1.AgentRuntime.Terminate:input_type -> agent_runtime.v1.TerminateRequest
-	155, // 260: agent_runtime.v1.AgentRuntime.TestEmitToolCall:input_type -> agent_runtime.v1.TestEmitToolCallRequest
-	5,   // 261: agent_runtime.v1.AgentRuntime.CreateSession:output_type -> agent_runtime.v1.CreateSessionResponse
-	9,   // 262: agent_runtime.v1.AgentRuntime.DestroySession:output_type -> agent_runtime.v1.DestroyResponse
-	6,   // 263: agent_runtime.v1.AgentRuntime.GetSessionInfo:output_type -> agent_runtime.v1.SessionInfo
-	48,  // 264: agent_runtime.v1.AgentRuntime.Health:output_type -> agent_runtime.v1.HealthResponse
-	43,  // 265: agent_runtime.v1.AgentRuntime.InjectMessage:output_type -> agent_runtime.v1.ContextOpResult
-	43,  // 266: agent_runtime.v1.AgentRuntime.RemoveMessage:output_type -> agent_runtime.v1.ContextOpResult
-	41,  // 267: agent_runtime.v1.AgentRuntime.GetContext:output_type -> agent_runtime.v1.GetContextResponse
-	43,  // 268: agent_runtime.v1.AgentRuntime.ClearContext:output_type -> agent_runtime.v1.ContextOpResult
-	50,  // 269: agent_runtime.v1.AgentRuntime.EventStream:output_type -> agent_runtime.v1.RuntimeEvent
-	136, // 270: agent_runtime.v1.AgentRuntime.SendA2AMessage:output_type -> agent_runtime.v1.A2AMessageResponse
-	139, // 271: agent_runtime.v1.AgentRuntime.RegisterAgent:output_type -> agent_runtime.v1.AgentStreamOut
-	148, // 272: agent_runtime.v1.AgentRuntime.Dispatch:output_type -> agent_runtime.v1.DispatchResponse
-	152, // 273: agent_runtime.v1.AgentRuntime.Terminate:output_type -> agent_runtime.v1.TerminateResponse
-	156, // 274: agent_runtime.v1.AgentRuntime.TestEmitToolCall:output_type -> agent_runtime.v1.TestEmitToolCallResponse
-	261, // [261:275] is the sub-list for method output_type
-	247, // [247:261] is the sub-list for method input_type
-	247, // [247:247] is the sub-list for extension type_name
-	247, // [247:247] is the sub-list for extension extendee
-	0,   // [0:247] is the sub-list for field type_name
+	19,  // 44: agent_runtime.v1.ContextWindowConfig.summary_llm:type_name -> agent_runtime.v1.LLMProviderConfig
+	162, // 45: agent_runtime.v1.CredentialsConfig.provider_keys:type_name -> agent_runtime.v1.CredentialsConfig.ProviderKeysEntry
+	44,  // 46: agent_runtime.v1.InjectMessageRequest.message:type_name -> agent_runtime.v1.ContextMessageProto
+	44,  // 47: agent_runtime.v1.GetContextResponse.messages:type_name -> agent_runtime.v1.ContextMessageProto
+	46,  // 48: agent_runtime.v1.ContextMessageProto.images:type_name -> agent_runtime.v1.ImageContentProto
+	45,  // 49: agent_runtime.v1.ContextMessageProto.tool_calls:type_name -> agent_runtime.v1.ToolCallProto
+	52,  // 50: agent_runtime.v1.ClientEvent.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
+	54,  // 51: agent_runtime.v1.ClientEvent.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
+	62,  // 52: agent_runtime.v1.ClientEvent.say:type_name -> agent_runtime.v1.SayCommand
+	64,  // 53: agent_runtime.v1.ClientEvent.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
+	66,  // 54: agent_runtime.v1.ClientEvent.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
+	67,  // 55: agent_runtime.v1.ClientEvent.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
+	68,  // 56: agent_runtime.v1.ClientEvent.keepalive:type_name -> agent_runtime.v1.Keepalive
+	65,  // 57: agent_runtime.v1.ClientEvent.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
+	111, // 58: agent_runtime.v1.ClientEvent.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
+	112, // 59: agent_runtime.v1.ClientEvent.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
+	119, // 60: agent_runtime.v1.ClientEvent.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
+	127, // 61: agent_runtime.v1.ClientEvent.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
+	128, // 62: agent_runtime.v1.ClientEvent.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
+	129, // 63: agent_runtime.v1.ClientEvent.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
+	113, // 64: agent_runtime.v1.ClientEvent.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
+	114, // 65: agent_runtime.v1.ClientEvent.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
+	115, // 66: agent_runtime.v1.ClientEvent.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
+	116, // 67: agent_runtime.v1.ClientEvent.send_image:type_name -> agent_runtime.v1.SendImageCmd
+	69,  // 68: agent_runtime.v1.ClientEvent.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
+	70,  // 69: agent_runtime.v1.ClientEvent.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
+	71,  // 70: agent_runtime.v1.ClientEvent.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
+	72,  // 71: agent_runtime.v1.ClientEvent.generate:type_name -> agent_runtime.v1.GenerateCmd
+	118, // 72: agent_runtime.v1.ClientEvent.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
+	102, // 73: agent_runtime.v1.ClientEvent.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
+	104, // 74: agent_runtime.v1.ClientEvent.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
+	110, // 75: agent_runtime.v1.ClientEvent.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
+	120, // 76: agent_runtime.v1.ClientEvent.publish_message:type_name -> agent_runtime.v1.PublishMessageCmd
+	121, // 77: agent_runtime.v1.ClientEvent.subscribe_pubsub:type_name -> agent_runtime.v1.SubscribePubSubCmd
+	51,  // 78: agent_runtime.v1.RuntimeEvent.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
+	53,  // 79: agent_runtime.v1.RuntimeEvent.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
+	56,  // 80: agent_runtime.v1.RuntimeEvent.turn_complete:type_name -> agent_runtime.v1.TurnComplete
+	63,  // 81: agent_runtime.v1.RuntimeEvent.say_complete:type_name -> agent_runtime.v1.SayComplete
+	57,  // 82: agent_runtime.v1.RuntimeEvent.state_change:type_name -> agent_runtime.v1.SessionStateChange
+	58,  // 83: agent_runtime.v1.RuntimeEvent.participant:type_name -> agent_runtime.v1.ParticipantEventProto
+	55,  // 84: agent_runtime.v1.RuntimeEvent.transcript:type_name -> agent_runtime.v1.TranscriptEvent
+	59,  // 85: agent_runtime.v1.RuntimeEvent.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
+	61,  // 86: agent_runtime.v1.RuntimeEvent.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
+	60,  // 87: agent_runtime.v1.RuntimeEvent.interrupt:type_name -> agent_runtime.v1.InterruptEvent
+	73,  // 88: agent_runtime.v1.RuntimeEvent.error:type_name -> agent_runtime.v1.ErrorEvent
+	75,  // 89: agent_runtime.v1.RuntimeEvent.warning:type_name -> agent_runtime.v1.WarningEvent
+	123, // 90: agent_runtime.v1.RuntimeEvent.dtmf:type_name -> agent_runtime.v1.DTMFEvent
+	131, // 91: agent_runtime.v1.RuntimeEvent.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
+	137, // 92: agent_runtime.v1.RuntimeEvent.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
+	109, // 93: agent_runtime.v1.RuntimeEvent.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
+	76,  // 94: agent_runtime.v1.RuntimeEvent.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
+	77,  // 95: agent_runtime.v1.RuntimeEvent.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
+	78,  // 96: agent_runtime.v1.RuntimeEvent.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
+	79,  // 97: agent_runtime.v1.RuntimeEvent.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
+	93,  // 98: agent_runtime.v1.RuntimeEvent.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
+	94,  // 99: agent_runtime.v1.RuntimeEvent.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
+	95,  // 100: agent_runtime.v1.RuntimeEvent.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
+	96,  // 101: agent_runtime.v1.RuntimeEvent.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
+	98,  // 102: agent_runtime.v1.RuntimeEvent.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
+	126, // 103: agent_runtime.v1.RuntimeEvent.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
+	125, // 104: agent_runtime.v1.RuntimeEvent.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
+	124, // 105: agent_runtime.v1.RuntimeEvent.stream_event:type_name -> agent_runtime.v1.StreamEventProto
+	80,  // 106: agent_runtime.v1.RuntimeEvent.vad_event:type_name -> agent_runtime.v1.VadEventProto
+	81,  // 107: agent_runtime.v1.RuntimeEvent.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
+	82,  // 108: agent_runtime.v1.RuntimeEvent.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
+	83,  // 109: agent_runtime.v1.RuntimeEvent.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
+	84,  // 110: agent_runtime.v1.RuntimeEvent.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
+	85,  // 111: agent_runtime.v1.RuntimeEvent.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
+	86,  // 112: agent_runtime.v1.RuntimeEvent.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
+	87,  // 113: agent_runtime.v1.RuntimeEvent.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
+	88,  // 114: agent_runtime.v1.RuntimeEvent.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
+	90,  // 115: agent_runtime.v1.RuntimeEvent.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
+	91,  // 116: agent_runtime.v1.RuntimeEvent.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
+	92,  // 117: agent_runtime.v1.RuntimeEvent.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
+	99,  // 118: agent_runtime.v1.RuntimeEvent.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
+	100, // 119: agent_runtime.v1.RuntimeEvent.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
+	101, // 120: agent_runtime.v1.RuntimeEvent.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
+	103, // 121: agent_runtime.v1.RuntimeEvent.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
+	74,  // 122: agent_runtime.v1.RuntimeEvent.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
+	97,  // 123: agent_runtime.v1.RuntimeEvent.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
+	122, // 124: agent_runtime.v1.RuntimeEvent.pubsub_message:type_name -> agent_runtime.v1.PubSubMessageEvent
+	33,  // 125: agent_runtime.v1.UpdateToolsCmd.tools:type_name -> agent_runtime.v1.ToolSchemaProto
+	89,  // 126: agent_runtime.v1.KnowledgeBaseUpsertCmd.documents:type_name -> agent_runtime.v1.KbDocument
+	163, // 127: agent_runtime.v1.GenerationChunkEvent.metadata:type_name -> agent_runtime.v1.GenerationChunkEvent.MetadataEntry
+	164, // 128: agent_runtime.v1.KbDocument.metadata:type_name -> agent_runtime.v1.KbDocument.MetadataEntry
+	89,  // 129: agent_runtime.v1.KbHitsEvent.documents:type_name -> agent_runtime.v1.KbDocument
+	0,   // 130: agent_runtime.v1.RecordingConfig.format:type_name -> agent_runtime.v1.RecordingFormat
+	1,   // 131: agent_runtime.v1.RecordingConfig.channel_mode:type_name -> agent_runtime.v1.RecordingChannelMode
+	106, // 132: agent_runtime.v1.RecordingConfig.storage:type_name -> agent_runtime.v1.RecordingStorageConfig
+	108, // 133: agent_runtime.v1.RecordingConfig.transcript:type_name -> agent_runtime.v1.RecordingTranscriptConfig
+	165, // 134: agent_runtime.v1.RecordingConfig.custom_metadata:type_name -> agent_runtime.v1.RecordingConfig.CustomMetadataEntry
+	107, // 135: agent_runtime.v1.RecordingStorageConfig.s3:type_name -> agent_runtime.v1.S3StorageConfig
+	166, // 136: agent_runtime.v1.S3StorageConfig.tags:type_name -> agent_runtime.v1.S3StorageConfig.TagsEntry
+	167, // 137: agent_runtime.v1.S3StorageConfig.user_metadata:type_name -> agent_runtime.v1.S3StorageConfig.UserMetadataEntry
+	2,   // 138: agent_runtime.v1.RecordingTranscriptConfig.format:type_name -> agent_runtime.v1.RecordingTranscriptFormat
+	3,   // 139: agent_runtime.v1.RecordingStatusEvent.state:type_name -> agent_runtime.v1.RecordingState
+	168, // 140: agent_runtime.v1.RecordingStatusEvent.metadata:type_name -> agent_runtime.v1.RecordingStatusEvent.MetadataEntry
+	105, // 141: agent_runtime.v1.RecordingStartCmd.config:type_name -> agent_runtime.v1.RecordingConfig
+	117, // 142: agent_runtime.v1.SendMessageWithFramesCmd.frames:type_name -> agent_runtime.v1.MessageFrame
+	169, // 143: agent_runtime.v1.UpdateProviderCmd.params:type_name -> agent_runtime.v1.UpdateProviderCmd.ParamsEntry
+	170, // 144: agent_runtime.v1.MCPServerConfig.env:type_name -> agent_runtime.v1.MCPServerConfig.EnvEntry
+	171, // 145: agent_runtime.v1.KnowledgeBaseConfig.params:type_name -> agent_runtime.v1.KnowledgeBaseConfig.ParamsEntry
+	140, // 146: agent_runtime.v1.AgentStreamIn.register:type_name -> agent_runtime.v1.AgentRegistration
+	145, // 147: agent_runtime.v1.AgentStreamIn.session_ack:type_name -> agent_runtime.v1.SessionAck
+	146, // 148: agent_runtime.v1.AgentStreamIn.draining:type_name -> agent_runtime.v1.AgentDraining
+	68,  // 149: agent_runtime.v1.AgentStreamIn.keepalive:type_name -> agent_runtime.v1.Keepalive
+	52,  // 150: agent_runtime.v1.AgentStreamIn.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
+	54,  // 151: agent_runtime.v1.AgentStreamIn.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
+	62,  // 152: agent_runtime.v1.AgentStreamIn.say:type_name -> agent_runtime.v1.SayCommand
+	64,  // 153: agent_runtime.v1.AgentStreamIn.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
+	66,  // 154: agent_runtime.v1.AgentStreamIn.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
+	65,  // 155: agent_runtime.v1.AgentStreamIn.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
+	111, // 156: agent_runtime.v1.AgentStreamIn.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
+	112, // 157: agent_runtime.v1.AgentStreamIn.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
+	119, // 158: agent_runtime.v1.AgentStreamIn.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
+	127, // 159: agent_runtime.v1.AgentStreamIn.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
+	67,  // 160: agent_runtime.v1.AgentStreamIn.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
+	128, // 161: agent_runtime.v1.AgentStreamIn.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
+	129, // 162: agent_runtime.v1.AgentStreamIn.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
+	113, // 163: agent_runtime.v1.AgentStreamIn.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
+	114, // 164: agent_runtime.v1.AgentStreamIn.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
+	115, // 165: agent_runtime.v1.AgentStreamIn.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
+	116, // 166: agent_runtime.v1.AgentStreamIn.send_image:type_name -> agent_runtime.v1.SendImageCmd
+	69,  // 167: agent_runtime.v1.AgentStreamIn.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
+	70,  // 168: agent_runtime.v1.AgentStreamIn.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
+	71,  // 169: agent_runtime.v1.AgentStreamIn.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
+	72,  // 170: agent_runtime.v1.AgentStreamIn.generate:type_name -> agent_runtime.v1.GenerateCmd
+	118, // 171: agent_runtime.v1.AgentStreamIn.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
+	102, // 172: agent_runtime.v1.AgentStreamIn.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
+	104, // 173: agent_runtime.v1.AgentStreamIn.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
+	110, // 174: agent_runtime.v1.AgentStreamIn.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
+	120, // 175: agent_runtime.v1.AgentStreamIn.publish_message:type_name -> agent_runtime.v1.PublishMessageCmd
+	121, // 176: agent_runtime.v1.AgentStreamIn.subscribe_pubsub:type_name -> agent_runtime.v1.SubscribePubSubCmd
+	141, // 177: agent_runtime.v1.AgentStreamOut.registered:type_name -> agent_runtime.v1.AgentRegistered
+	143, // 178: agent_runtime.v1.AgentStreamOut.session_started:type_name -> agent_runtime.v1.SessionStarted
+	144, // 179: agent_runtime.v1.AgentStreamOut.session_ended:type_name -> agent_runtime.v1.SessionEnded
+	51,  // 180: agent_runtime.v1.AgentStreamOut.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
+	53,  // 181: agent_runtime.v1.AgentStreamOut.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
+	56,  // 182: agent_runtime.v1.AgentStreamOut.turn_complete:type_name -> agent_runtime.v1.TurnComplete
+	63,  // 183: agent_runtime.v1.AgentStreamOut.say_complete:type_name -> agent_runtime.v1.SayComplete
+	57,  // 184: agent_runtime.v1.AgentStreamOut.state_change:type_name -> agent_runtime.v1.SessionStateChange
+	58,  // 185: agent_runtime.v1.AgentStreamOut.participant:type_name -> agent_runtime.v1.ParticipantEventProto
+	55,  // 186: agent_runtime.v1.AgentStreamOut.transcript:type_name -> agent_runtime.v1.TranscriptEvent
+	59,  // 187: agent_runtime.v1.AgentStreamOut.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
+	61,  // 188: agent_runtime.v1.AgentStreamOut.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
+	60,  // 189: agent_runtime.v1.AgentStreamOut.interrupt:type_name -> agent_runtime.v1.InterruptEvent
+	73,  // 190: agent_runtime.v1.AgentStreamOut.error:type_name -> agent_runtime.v1.ErrorEvent
+	75,  // 191: agent_runtime.v1.AgentStreamOut.warning:type_name -> agent_runtime.v1.WarningEvent
+	123, // 192: agent_runtime.v1.AgentStreamOut.dtmf:type_name -> agent_runtime.v1.DTMFEvent
+	131, // 193: agent_runtime.v1.AgentStreamOut.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
+	137, // 194: agent_runtime.v1.AgentStreamOut.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
+	109, // 195: agent_runtime.v1.AgentStreamOut.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
+	76,  // 196: agent_runtime.v1.AgentStreamOut.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
+	77,  // 197: agent_runtime.v1.AgentStreamOut.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
+	78,  // 198: agent_runtime.v1.AgentStreamOut.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
+	79,  // 199: agent_runtime.v1.AgentStreamOut.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
+	93,  // 200: agent_runtime.v1.AgentStreamOut.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
+	94,  // 201: agent_runtime.v1.AgentStreamOut.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
+	95,  // 202: agent_runtime.v1.AgentStreamOut.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
+	96,  // 203: agent_runtime.v1.AgentStreamOut.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
+	98,  // 204: agent_runtime.v1.AgentStreamOut.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
+	126, // 205: agent_runtime.v1.AgentStreamOut.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
+	125, // 206: agent_runtime.v1.AgentStreamOut.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
+	124, // 207: agent_runtime.v1.AgentStreamOut.stream_event:type_name -> agent_runtime.v1.StreamEventProto
+	80,  // 208: agent_runtime.v1.AgentStreamOut.vad_event:type_name -> agent_runtime.v1.VadEventProto
+	81,  // 209: agent_runtime.v1.AgentStreamOut.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
+	82,  // 210: agent_runtime.v1.AgentStreamOut.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
+	83,  // 211: agent_runtime.v1.AgentStreamOut.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
+	84,  // 212: agent_runtime.v1.AgentStreamOut.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
+	85,  // 213: agent_runtime.v1.AgentStreamOut.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
+	86,  // 214: agent_runtime.v1.AgentStreamOut.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
+	87,  // 215: agent_runtime.v1.AgentStreamOut.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
+	88,  // 216: agent_runtime.v1.AgentStreamOut.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
+	90,  // 217: agent_runtime.v1.AgentStreamOut.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
+	91,  // 218: agent_runtime.v1.AgentStreamOut.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
+	92,  // 219: agent_runtime.v1.AgentStreamOut.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
+	99,  // 220: agent_runtime.v1.AgentStreamOut.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
+	100, // 221: agent_runtime.v1.AgentStreamOut.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
+	101, // 222: agent_runtime.v1.AgentStreamOut.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
+	103, // 223: agent_runtime.v1.AgentStreamOut.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
+	74,  // 224: agent_runtime.v1.AgentStreamOut.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
+	97,  // 225: agent_runtime.v1.AgentStreamOut.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
+	31,  // 226: agent_runtime.v1.AgentRegistration.agent:type_name -> agent_runtime.v1.AgentConfig
+	12,  // 227: agent_runtime.v1.AgentRegistration.pipeline:type_name -> agent_runtime.v1.PipelineConfig
+	36,  // 228: agent_runtime.v1.AgentRegistration.credentials:type_name -> agent_runtime.v1.CredentialsConfig
+	105, // 229: agent_runtime.v1.AgentRegistration.default_recording:type_name -> agent_runtime.v1.RecordingConfig
+	172, // 230: agent_runtime.v1.AgentRegistration.labels:type_name -> agent_runtime.v1.AgentRegistration.LabelsEntry
+	37,  // 231: agent_runtime.v1.AgentRegistration.client_version:type_name -> agent_runtime.v1.VersionInfo
+	35,  // 232: agent_runtime.v1.SessionStarted.room:type_name -> agent_runtime.v1.RoomConfig
+	173, // 233: agent_runtime.v1.SessionStarted.dispatch_metadata:type_name -> agent_runtime.v1.SessionStarted.DispatchMetadataEntry
+	142, // 234: agent_runtime.v1.SessionStarted.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
+	105, // 235: agent_runtime.v1.SessionStarted.recording_override:type_name -> agent_runtime.v1.RecordingConfig
+	11,  // 236: agent_runtime.v1.SessionStarted.limits:type_name -> agent_runtime.v1.SessionLimits
+	56,  // 237: agent_runtime.v1.SessionEnded.final_turn:type_name -> agent_runtime.v1.TurnComplete
+	35,  // 238: agent_runtime.v1.DispatchRequest.room:type_name -> agent_runtime.v1.RoomConfig
+	174, // 239: agent_runtime.v1.DispatchRequest.dispatch_metadata:type_name -> agent_runtime.v1.DispatchRequest.DispatchMetadataEntry
+	142, // 240: agent_runtime.v1.DispatchRequest.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
+	105, // 241: agent_runtime.v1.DispatchRequest.recording_override:type_name -> agent_runtime.v1.RecordingConfig
+	11,  // 242: agent_runtime.v1.DispatchRequest.limits:type_name -> agent_runtime.v1.SessionLimits
+	175, // 243: agent_runtime.v1.DispatchRequest.label_selector:type_name -> agent_runtime.v1.DispatchRequest.LabelSelectorEntry
+	149, // 244: agent_runtime.v1.DispatchResponse.accepted:type_name -> agent_runtime.v1.DispatchAccepted
+	150, // 245: agent_runtime.v1.DispatchResponse.rejected:type_name -> agent_runtime.v1.DispatchRejected
+	153, // 246: agent_runtime.v1.TerminateResponse.accepted:type_name -> agent_runtime.v1.TerminateAccepted
+	154, // 247: agent_runtime.v1.TerminateResponse.rejected:type_name -> agent_runtime.v1.TerminateRejected
+	4,   // 248: agent_runtime.v1.AgentRuntime.CreateSession:input_type -> agent_runtime.v1.SessionConfig
+	8,   // 249: agent_runtime.v1.AgentRuntime.DestroySession:input_type -> agent_runtime.v1.DestroyRequest
+	10,  // 250: agent_runtime.v1.AgentRuntime.GetSessionInfo:input_type -> agent_runtime.v1.SessionInfoRequest
+	47,  // 251: agent_runtime.v1.AgentRuntime.Health:input_type -> agent_runtime.v1.HealthRequest
+	38,  // 252: agent_runtime.v1.AgentRuntime.InjectMessage:input_type -> agent_runtime.v1.InjectMessageRequest
+	39,  // 253: agent_runtime.v1.AgentRuntime.RemoveMessage:input_type -> agent_runtime.v1.RemoveMessageRequest
+	40,  // 254: agent_runtime.v1.AgentRuntime.GetContext:input_type -> agent_runtime.v1.GetContextRequest
+	42,  // 255: agent_runtime.v1.AgentRuntime.ClearContext:input_type -> agent_runtime.v1.ClearContextRequest
+	49,  // 256: agent_runtime.v1.AgentRuntime.EventStream:input_type -> agent_runtime.v1.ClientEvent
+	135, // 257: agent_runtime.v1.AgentRuntime.SendA2AMessage:input_type -> agent_runtime.v1.A2AMessageRequest
+	138, // 258: agent_runtime.v1.AgentRuntime.RegisterAgent:input_type -> agent_runtime.v1.AgentStreamIn
+	147, // 259: agent_runtime.v1.AgentRuntime.Dispatch:input_type -> agent_runtime.v1.DispatchRequest
+	151, // 260: agent_runtime.v1.AgentRuntime.Terminate:input_type -> agent_runtime.v1.TerminateRequest
+	155, // 261: agent_runtime.v1.AgentRuntime.TestEmitToolCall:input_type -> agent_runtime.v1.TestEmitToolCallRequest
+	5,   // 262: agent_runtime.v1.AgentRuntime.CreateSession:output_type -> agent_runtime.v1.CreateSessionResponse
+	9,   // 263: agent_runtime.v1.AgentRuntime.DestroySession:output_type -> agent_runtime.v1.DestroyResponse
+	6,   // 264: agent_runtime.v1.AgentRuntime.GetSessionInfo:output_type -> agent_runtime.v1.SessionInfo
+	48,  // 265: agent_runtime.v1.AgentRuntime.Health:output_type -> agent_runtime.v1.HealthResponse
+	43,  // 266: agent_runtime.v1.AgentRuntime.InjectMessage:output_type -> agent_runtime.v1.ContextOpResult
+	43,  // 267: agent_runtime.v1.AgentRuntime.RemoveMessage:output_type -> agent_runtime.v1.ContextOpResult
+	41,  // 268: agent_runtime.v1.AgentRuntime.GetContext:output_type -> agent_runtime.v1.GetContextResponse
+	43,  // 269: agent_runtime.v1.AgentRuntime.ClearContext:output_type -> agent_runtime.v1.ContextOpResult
+	50,  // 270: agent_runtime.v1.AgentRuntime.EventStream:output_type -> agent_runtime.v1.RuntimeEvent
+	136, // 271: agent_runtime.v1.AgentRuntime.SendA2AMessage:output_type -> agent_runtime.v1.A2AMessageResponse
+	139, // 272: agent_runtime.v1.AgentRuntime.RegisterAgent:output_type -> agent_runtime.v1.AgentStreamOut
+	148, // 273: agent_runtime.v1.AgentRuntime.Dispatch:output_type -> agent_runtime.v1.DispatchResponse
+	152, // 274: agent_runtime.v1.AgentRuntime.Terminate:output_type -> agent_runtime.v1.TerminateResponse
+	156, // 275: agent_runtime.v1.AgentRuntime.TestEmitToolCall:output_type -> agent_runtime.v1.TestEmitToolCallResponse
+	262, // [262:276] is the sub-list for method output_type
+	248, // [248:262] is the sub-list for method input_type
+	248, // [248:248] is the sub-list for extension type_name
+	248, // [248:248] is the sub-list for extension extendee
+	0,   // [0:248] is the sub-list for field type_name
 }
 
 func init() { file_zrt_runtime_proto_init() }
