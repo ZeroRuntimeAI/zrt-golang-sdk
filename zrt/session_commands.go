@@ -271,6 +271,35 @@ func (s *AgentSession) Reply(ctx context.Context, instructions string, waitForPl
 	return handle, nil
 }
 
+// ReplyOptions configures ReplyWith.
+type ReplyOptions struct {
+	// WaitForPlayback blocks until playback completes before returning.
+	WaitForPlayback bool
+	Frames []MessageFrame
+}
+
+func (s *AgentSession) ReplyWith(ctx context.Context, instructions string, opts ReplyOptions) (*UtteranceHandle, error) {
+	handle := NewUtteranceHandle("", true)
+	s.mu.Lock()
+	s.currentUtterance = handle
+	t := s.transport
+	s.mu.Unlock()
+	if t == nil {
+		return handle, ErrSessionNotStarted
+	}
+	if len(opts.Frames) > 0 {
+		if err := s.SendMessageWithFrames(ctx, instructions, opts.Frames); err != nil {
+			return handle, err
+		}
+	} else if err := t.sendSay(instructions, true, "", true); err != nil {
+		return handle, err
+	}
+	if opts.WaitForPlayback {
+		handle.Wait()
+	}
+	return handle, nil
+}
+
 // Interrupt interrupts the current utterance and cancels generation.
 func (s *AgentSession) Interrupt(force bool) {
 	s.mu.Lock()
@@ -426,6 +455,24 @@ func (s *AgentSession) SendImage(ctx context.Context, data []byte, mimeType stri
 type MessageFrame struct {
 	MimeType string
 	Data     []byte
+}
+
+// MessageFramesFromCaptured converts the frames returned by Agent.CaptureFrames (each a
+// map with "data" []byte and an optional "mime_type" string) into MessageFrames ready for
+// SendMessageWithFrames / ReplyWith. Frames with no usable bytes are skipped; a missing or
+// empty MIME defaults to image/jpeg. This removes the per-frame type-assertion boilerplate
+// from the capture→send flow
+func MessageFramesFromCaptured(frames []map[string]any) []MessageFrame {
+	out := make([]MessageFrame, 0, len(frames))
+	for _, f := range frames {
+		data, _ := f["data"].([]byte)
+		if len(data) == 0 {
+			continue
+		}
+		mime, _ := f["mime_type"].(string)
+		out = append(out, MessageFrame{MimeType: cmp.Or(mime, "image/jpeg"), Data: data})
+	}
+	return out
 }
 
 // SendMessageWithFrames sends a text message with image frames.

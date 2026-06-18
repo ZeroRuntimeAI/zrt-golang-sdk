@@ -107,7 +107,7 @@ func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string
 func (c *ChatContext) Copy() *ChatContext {
 	return &ChatContext{messages: slices.Clone(c.messages)}
 }
-=
+
 type TruncateOptions struct {
 	MaxItems  int
 	MaxTokens int
