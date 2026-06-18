@@ -320,6 +320,7 @@ func evPubSubMessage(s *AgentSession, m *pb.PubSubMessageEvent) {
 }
 
 func evAgentSwitched(s *AgentSession, sw *pb.AgentSwitchedEvent) {
+	s.applyAgentSwitch(sw.GetFrom(), sw.GetTo(), sw.GetReason())
 	s.Emit("agent_switched", map[string]any{"from": sw.GetFrom(), "to": sw.GetTo(), "reason": sw.GetReason()})
 }
 
@@ -517,7 +518,10 @@ func evAgentTurnEnd(s *AgentSession, ate *pb.AgentTurnEndEvent) {
 
 // ---- tool execution (shared) ----
 
-func executeTool(ctx context.Context, tools []*FunctionTool, callID, toolName, argsJSON string, sendResult func(callID, resultJSON string, isErr bool)) {
+// executeTool runs the named tool and sends its result. onResult, when non-nil,
+// is applied to the raw return value before serialization; it is how a tool that
+// returns an Agent object is converted into an agent-switch marker.
+func executeTool(ctx context.Context, tools []*FunctionTool, callID, toolName, argsJSON string, sendResult func(callID, resultJSON string, isErr bool), onResult func(any) any) {
 	var args map[string]any
 	if argsJSON != "" {
 		if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
@@ -552,6 +556,9 @@ func executeTool(ctx context.Context, tools []*FunctionTool, callID, toolName, a
 		b, _ := json.Marshal(map[string]any{"error": err.Error()})
 		sendResult(callID, string(b), true)
 		return
+	}
+	if onResult != nil {
+		result = onResult(result)
 	}
 	var resultJSON string
 	if str, ok := result.(string); ok {

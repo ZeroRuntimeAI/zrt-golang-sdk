@@ -133,6 +133,9 @@ type AgentSession struct {
 	meetingJoinedEmitted bool
 	jobCtx               *JobContext
 	audioTrackCache      *AudioTrack
+	agentsByID   map[string]Agent
+	alternateIDs map[string]bool
+	handoffs []AgentHandoff
 }
 
 // NewAgentSession creates a session for agent + pipeline.
@@ -158,6 +161,7 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 	}
 	close(s.synthesisDone) // starts "done"
 	agent.base().session = s
+	s.seedHandoffRegistry(agent)
 	pipeline.setAgent(agent)
 	for _, comp := range []any{pipeline.STT, pipeline.LLM, pipeline.TTS, pipeline.VAD, pipeline.TurnDetector} {
 		if ss, ok := comp.(sessionSettable); ok && comp != nil {
@@ -310,8 +314,9 @@ func (s *AgentSession) SignalingSessionID() string {
 // Pipeline returns the session's pipeline.
 func (s *AgentSession) Pipeline() *Pipeline { return s.pipeline }
 
-// Agent returns the session's agent.
-func (s *AgentSession) Agent() Agent { return s.agent }
+// Agent returns the session's active agent (the most recent handoff target, or
+// the agent the session started with).
+func (s *AgentSession) Agent() Agent { return s.ActiveAgent() }
 
 // CurrentUtterance returns the in-flight utterance handle (may be nil).
 func (s *AgentSession) CurrentUtterance() *UtteranceHandle {

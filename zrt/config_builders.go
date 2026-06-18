@@ -708,10 +708,28 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 		suffixToSend = *a.voiceSuffix
 	}
 	var altProtos []*pb.NamedAgentConfig
-	for _, alt := range a.alternates {
-		if alt == nil || alt.AgentID == "" {
+	seenAlt := map[string]bool{}
+	for _, ag := range a.handoffAgents {
+		if ag == nil {
 			continue
 		}
+		hb := ag.base()
+		if hb.id == "" || seenAlt[hb.id] {
+			continue
+		}
+		seenAlt[hb.id] = true
+		altProtos = append(altProtos, &pb.NamedAgentConfig{
+			AgentId:      hb.id,
+			Instructions: hb.instructions,
+			Tools:        buildToolSchemas(hb.tools),
+			Greeting:     hb.greeting,
+		})
+	}
+	for _, alt := range a.alternates {
+		if alt == nil || alt.AgentID == "" || seenAlt[alt.AgentID] {
+			continue
+		}
+		seenAlt[alt.AgentID] = true
 		altProtos = append(altProtos, &pb.NamedAgentConfig{
 			AgentId:      alt.AgentID,
 			Instructions: alt.Instructions,

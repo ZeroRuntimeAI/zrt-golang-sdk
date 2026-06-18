@@ -48,11 +48,26 @@ type ChatMessage struct {
 	ToolCallID string
 	// Images attached to this message (sent to the runtime as ImageContent values).
 	Images []ImageContent
+	// AgentID attributes this message to the agent that produced it. Used for
+	// multi-agent audit/filtering; it is not sent to the LLM.
+	AgentID string
 }
 
-// ChatContext holds an ordered list of chat messages.
+// AgentHandoff records a transfer of control between agents. It is a structural,
+// audit-only item: it is kept in the ChatContext for inspection but is never sent
+// to the LLM/runtime as a message (mirrors videosdk-agents).
+type AgentHandoff struct {
+	ID        string
+	FromAgent string
+	ToAgent   string
+	Reason    string
+}
+
+// ChatContext holds an ordered list of chat messages plus structural items
+// (agent handoffs) that are tracked for attribution but not sent to the LLM.
 type ChatContext struct {
 	messages []ChatMessage
+	handoffs []AgentHandoff
 }
 
 // NewChatContext returns an empty chat context.
@@ -103,9 +118,38 @@ func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string
 	return msg
 }
 
-// Copy returns a shallow copy of the context.
+// AddAttributedMessage appends a message attributed to agentID and returns it.
+// When messageID is empty a fresh UUID is generated.
+func (c *ChatContext) AddAttributedMessage(role ChatRole, content, messageID, agentID string, images ...ImageContent) ChatMessage {
+	msg := c.AddMessage(role, content, messageID, images...)
+	c.messages[len(c.messages)-1].AgentID = agentID
+	msg.AgentID = agentID
+	return msg
+}
+
+// AddHandoff records a transfer of control between agents and returns the marker.
+// The handoff is structural (audit-only) and is excluded from LLM/runtime messages.
+func (c *ChatContext) AddHandoff(fromAgent, toAgent, reason string) AgentHandoff {
+	h := AgentHandoff{ID: "handoff_" + uuid.NewString(), FromAgent: fromAgent, ToAgent: toAgent, Reason: reason}
+	c.handoffs = append(c.handoffs, h)
+	return h
+}
+
+// Handoffs returns a copy of the recorded agent handoffs (most recent last).
+func (c *ChatContext) Handoffs() []AgentHandoff { return slices.Clone(c.handoffs) }
+
+// LastHandoff returns the most recent handoff, or nil if none was recorded.
+func (c *ChatContext) LastHandoff() *AgentHandoff {
+	if n := len(c.handoffs); n > 0 {
+		h := c.handoffs[n-1]
+		return &h
+	}
+	return nil
+}
+
+// Copy returns a shallow copy of the context (messages and handoff markers).
 func (c *ChatContext) Copy() *ChatContext {
-	return &ChatContext{messages: slices.Clone(c.messages)}
+	return &ChatContext{messages: slices.Clone(c.messages), handoffs: slices.Clone(c.handoffs)}
 }
 
 type TruncateOptions struct {

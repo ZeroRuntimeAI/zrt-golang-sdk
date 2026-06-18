@@ -329,7 +329,8 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 	switch ev := event.GetEvent().(type) {
 	case *pb.RuntimeEvent_ToolCall:
 		tc := ev.ToolCall
-		go executeTool(ctx, b.agent.base().tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(), b.sendToolResult)
+		active := s.ActiveAgent()
+		go executeTool(ctx, active.base().tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(), b.sendToolResult, s.interceptToolResult)
 	case *pb.RuntimeEvent_BeforeLlm:
 		go b.handleBeforeLLM(event.GetRequestId(), ev.BeforeLlm)
 	case *pb.RuntimeEvent_LlmTokenForReview:

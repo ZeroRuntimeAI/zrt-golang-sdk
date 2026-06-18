@@ -86,6 +86,17 @@ func (r *agentRegistry) bindSession(sid string, s *AgentSession) {
 	}
 }
 
+func (r *agentRegistry) setSessionAgent(sid string, agent Agent) {
+	r.mu.Lock()
+	state := r.sessions[sid]
+	r.mu.Unlock()
+	if state != nil {
+		state.mu.Lock()
+		state.agent = agent
+		state.mu.Unlock()
+	}
+}
+
 func (r *agentRegistry) enqueue(ev *pb.AgentStreamIn) {
 	t := time.NewTimer(2 * time.Second)
 	defer t.Stop()
@@ -301,13 +312,18 @@ func (r *agentRegistry) routeSessionEvent(ctx context.Context, state *registered
 	switch p := msg.GetPayload().(type) {
 	case *pb.AgentStreamOut_ToolCall:
 		tc := p.ToolCall
+		var onResult func(any) any
 		agent := state.agent
+		if sess != nil {
+			agent = sess.ActiveAgent()
+			onResult = sess.interceptToolResult
+		}
 		if agent == nil {
 			agent = r.agentTemplate
 		}
 		go executeTool(ctx, agent.base().tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(), func(callID, resultJSON string, isErr bool) {
 			r.sendToolResult(state.sessionID, callID, resultJSON, isErr)
-		})
+		}, onResult)
 		return
 	case *pb.AgentStreamOut_BeforeLlm:
 		if sess == nil {

@@ -47,6 +47,7 @@ type AgentOptions struct {
 	AppendVoiceSuffix *bool
 	// Alternates are additional named agents for in-call handoff.
 	Alternates []*NamedAgent
+	Agents []Agent
 	// ContextWindow configures server-side context management for this agent.
 	ContextWindow *ContextWindow
 }
@@ -64,6 +65,7 @@ type BaseAgent struct {
 	voiceSuffix              *string
 	appendVoiceSuffix        bool
 	alternates               []*NamedAgent
+	handoffAgents            []Agent
 	cw                       *ContextWindow
 
 	session                  *AgentSession
@@ -89,6 +91,7 @@ func NewBaseAgent(opts AgentOptions) BaseAgent {
 		voiceSuffix:              opts.VoiceSuffix,
 		appendVoiceSuffix:        BoolOr(opts.AppendVoiceSuffix, true),
 		alternates:               opts.Alternates,
+		handoffAgents:            slices.Clone(opts.Agents),
 		cw:                       opts.ContextWindow,
 		llmStreamHookTimeoutMS:   100,
 	}
@@ -109,6 +112,17 @@ func (a *BaseAgent) SetInstructions(v string) { a.instructions = v }
 
 // ID returns the agent id.
 func (a *BaseAgent) ID() string { return a.id }
+
+// Greeting returns the agent's opening line, if any.
+func (a *BaseAgent) Greeting() string { return a.greeting }
+
+// InheritContext reports whether this agent inherits the conversation context on
+// a handoff into it.
+func (a *BaseAgent) InheritContext() bool { return a.inheritContext }
+
+// HandoffAgents returns the full agent objects reachable from this agent via
+// handoff (configured through AgentOptions.Agents).
+func (a *BaseAgent) HandoffAgents() []Agent { return a.handoffAgents }
 
 // Tools returns the registered tools.
 func (a *BaseAgent) Tools() []*FunctionTool { return a.tools }
