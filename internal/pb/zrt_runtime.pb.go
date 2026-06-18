@@ -9107,11 +9107,12 @@ func (x *MessageFrame) GetData() []byte {
 }
 
 type SendMessageWithFramesCmd struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-	Frames        []*MessageFrame        `protobuf:"bytes,2,rep,name=frames,proto3" json:"frames,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Text   string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Frames []*MessageFrame        `protobuf:"bytes,2,rep,name=frames,proto3" json:"frames,omitempty"`
+	NumLatestFrames uint32 `protobuf:"varint,3,opt,name=num_latest_frames,json=numLatestFrames,proto3" json:"num_latest_frames,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *SendMessageWithFramesCmd) Reset() {
@@ -9156,6 +9157,13 @@ func (x *SendMessageWithFramesCmd) GetFrames() []*MessageFrame {
 		return x.Frames
 	}
 	return nil
+}
+
+func (x *SendMessageWithFramesCmd) GetNumLatestFrames() uint32 {
+	if x != nil {
+		return x.NumLatestFrames
+	}
+	return 0
 }
 
 type SendDTMFCmd struct {
@@ -13747,10 +13755,11 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x04data\x18\x02 \x01(\fR\x04data\"?\n" +
 	"\fMessageFrame\x12\x1b\n" +
 	"\tmime_type\x18\x01 \x01(\tR\bmimeType\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\"f\n" +
+	"\x04data\x18\x02 \x01(\fR\x04data\"\x92\x01\n" +
 	"\x18SendMessageWithFramesCmd\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x126\n" +
-	"\x06frames\x18\x02 \x03(\v2\x1e.agent_runtime.v1.MessageFrameR\x06frames\"%\n" +
+	"\x06frames\x18\x02 \x03(\v2\x1e.agent_runtime.v1.MessageFrameR\x06frames\x12*\n" +
+	"\x11num_latest_frames\x18\x03 \x01(\rR\x0fnumLatestFrames\"%\n" +
 	"\vSendDTMFCmd\x12\x16\n" +
 	"\x06digits\x18\x01 \x01(\tR\x06digits\"\x89\x01\n" +
 	"\x11PublishMessageCmd\x12\x14\n" +

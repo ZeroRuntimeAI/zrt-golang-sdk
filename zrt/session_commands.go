@@ -276,6 +276,7 @@ type ReplyOptions struct {
 	// WaitForPlayback blocks until playback completes before returning.
 	WaitForPlayback bool
 	Frames []MessageFrame
+	LatestFrames int
 }
 
 func (s *AgentSession) ReplyWith(ctx context.Context, instructions string, opts ReplyOptions) (*UtteranceHandle, error) {
@@ -289,6 +290,10 @@ func (s *AgentSession) ReplyWith(ctx context.Context, instructions string, opts 
 	}
 	if len(opts.Frames) > 0 {
 		if err := s.SendMessageWithFrames(ctx, instructions, opts.Frames); err != nil {
+			return handle, err
+		}
+	} else if opts.LatestFrames > 0 {
+		if err := t.sendSendMessageWithFrames(instructions, nil, uint32(opts.LatestFrames)); err != nil {
 			return handle, err
 		}
 	} else if err := t.sendSay(instructions, true, "", true); err != nil {
@@ -485,7 +490,7 @@ func (s *AgentSession) SendMessageWithFrames(ctx context.Context, message string
 		return nil
 	}
 	if t := s.transportRef(); t != nil {
-		return t.sendSendMessageWithFrames(message, fd)
+		return t.sendSendMessageWithFrames(message, fd, 0)
 	}
 	return nil
 }

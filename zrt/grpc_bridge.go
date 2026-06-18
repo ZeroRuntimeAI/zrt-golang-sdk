@@ -229,12 +229,12 @@ func (b *grpcBridge) sendPushAudioFrame(pcm []byte, sampleRate int) error {
 func (b *grpcBridge) sendSendImage(mimeType string, data []byte) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SendImage{SendImage: &pb.SendImageCmd{MimeType: mimeType, Data: data}}})
 }
-func (b *grpcBridge) sendSendMessageWithFrames(text string, frames []frameData) error {
+func (b *grpcBridge) sendSendMessageWithFrames(text string, frames []frameData, numLatestFrames uint32) error {
 	var mf []*pb.MessageFrame
 	for _, f := range frames {
 		mf = append(mf, &pb.MessageFrame{MimeType: f.mimeType, Data: f.data})
 	}
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SendMessageWithFrames{SendMessageWithFrames: &pb.SendMessageWithFramesCmd{Text: text, Frames: mf}}})
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SendMessageWithFrames{SendMessageWithFrames: &pb.SendMessageWithFramesCmd{Text: text, Frames: mf, NumLatestFrames: numLatestFrames}}})
 }
 
 func (b *grpcBridge) sendToolResult(callID, resultJSON string, isErr bool) {

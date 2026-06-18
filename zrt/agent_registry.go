@@ -584,12 +584,12 @@ func (r *agentRegistry) sendPushAudioFrame(sid string, pcm []byte, sampleRate in
 func (r *agentRegistry) sendSendImage(sid, mimeType string, data []byte) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_SendImage{SendImage: &pb.SendImageCmd{MimeType: mimeType, Data: data}}})
 }
-func (r *agentRegistry) sendSendMessageWithFrames(sid, text string, frames []frameData) {
+func (r *agentRegistry) sendSendMessageWithFrames(sid, text string, frames []frameData, numLatestFrames uint32) {
 	var mf []*pb.MessageFrame
 	for _, f := range frames {
 		mf = append(mf, &pb.MessageFrame{MimeType: f.mimeType, Data: f.data})
 	}
-	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_SendMessageWithFrames{SendMessageWithFrames: &pb.SendMessageWithFramesCmd{Text: text, Frames: mf}}})
+	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_SendMessageWithFrames{SendMessageWithFrames: &pb.SendMessageWithFramesCmd{Text: text, Frames: mf, NumLatestFrames: numLatestFrames}}})
 }
 func (r *agentRegistry) sendRecordingStart(sid string, cfg *RecordingConfig) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_RecordingStart{RecordingStart: &pb.RecordingStartCmd{Config: buildRecordingConfig(cfg)}}})
@@ -685,8 +685,8 @@ func (t *registryTransport) sendSendImage(mimeType string, data []byte) error {
 	t.registry.sendSendImage(t.sid, mimeType, data)
 	return nil
 }
-func (t *registryTransport) sendSendMessageWithFrames(text string, frames []frameData) error {
-	t.registry.sendSendMessageWithFrames(t.sid, text, frames)
+func (t *registryTransport) sendSendMessageWithFrames(text string, frames []frameData, numLatestFrames uint32) error {
+	t.registry.sendSendMessageWithFrames(t.sid, text, frames, numLatestFrames)
 	return nil
 }
 func (t *registryTransport) sendPublishMessage(topic, message, optionsJSON, payloadJSON string) error {
