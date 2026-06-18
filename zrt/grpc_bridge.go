@@ -186,6 +186,9 @@ func (b *grpcBridge) sendSay(text string, interruptCurrent bool, voice string, i
 func (b *grpcBridge) sendCancelGeneration() error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_CancelGeneration{CancelGeneration: &pb.CancelGenerationCmd{}}})
 }
+func (b *grpcBridge) sendSetUserInputEnabled(enabled bool) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SetUserInputEnabled{SetUserInputEnabled: &pb.SetUserInputEnabledCmd{Enabled: enabled}}})
+}
 func (b *grpcBridge) sendGenerate(text string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_Generate{Generate: &pb.GenerateCmd{Text: text}}})
 }
@@ -413,6 +416,10 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		evAgentTurnEnd(s, ev.AgentTurnEnd)
 	case *pb.RuntimeEvent_LlmCompleted:
 		evLLMCompleted(s, ev.LlmCompleted)
+	case *pb.RuntimeEvent_ComponentMetrics:
+		evComponentMetrics(s, ev.ComponentMetrics)
+	case *pb.RuntimeEvent_TurnMetrics:
+		evTurnMetrics(s, ev.TurnMetrics)
 	default:
 		logger.Debugf("handleRuntimeEvent: unhandled event %T", event.GetEvent())
 	}

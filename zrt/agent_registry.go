@@ -420,6 +420,10 @@ func (r *agentRegistry) handleObserveEvent(s *AgentSession, msg *pb.AgentStreamO
 		evTranscriptPreflight(s, p.TranscriptPreflight)
 	case *pb.AgentStreamOut_LlmCompleted:
 		evLLMCompleted(s, p.LlmCompleted)
+	case *pb.AgentStreamOut_ComponentMetrics:
+		evComponentMetrics(s, p.ComponentMetrics)
+	case *pb.AgentStreamOut_TurnMetrics:
+		evTurnMetrics(s, p.TurnMetrics)
 	case *pb.AgentStreamOut_AgentStateChanged:
 		evAgentStateChanged(s, p.AgentStateChanged)
 	case *pb.AgentStreamOut_UserStateChanged:
@@ -551,6 +555,9 @@ func (r *agentRegistry) sendGenerate(sid, text string) {
 func (r *agentRegistry) sendCancelGeneration(sid string) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_CancelGeneration{CancelGeneration: &pb.CancelGenerationCmd{}}})
 }
+func (r *agentRegistry) sendSetUserInputEnabled(sid string, enabled bool) {
+	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_SetUserInputEnabled{SetUserInputEnabled: &pb.SetUserInputEnabledCmd{Enabled: enabled}}})
+}
 func (r *agentRegistry) sendUpdateTools(sid string, tools []*FunctionTool) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: toolSchemasFor(tools)}}})
 }
@@ -614,6 +621,10 @@ func (t *registryTransport) sendSay(text string, ic bool, voice string, interrup
 }
 func (t *registryTransport) sendCancelGeneration() error {
 	t.registry.sendCancelGeneration(t.sid)
+	return nil
+}
+func (t *registryTransport) sendSetUserInputEnabled(enabled bool) error {
+	t.registry.sendSetUserInputEnabled(t.sid, enabled)
 	return nil
 }
 func (t *registryTransport) sendGenerate(text string) error {

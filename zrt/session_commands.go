@@ -272,7 +272,7 @@ func (s *AgentSession) Reply(ctx context.Context, instructions string, waitForPl
 	if t == nil {
 		return handle, ErrSessionNotStarted
 	}
-	if err := t.sendSay(instructions, true, "", true); err != nil {
+	if err := t.sendGenerate(instructions); err != nil {
 		return handle, err
 	}
 	if waitForPlayback {
@@ -307,6 +307,15 @@ func (s *AgentSession) Generate(ctx context.Context, text string) error {
 func (s *AgentSession) CancelGeneration(ctx context.Context) error {
 	if t := s.transportRef(); t != nil {
 		return t.sendCancelGeneration()
+	}
+	return nil
+}
+
+// SetUserInputEnabled enables/disables processing of the caller's audio input
+// (e.g. put the caller on hold while keeping the session alive).
+func (s *AgentSession) SetUserInputEnabled(ctx context.Context, enabled bool) error {
+	if t := s.transportRef(); t != nil {
+		return t.sendSetUserInputEnabled(enabled)
 	}
 	return nil
 }
