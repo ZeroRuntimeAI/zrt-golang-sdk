@@ -31,8 +31,7 @@ type frameData struct {
 	data     []byte
 }
 
-// sessionTransport abstracts the outbound channel (direct gRPC bridge or the
-// registered-agent registry), so AgentSession command methods don't branch.
+// sessionTransport abstracts the outbound channel used by AgentSession command methods.
 type sessionTransport interface {
 	sendSay(text string, interruptCurrent bool, voice string, interruptible bool) error
 	sendCancelGeneration() error
@@ -66,7 +65,8 @@ type AgentSessionOptions struct {
 	Recording         *RecordingConfig
 }
 
-// AgentSession runs an agent against the ZRT runtime.
+// AgentSession runs an agent with its pipeline and exposes the commands and
+// events for a live voice session.
 type AgentSession struct {
 	EventEmitter
 
@@ -138,7 +138,8 @@ type AgentSession struct {
 	handoffs []AgentHandoff
 }
 
-// NewAgentSession creates a session for agent + pipeline.
+// NewAgentSession creates a session that runs agent with pipeline. Call Start to
+// connect it to the runtime.
 func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) *AgentSession {
 	s := &AgentSession{
 		agent:             agent,
@@ -192,7 +193,6 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 	s.On("synthesis_interrupted", func(any) { s.markSynthesisDone() })
 	s.On("participant_joined", func(any) { s.markParticipantArrived() })
 	s.On("stream_enabled", func(payload any) { s.markAudioStreamActive(payload) })
-	// transcript mirror (for GetContextHistory fallback).
 	s.On("transcript_preflight", func(p any) { s.mirrorUserTranscript(p) })
 	s.On("user_turn_end", func(p any) { s.mirrorUserTranscript(p) })
 	s.On("generation_complete", func(p any) { s.mirrorAgentGeneration(p) })
@@ -297,7 +297,7 @@ func (s *AgentSession) AgentState() AgentState {
 	return s.agentState
 }
 
-// SessionID returns the runtime session id (empty before start).
+// SessionID returns the session id, or empty before the session has started.
 func (s *AgentSession) SessionID() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -332,7 +332,8 @@ func (s *AgentSession) IsSynthesizing() bool {
 	return s.isSynthesizing
 }
 
-// TTSCapabilities returns the runtime-reported TTS capabilities (may be nil).
+// TTSCapabilities returns the active TTS provider's reported capabilities, or
+// nil if none are available.
 func (s *AgentSession) TTSCapabilities() map[string]any {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -480,7 +481,6 @@ func (s *AgentSession) resetWakeUpTimer() {
 func closeOnce(ch *chan struct{}) {
 	select {
 	case <-*ch:
-		// already closed
 	default:
 		close(*ch)
 	}

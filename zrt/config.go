@@ -4,7 +4,7 @@ package zrt
 type EOUConfig struct {
 	// Mode is "ADAPTIVE" or "DEFAULT".
 	Mode string
-	// MinMaxSpeechWaitTimeout is [min, max] seconds the runtime waits for more speech.
+	// MinMaxSpeechWaitTimeout is [min, max] seconds to wait for more speech.
 	MinMaxSpeechWaitTimeout []float64
 }
 
@@ -57,7 +57,7 @@ type RealtimeConfig struct {
 	ResponseModalities []string
 }
 
-// ContextWindow configures server-side context window management.
+// ContextWindow configures automatic context window management.
 type ContextWindow struct {
 	MaxTokens           int
 	MaxContextItems     int

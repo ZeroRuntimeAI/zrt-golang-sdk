@@ -46,16 +46,16 @@ type ChatMessage struct {
 	ToolCalls []FunctionCall
 	// ToolCallID, for a tool-result message, is the FunctionCall.CallID it answers.
 	ToolCallID string
-	// Images attached to this message (sent to the runtime as ImageContent values).
+	// Images attached to this message.
 	Images []ImageContent
 	// AgentID attributes this message to the agent that produced it. Used for
 	// multi-agent audit/filtering; it is not sent to the LLM.
 	AgentID string
 }
 
-// AgentHandoff records a transfer of control between agents. It is a structural,
-// audit-only item: it is kept in the ChatContext for inspection but is never sent
-// to the LLM/runtime as a message (mirrors videosdk-agents).
+// AgentHandoff records a transfer of control between agents. It is an audit-only
+// item: kept in the ChatContext for inspection but never sent to the LLM as a
+// message.
 type AgentHandoff struct {
 	ID        string
 	FromAgent string
@@ -211,7 +211,7 @@ func (c *ChatContext) ToContextMessages() []*pb.ContextMessageProto {
 	return out
 }
 
-// ChatContextFromContextMessages builds a ChatContext from runtime wire messages
+// ChatContextFromContextMessages builds a ChatContext from context messages.
 func ChatContextFromContextMessages(messages []*pb.ContextMessageProto) *ChatContext {
 	c := &ChatContext{}
 	for _, m := range messages {

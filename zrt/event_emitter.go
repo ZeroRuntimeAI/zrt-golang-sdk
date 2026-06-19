@@ -75,8 +75,7 @@ func invokeHandler(fn EventHandler, payload any, event string) {
 }
 
 // safeHook runs a user-supplied pipeline hook, recovering and logging any panic
-// so that one misbehaving hook cannot crash the session event loop. It mirrors
-// the panic isolation that invokeHandler provides for event handlers.
+// so that one misbehaving hook cannot crash the session event loop.
 func safeHook(name string, fn func()) {
 	defer func() {
 		if rec := recover(); rec != nil {

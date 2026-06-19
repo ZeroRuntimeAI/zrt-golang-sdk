@@ -159,7 +159,7 @@ type Pipeline struct {
 	STTFilterPatterns    []string
 	STTWordSubstitutions map[string]string
 
-	// Sentence buffer knobs (0 -> runtime defaults of 5/3/3).
+	// Sentence buffering thresholds. Leave a field at 0 to use the default.
 	SentenceMinClauseLen   int
 	SentenceFirstClauseLen int
 	SentenceMinSentenceLen int
@@ -229,10 +229,10 @@ func (p *Pipeline) setAgent(a Agent) { p.agent = a }
 
 // ---- hook registration (typed, all on the Pipeline for convenience) ----
 
-// OnCustomSTT registers a custom speech-to-text hook (sets the stt stream hook).
+// OnCustomSTT registers a custom speech-to-text hook for the pipeline.
 func (p *Pipeline) OnCustomSTT(h CustomSTTHook) { p.Hooks.customSTT = h; p.Hooks.mark("stt") }
 
-// OnCustomTTS registers a custom text-to-speech hook (sets the tts stream hook).
+// OnCustomTTS registers a custom text-to-speech hook for the pipeline.
 func (p *Pipeline) OnCustomTTS(h CustomTTSHook) { p.Hooks.customTTS = h; p.Hooks.mark("tts") }
 
 // OnLLMStream registers a per-token LLM review hook.
@@ -493,7 +493,8 @@ func (c PipelineConfigInfo) HasComponent(comp PipelineComponent) bool {
 	return c.ActiveComponents[comp]
 }
 
-// ChangePipeline mutates pipeline slots at runtime (nil values are ignored).
+// ChangePipeline swaps pipeline components at runtime. Nil fields in opts leave
+// the corresponding component unchanged.
 func (p *Pipeline) ChangePipeline(opts PipelineOptions) {
 	if opts.STT != nil {
 		p.STT = opts.STT

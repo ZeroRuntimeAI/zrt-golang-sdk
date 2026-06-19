@@ -239,7 +239,8 @@ type SayOptions struct {
 	Voice         string
 }
 
-// SayWith speaks message with options.
+// SayWith speaks message via TTS using opts to control voice and
+// interruptibility, and returns a handle that completes on playback.
 func (s *AgentSession) SayWith(ctx context.Context, message string, opts SayOptions) (*UtteranceHandle, error) {
 	handle := NewUtteranceHandle("", opts.Interruptible)
 	s.mu.Lock()
@@ -275,10 +276,15 @@ func (s *AgentSession) Reply(ctx context.Context, instructions string, waitForPl
 type ReplyOptions struct {
 	// WaitForPlayback blocks until playback completes before returning.
 	WaitForPlayback bool
+	// Frames attaches image frames to the reply.
 	Frames []MessageFrame
+	// LatestFrames includes this many most-recent buffered vision frames when
+	// Frames is empty.
 	LatestFrames int
 }
 
+// ReplyWith generates a context-aware reply following instructions, with options
+// to attach image frames and wait for playback, and returns its utterance handle.
 func (s *AgentSession) ReplyWith(ctx context.Context, instructions string, opts ReplyOptions) (*UtteranceHandle, error) {
 	handle := NewUtteranceHandle("", true)
 	s.mu.Lock()
@@ -462,11 +468,9 @@ type MessageFrame struct {
 	Data     []byte
 }
 
-// MessageFramesFromCaptured converts the frames returned by Agent.CaptureFrames (each a
-// map with "data" []byte and an optional "mime_type" string) into MessageFrames ready for
-// SendMessageWithFrames / ReplyWith. Frames with no usable bytes are skipped; a missing or
-// empty MIME defaults to image/jpeg. This removes the per-frame type-assertion boilerplate
-// from the capture→send flow
+// MessageFramesFromCaptured converts frames returned by Agent.CaptureFrames into
+// MessageFrames ready for SendMessageWithFrames or ReplyWith. Frames with no
+// usable bytes are skipped, and a missing or empty MIME type defaults to image/jpeg.
 func MessageFramesFromCaptured(frames []map[string]any) []MessageFrame {
 	out := make([]MessageFrame, 0, len(frames))
 	for _, f := range frames {
@@ -573,10 +577,10 @@ func (s *AgentSession) Close(ctx context.Context, reason string) error {
 	return nil
 }
 
-// Leave closes the session with reason "sdk_leave".
+// Leave ends the session and disconnects the agent.
 func (s *AgentSession) Leave(ctx context.Context) error { return s.Close(ctx, "sdk_leave") }
 
-// Hangup closes the session.
+// Hangup ends the call and closes the session.
 func (s *AgentSession) Hangup(ctx context.Context, reason string) error {
 	return s.Close(ctx, "manual_hangup")
 }
@@ -605,7 +609,8 @@ func (s *AgentSession) FetchContextHistory(ctx context.Context, lastN int, inclu
 	return filterHistory(full, lastN, includeFunctionCalls, includeSystemMessages), nil
 }
 
-// RemoveMessage removes a message from the runtime context.
+// RemoveMessage removes a message from the conversation context by id. Returns
+// true if the message was removed.
 func (s *AgentSession) RemoveMessage(ctx context.Context, messageID string) bool {
 	if messageID == "" || s.SessionID() == "" {
 		return false
@@ -629,8 +634,7 @@ func (s *AgentSession) RemoveMessage(ctx context.Context, messageID string) bool
 	return resp.GetSuccess()
 }
 
-// InjectMessage appends a message to the runtime conversation context via the
-// InjectMessage RPC. Returns true on success.
+// InjectMessage appends a message to the conversation context. Returns true on success.
 func (s *AgentSession) InjectMessage(ctx context.Context, message ChatMessage) bool {
 	if s.SessionID() == "" {
 		logger.Warnf("InjectMessage: no active session id yet; skipping")
@@ -658,8 +662,8 @@ func (s *AgentSession) InjectMessage(ctx context.Context, message ChatMessage) b
 	return true
 }
 
-// InjectContext appends every message of a ChatContext to the runtime context,
-// in order. Returns true if every message was injected successfully.
+// InjectContext appends every message of a ChatContext to the conversation
+// context, in order. Returns true if every message was injected successfully.
 func (s *AgentSession) InjectContext(ctx context.Context, cc *ChatContext) bool {
 	if cc == nil {
 		return true
@@ -673,9 +677,9 @@ func (s *AgentSession) InjectContext(ctx context.Context, cc *ChatContext) bool 
 	return ok
 }
 
-// FetchChatContext fetches the latest conversation history from the runtime as a
-// typed *ChatContext. Returns an empty context when no session/runtime is available
-// or the RPC fails.
+// FetchChatContext fetches the latest conversation history as a typed
+// *ChatContext. Pass lastN > 0 to limit the number of most-recent messages.
+// Returns an empty context if the session is not started or the fetch fails.
 func (s *AgentSession) FetchChatContext(ctx context.Context, lastN int) *ChatContext {
 	if s.SessionID() == "" {
 		logger.Warnf("FetchChatContext: no active session id yet; returning empty context")

@@ -77,7 +77,7 @@ func (s *AgentSession) UpdateInterruptConfig(ctx context.Context, opts UpdateInt
 	return s.UpdateProvider(ctx, "interrupt", "interrupt", params)
 }
 
-// WarmTransfer is not implemented in the thin SDK (use AgentSwitch for handoff).
+// WarmTransfer is not supported; use AgentSwitch for multi-agent handoff.
 func (s *AgentSession) WarmTransfer(ctx context.Context) error {
 	return fmt.Errorf("%w: AgentSession.WarmTransfer; use AgentSwitch(...) for multi-agent handoff", ErrNotImplemented)
 }
@@ -164,14 +164,14 @@ func statusString(s map[string]any, key string) string {
 
 // ---- AudioTrack ----
 
-// AudioTrack is a thin handle over the agent's outgoing audio.
+// AudioTrack is a handle to the agent's outgoing audio.
 type AudioTrack struct {
 	session         *AgentSession
 	sampleRate      int
 	lastAudioByteCB func(durationSeconds float64)
 }
 
-// AudioTrack returns the session's audio track (cached).
+// AudioTrack returns the session's outgoing audio track.
 func (s *AgentSession) AudioTrack() *AudioTrack {
 	s.mu.Lock()
 	if s.audioTrackCache != nil {

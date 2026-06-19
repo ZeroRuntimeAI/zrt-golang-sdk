@@ -23,7 +23,7 @@ type STTResponse struct {
 	Metadata  map[string]string
 }
 
-// LLMResponse is an LLM response chunk (the runtime drives the LLM).
+// LLMResponse is a single chunk of an LLM response.
 type LLMResponse struct {
 	Content  string
 	Role     ChatRole
@@ -50,7 +50,7 @@ type VADResponse struct {
 // Runtime config value types
 // ---------------------------------------------------------------------------
 
-// STTRuntimeConfig is the STT slice of a pipeline config.
+// STTRuntimeConfig holds speech-to-text settings for a pipeline.
 type STTRuntimeConfig struct {
 	Provider      string
 	Model         string
@@ -58,7 +58,7 @@ type STTRuntimeConfig struct {
 	EndpointingMs uint32
 }
 
-// LLMRuntimeConfig is the LLM slice of a pipeline config.
+// LLMRuntimeConfig holds LLM settings for a pipeline.
 type LLMRuntimeConfig struct {
 	Provider        string
 	Model           string
@@ -66,13 +66,13 @@ type LLMRuntimeConfig struct {
 	MaxOutputTokens uint32
 }
 
-// TTSRuntimeConfig is the TTS slice of a pipeline config.
+// TTSRuntimeConfig holds text-to-speech settings for a pipeline.
 type TTSRuntimeConfig struct {
 	Provider string
 	Voice    string
 }
 
-// VADRuntimeConfig is the VAD slice of a pipeline config.
+// VADRuntimeConfig holds voice-activity-detection settings for a pipeline.
 type VADRuntimeConfig struct {
 	Threshold          float32
 	StopThreshold      float32
@@ -86,18 +86,18 @@ type VADRuntimeConfig struct {
 	MinVolume          float32
 }
 
-// TurnRuntimeConfig is the turn-detector / EOU slice of a pipeline config.
+// TurnRuntimeConfig holds turn-detection (end-of-utterance) settings for a pipeline.
 type TurnRuntimeConfig struct {
 	Threshold float32
 	ModelID   string
 	Host      string
 	AuthToken string
 	Language  string
-	// HasThreshold reports whether the provider explicitly set a threshold.
+	// HasThreshold reports whether a threshold was explicitly set.
 	HasThreshold bool
 }
 
-// InferenceInfo marks a provider as dedicated-inference (set by inference factories).
+// InferenceInfo describes a provider's dedicated-inference settings.
 type InferenceInfo struct {
 	IsInference bool
 	BaseURL     string
@@ -106,7 +106,7 @@ type InferenceInfo struct {
 
 // RealtimeInfo describes a realtime (speech-to-speech) model.
 type RealtimeInfo struct {
-	Provider           string // usually empty; falls back to ProviderName()
+	Provider           string // defaults to ProviderName() when empty
 	Model              string
 	Voice              string
 	Params             map[string]string
@@ -138,7 +138,7 @@ type GeminiLLMExtras struct {
 }
 
 // ---------------------------------------------------------------------------
-// Provider interfaces (all methods exported so plugin packages can implement)
+// Provider interfaces
 // ---------------------------------------------------------------------------
 
 // Provider is implemented by every pipeline component descriptor.
@@ -155,7 +155,7 @@ type STT interface {
 	STTConfig() STTRuntimeConfig
 }
 
-// LLMLike is anything accepted in the Pipeline LLM slot (text LLM or realtime model).
+// LLMLike is anything accepted in the Pipeline LLM slot: a text LLM or a realtime model.
 type LLMLike interface {
 	ProviderName() string
 }
@@ -195,17 +195,17 @@ type RealtimeModel interface {
 	IsRealtimeModel() bool
 }
 
-// GeminiExtrasProvider is implemented by the Gemini LLM to expose Gemini extras.
+// GeminiExtrasProvider exposes Gemini-specific LLM configuration.
 type GeminiExtrasProvider interface {
 	GeminiLLMExtras() *GeminiLLMExtras
 }
 
 // ---------------------------------------------------------------------------
-// Base structs (plugins embed these and call Init/SetInference in their ctors)
+// Base structs
 // ---------------------------------------------------------------------------
 
-// ProviderBase holds fields common to every component descriptor. Plugin
-// packages embed it and call Init (and optionally SetInference / SetKnobs).
+// ProviderBase holds fields common to every component descriptor. Embed it in a
+// provider and call Init (and optionally SetInference / SetKnobs).
 type ProviderBase struct {
 	name              string
 	apiKey            string
@@ -216,7 +216,7 @@ type ProviderBase struct {
 	session           *AgentSession
 }
 
-// Init sets the provider name and API key. Call from a plugin constructor.
+// Init sets the provider name and API key.
 func (p *ProviderBase) Init(name, apiKey string) {
 	p.name = name
 	p.apiKey = apiKey
@@ -225,8 +225,7 @@ func (p *ProviderBase) Init(name, apiKey string) {
 // SetKnobs sets the provider-specific credential knobs.
 func (p *ProviderBase) SetKnobs(knobs map[string]any) { p.knobs = knobs }
 
-// SetInference marks this provider as dedicated-inference (used by the
-// inference factory helpers). location may be empty.
+// SetInference marks this provider as dedicated-inference. location may be empty.
 func (p *ProviderBase) SetInference(baseURL, location string) {
 	p.isInference = true
 	p.inferenceBaseURL = baseURL
@@ -242,14 +241,14 @@ func (p *ProviderBase) APIKey() string { return p.apiKey }
 // Knobs returns the provider-specific credential knobs (may be nil).
 func (p *ProviderBase) Knobs() map[string]any { return p.knobs }
 
-// InferenceInfo returns the dedicated-inference markers.
+// InferenceInfo returns the dedicated-inference settings.
 func (p *ProviderBase) InferenceInfo() InferenceInfo {
 	return InferenceInfo{IsInference: p.isInference, BaseURL: p.inferenceBaseURL, Location: p.inferenceLocation}
 }
 
 func (p *ProviderBase) setSession(s *AgentSession) { p.session = s }
 
-// BaseSTT is embedded by STT plugins.
+// BaseSTT is the base type for STT providers.
 type BaseSTT struct {
 	ProviderBase
 	transcriptCB func(STTResponse)
@@ -259,14 +258,12 @@ type BaseSTT struct {
 func (b *BaseSTT) OnTranscript(cb func(STTResponse))     { b.transcriptCB = cb }
 func (b *BaseSTT) transcriptCallback() func(STTResponse) { return b.transcriptCB }
 
-// VoiceEmbedding default for STT is none (kept off the STT interface).
-
-// BaseLLM is embedded by text-LLM plugins.
+// BaseLLM is the base type for text-LLM providers.
 type BaseLLM struct {
 	ProviderBase
 }
 
-// BaseTTS is embedded by TTS plugins.
+// BaseTTS is the base type for TTS providers.
 type BaseTTS struct {
 	ProviderBase
 	sampleRate   int
@@ -274,7 +271,7 @@ type BaseTTS struct {
 	firstAudioCB func(ttfbMS, byteCount uint32)
 }
 
-// InitTTS sets TTS audio params (default num_channels = 1).
+// InitTTS sets the TTS provider name, API key, and sample rate.
 func (b *BaseTTS) InitTTS(name, apiKey string, sampleRate int) {
 	b.Init(name, apiKey)
 	b.sampleRate = cmp.Or(sampleRate, 24000)
@@ -284,17 +281,17 @@ func (b *BaseTTS) InitTTS(name, apiKey string, sampleRate int) {
 // SampleRate returns the TTS sample rate.
 func (b *BaseTTS) SampleRate() int { return b.sampleRate }
 
-// NumChannels returns the TTS channel count (always 1).
+// NumChannels returns the TTS channel count.
 func (b *BaseTTS) NumChannels() int { return b.numChannels }
 
-// VoiceEmbedding returns the Cartesia voice embedding (nil for other providers).
+// VoiceEmbedding returns the TTS voice embedding, or nil if none.
 func (b *BaseTTS) VoiceEmbedding() []float64 { return nil }
 
 // OnFirstAudioByte registers a callback for the first synthesized audio byte.
 func (b *BaseTTS) OnFirstAudioByte(cb func(ttfbMS, byteCount uint32))     { b.firstAudioCB = cb }
 func (b *BaseTTS) firstAudioByteCallback() func(ttfbMS, byteCount uint32) { return b.firstAudioCB }
 
-// BaseVAD is embedded by VAD plugins.
+// BaseVAD is the base type for VAD providers.
 type BaseVAD struct {
 	ProviderBase
 	sampleRate int
@@ -314,7 +311,7 @@ func (b *BaseVAD) SampleRate() int { return b.sampleRate }
 func (b *BaseVAD) OnVADEvent(cb func(VADResponse)) { b.vadCB = cb }
 func (b *BaseVAD) vadCallback() func(VADResponse)  { return b.vadCB }
 
-// BaseRealtime is embedded by realtime (speech-to-speech) model plugins.
+// BaseRealtime is the base type for realtime (speech-to-speech) models.
 type BaseRealtime struct {
 	ProviderBase
 }
@@ -322,7 +319,7 @@ type BaseRealtime struct {
 // IsRealtimeModel reports that this is a realtime model.
 func (b *BaseRealtime) IsRealtimeModel() bool { return true }
 
-// BaseEOU is embedded by turn-detector plugins.
+// BaseEOU is the base type for turn-detector providers.
 type BaseEOU struct {
 	ProviderBase
 	threshold float64
@@ -337,7 +334,7 @@ func (b *BaseEOU) InitEOU(name string, threshold float64) {
 // Threshold returns the configured EOU threshold.
 func (b *BaseEOU) Threshold() float64 { return b.threshold }
 
-// internal accessor interfaces used by session/grpc-bridge across plugin pkgs.
+// Internal accessor interfaces.
 type sessionSettable interface{ setSession(*AgentSession) }
 type transcriptObservable interface {
 	transcriptCallback() func(STTResponse)

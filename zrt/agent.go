@@ -18,7 +18,6 @@ type Agent interface {
 	OnEnter(ctx context.Context) error
 	// OnExit is called as the session closes.
 	OnExit(ctx context.Context) error
-	// base exposes the embedded BaseAgent to the SDK.
 	base() *BaseAgent
 }
 
@@ -48,7 +47,7 @@ type AgentOptions struct {
 	// Alternates are additional named agents for in-call handoff.
 	Alternates []*NamedAgent
 	Agents []Agent
-	// ContextWindow configures server-side context management for this agent.
+	// ContextWindow configures context management for this agent.
 	ContextWindow *ContextWindow
 }
 
@@ -106,8 +105,8 @@ func (a *BaseAgent) contextWindow() *ContextWindow { return a.cw }
 // Instructions returns the system instructions.
 func (a *BaseAgent) Instructions() string { return a.instructions }
 
-// SetInstructions replaces the system instructions (local copy only; use
-// AgentSession.UpdateInstructions to push to the runtime).
+// SetInstructions replaces the system instructions locally. Use
+// AgentSession.UpdateInstructions to apply them to a live session.
 func (a *BaseAgent) SetInstructions(v string) { a.instructions = v }
 
 // ID returns the agent id.
@@ -127,7 +126,8 @@ func (a *BaseAgent) HandoffAgents() []Agent { return a.handoffAgents }
 // Tools returns the registered tools.
 func (a *BaseAgent) Tools() []*FunctionTool { return a.tools }
 
-// UpdateTools replaces the local tool set (use AgentSession.UpdateTools to push).
+// UpdateTools replaces the tool set locally. Use AgentSession.UpdateTools to
+// apply them to a live session.
 func (a *BaseAgent) UpdateTools(tools []*FunctionTool) {
 	a.tools = slices.Clone(tools)
 }

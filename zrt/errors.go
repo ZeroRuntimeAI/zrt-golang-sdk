@@ -21,8 +21,7 @@ var (
 	// (for example minting a JWT from the API key and secret failed).
 	ErrAuthFailed = errors.New("zrt: authentication failed")
 
-	// ErrConnection means the SDK could not establish or maintain the gRPC
-	// connection to the runtime.
+	// ErrConnection means the SDK could not reach the runtime.
 	ErrConnection = errors.New("zrt: connection failed")
 
 	// ErrSessionRejected means the runtime rejected the session request
@@ -33,7 +32,6 @@ var (
 	// has not been started yet. Call AgentSession.Start first.
 	ErrSessionNotStarted = errors.New("zrt: session not started")
 
-	// ErrNotImplemented means the requested capability is not available in the
-	// thin SDK.
+	// ErrNotImplemented means the requested capability is not available.
 	ErrNotImplemented = errors.New("zrt: not implemented")
 )

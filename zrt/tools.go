@@ -12,9 +12,9 @@ type FunctionToolInfo struct {
 	ParametersSchema map[string]any
 }
 
-// ToolHandler executes a tool call. args is the decoded arguments_json object.
-// The returned value is JSON-encoded (a string is sent verbatim) and shipped
-// back to the runtime as the tool result.
+// ToolHandler executes a tool call. args is the decoded arguments object. The
+// returned value becomes the tool result: a string is used verbatim, anything
+// else is JSON-encoded.
 type ToolHandler func(ctx context.Context, args map[string]any) (any, error)
 
 // FunctionTool is a callable tool exposed to the LLM.

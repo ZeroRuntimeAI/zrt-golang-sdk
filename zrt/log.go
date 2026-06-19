@@ -23,8 +23,8 @@ const (
 
 // Logger is the SDK logging interface.
 //
-// Prefer wiring a standard library *slog.Logger via WorkerOptions.Logger; this
-// interface exists for back-compat and for adapting non-slog loggers.
+// Prefer wiring a standard library *slog.Logger via WorkerOptions.Logger. Use
+// this interface to adapt a non-slog logger.
 type Logger interface {
 	Debugf(format string, args ...any)
 	Infof(format string, args ...any)

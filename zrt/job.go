@@ -69,8 +69,7 @@ type ObservabilityOptions struct {
 }
 
 // PubSubPublishConfig configures publishing a message on a room pubsub topic.
-// It mirrors the VideoSDK PubSubPublishConfig; persistence is requested through
-// Options (e.g. {"persist": true}) rather than a dedicated mode field.
+// Persistence is requested through Options (e.g. {"persist": true}).
 type PubSubPublishConfig struct {
 	Topic   string // e.g. "CHAT", "AGENT_EVENT"
 	Message string
@@ -168,7 +167,7 @@ func NewWorkerOptions() *WorkerOptions {
 	}
 }
 
-// JobContext carries per-job configuration and runtime wiring.
+// JobContext carries per-job configuration and session state.
 type JobContext struct {
 	RoomOptions *RoomOptions
 	Metadata    map[string]any
@@ -312,7 +311,7 @@ type runnerInfo struct {
 	sessionID string
 }
 
-// WorkerJob runs an agent entrypoint and connects it to the runtime.
+// WorkerJob runs an agent entrypoint for each incoming job.
 type WorkerJob struct {
 	entrypoint    EntrypointFunc
 	jobctxFactory func() *JobContext

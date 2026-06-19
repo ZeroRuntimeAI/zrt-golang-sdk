@@ -1,9 +1,8 @@
 package zrt
 
-// Image-source helpers for building an ImageContent from local data. The runtime
-// forwards the resulting URL (an http(s) URL or an embedded base64 "data:" URL) to the
-// LLM as a vision input (Gemini decodes it to inline data; OpenAI/Anthropic accept it
-// directly). Mirrors the JS SDK's ImageContent.from* helpers (cross-SDK parity).
+// Image-source helpers for building an ImageContent from local data. The
+// resulting URL (an http(s) URL or an embedded base64 "data:" URL) is sent to
+// the LLM as a vision input.
 
 import (
 	"bytes"
@@ -51,8 +50,8 @@ func ImageContentFromFile(path string, detail ...string) (ImageContent, error) {
 	return ImageContentFromBytes(data, mime, detail...), nil
 }
 
-// ImageContentFromImage encodes a decoded image (the PIL / AV-frame analog — also how
-// raw pixels become an image via image.RGBA) to PNG and embeds it as a "data:" URL.
+// ImageContentFromImage encodes a decoded image to PNG and embeds it as a
+// "data:" URL.
 func ImageContentFromImage(img image.Image, detail ...string) (ImageContent, error) {
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
