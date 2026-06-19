@@ -5,10 +5,10 @@
 proto:
 	protoc \
 	  --proto_path=proto \
-	  --go_out=. --go_opt=module=github.com/ZeroRuntimeAI/zrt-go \
-	  --go_opt=Mzrt_runtime.proto=github.com/ZeroRuntimeAI/zrt-go/internal/pb \
-	  --go-grpc_out=. --go-grpc_opt=module=github.com/ZeroRuntimeAI/zrt-go \
-	  --go-grpc_opt=Mzrt_runtime.proto=github.com/ZeroRuntimeAI/zrt-go/internal/pb \
+	  --go_out=. --go_opt=module=github.com/ZeroRuntimeAI/zrt-golang-sdk \
+	  --go_opt=Mzrt_runtime.proto=github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb \
+	  --go-grpc_out=. --go-grpc_opt=module=github.com/ZeroRuntimeAI/zrt-golang-sdk \
+	  --go-grpc_opt=Mzrt_runtime.proto=github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb \
 	  proto/zrt_runtime.proto
 
 build:

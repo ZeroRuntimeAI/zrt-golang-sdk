@@ -71,7 +71,7 @@ func DenoiseSanas(modelID string, sampleRate, chunkMS int, gatewayToken, baseURL
 // DenoiseAicoustics builds an ai-coustics denoiser.
 func DenoiseAicoustics(modelID string, sampleRate, chunkMS int, gatewayToken, baseURL string) *Denoise {
 	if modelID == "" {
-		modelID = "sparrow-xxs-48khz"
+		modelID = "rook-l-48khz"
 	}
 	if sampleRate == 0 {
 		sampleRate = 48000

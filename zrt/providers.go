@@ -211,6 +211,7 @@ type ProviderBase struct {
 	isInference       bool
 	inferenceBaseURL  string
 	inferenceLocation string
+	inferenceConfig   map[string]any
 	session           *AgentSession
 }
 
@@ -230,6 +231,10 @@ func (p *ProviderBase) SetInference(baseURL, location string) {
 	p.inferenceBaseURL = baseURL
 	p.inferenceLocation = location
 }
+
+func (p *ProviderBase) SetInferenceConfig(cfg map[string]any) { p.inferenceConfig = cfg }
+
+func (p *ProviderBase) InferenceConfigMap() map[string]any { return p.inferenceConfig }
 
 // ProviderName returns the provider name.
 func (p *ProviderBase) ProviderName() string { return p.name }
