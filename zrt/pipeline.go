@@ -143,6 +143,7 @@ type Pipeline struct {
 	VAD          VAD
 	TurnDetector EOU
 	Denoise      *Denoise
+	Avatar       Avatar
 
 	EOUConfig         *EOUConfig
 	InterruptConfig   *InterruptConfig
@@ -180,6 +181,7 @@ type PipelineOptions struct {
 	VAD                    VAD
 	TurnDetector           EOU
 	Denoise                *Denoise
+	Avatar                 Avatar
 	EOUConfig              *EOUConfig
 	InterruptConfig        *InterruptConfig
 	ContextWindow          *ContextWindow
@@ -211,6 +213,7 @@ func NewPipeline(opts PipelineOptions) *Pipeline {
 		VAD:                    opts.VAD,
 		TurnDetector:           opts.TurnDetector,
 		Denoise:                opts.Denoise,
+		Avatar:                 opts.Avatar,
 		EOUConfig:              opts.EOUConfig,
 		InterruptConfig:        opts.InterruptConfig,
 		ContextWindow:          opts.ContextWindow,
@@ -441,6 +444,9 @@ func (p *Pipeline) Config() PipelineConfigInfo {
 	}
 	if p.Denoise != nil {
 		components[ComponentDenoise] = true
+	}
+	if p.Avatar != nil {
+		components[ComponentAvatar] = true
 	}
 	isRealtime := llmIsRealtime(p.LLM) || (p.RealtimeConfig != nil && p.RealtimeConfig.Mode != "")
 	hasSTT, hasLLM, hasTTS := p.STT != nil, p.LLM != nil, p.TTS != nil
