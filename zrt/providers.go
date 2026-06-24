@@ -70,6 +70,16 @@ type TTSRuntimeConfig struct {
 	Voice    string
 }
 
+// AvatarRuntimeConfig is the avatar slice of a pipeline config.
+type AvatarRuntimeConfig struct {
+	Provider  string
+	AvatarID  string
+	FaceID    string
+	Model     string
+	IsTrinity bool
+	Params    map[string]string
+}
+
 // VADRuntimeConfig is the VAD slice of a pipeline config.
 type VADRuntimeConfig struct {
 	Threshold          float32
@@ -185,6 +195,12 @@ type EOU interface {
 	TurnConfig() TurnRuntimeConfig
 }
 
+// Avatar is a video-avatar provider descriptor.
+type Avatar interface {
+	Provider
+	AvatarConfig() AvatarRuntimeConfig
+}
+
 // RealtimeModel is a realtime speech-to-speech model descriptor.
 type RealtimeModel interface {
 	LLMLike
@@ -261,6 +277,11 @@ func (b *BaseSTT) transcriptCallback() func(STTResponse) { return b.transcriptCB
 
 // BaseLLM is embedded by text-LLM plugins.
 type BaseLLM struct {
+	ProviderBase
+}
+
+// BaseAvatar is embedded by avatar plugins. Plugins call Init in their ctor.
+type BaseAvatar struct {
 	ProviderBase
 }
 
