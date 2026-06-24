@@ -73,6 +73,43 @@ type CustomTTSHook func(requests <-chan CustomTTSSynthesize) <-chan CustomTTSAud
 // and whether to drop the token.
 type LLMStreamHook func(text string, tokenID uint64) (replacement string, drop bool)
 
+// STTHookData is the final transcript the runtime offers to the hook
+// before it reaches the LLM (hook mode: real server-side STT + a hook).
+type STTHookData struct {
+	Text       string
+	Language   string
+	IsFinal    bool
+	TurnNumber uint32
+}
+
+// STTHookResult is what a STT hook returns. ModifiedText
+// empty (or equal to the original) keeps the transcript; Drop skips the turn.
+type STTHookResult struct {
+	ModifiedText string
+	Drop         bool
+}
+
+// STTHookFunc rewrites a final transcript before the LLM sees it.
+type STTHookFunc func(STTHookData) *STTHookResult
+
+// TTSHookData is a text segment the runtime offers to the hook before the
+// real server-side TTS synthesizes it.
+type TTSHookData struct {
+	Text        string
+	UtteranceID string
+	Voice       string
+}
+
+// TTSHookResult is what a TTS hook returns. ModifiedText empty
+// (or equal to the original) keeps the text; Drop skips synthesizing the segment.
+type TTSHookResult struct {
+	ModifiedText string
+	Drop         bool
+}
+
+// TTSHookFunc rewrites a text segment before server-side synthesis.
+type TTSHookFunc func(TTSHookData) *TTSHookResult
+
 // hookNamesAutoEnable lists hook names that are automatically enabled when registered.
 var hookNamesAutoEnable = map[string]bool{"llm": true, "llm_stream": true, "llm_messages": true}
 
@@ -85,6 +122,9 @@ type PipelineHooks struct {
 	llmStream LLMStreamHook
 
 	beforeLLM func(BeforeLLMData) *BeforeLLMResult
+
+	sttHook STTHookFunc
+	ttsHook    TTSHookFunc
 
 	generationStarted    []func(turnNumber uint32)
 	generationComplete   []func(turnNumber uint32, wasInterrupted bool)
@@ -243,6 +283,20 @@ func (p *Pipeline) OnLLMStream(h LLMStreamHook) { p.Hooks.llmStream = h; p.Hooks
 func (p *Pipeline) OnBeforeLLM(h func(BeforeLLMData) *BeforeLLMResult) {
 	p.Hooks.beforeLLM = h
 	p.Hooks.mark("llm_messages")
+}
+
+// OnSTTHook registers a hook that rewrites the final transcript before
+// it reaches the LLM. Requires a real server-side STT provider (hook mode).
+func (p *Pipeline) OnSTTHook(h STTHookFunc) {
+	p.Hooks.sttHook = h
+	p.Hooks.mark("stt_hook")
+}
+
+// OnTTSHook registers a hook that rewrites a text segment before the real
+// server-side TTS synthesizes it. Requires a real server-side TTS provider.
+func (p *Pipeline) OnTTSHook(h TTSHookFunc) {
+	p.Hooks.ttsHook = h
+	p.Hooks.mark("tts_hook")
 }
 
 // OnLLMTokenForReview registers a fallback per-token review hook.
