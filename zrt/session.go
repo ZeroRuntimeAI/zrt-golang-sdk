@@ -36,6 +36,7 @@ type frameData struct {
 type sessionTransport interface {
 	sendSay(text string, interruptCurrent bool, voice string, interruptible bool) error
 	sendCancelGeneration() error
+	sendSetUserInputEnabled(enabled bool) error
 	sendGenerate(text string) error
 	sendUpdateInstructions(s string) error
 	sendUpdateTools(tools []*FunctionTool) error

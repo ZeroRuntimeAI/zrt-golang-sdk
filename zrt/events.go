@@ -363,6 +363,27 @@ func evLLMCompleted(s *AgentSession, lc *pb.LLMCompletedEvent) {
 	s.Emit("llm_completed", map[string]any{"response_text": lc.GetResponseText(), "interrupted": lc.GetInterrupted()})
 }
 
+// parseMetricsJSON decodes a metrics_json payload into its native value. An
+// empty string yields an empty object; invalid JSON is surfaced under "raw".
+func parseMetricsJSON(s string) any {
+	if s == "" {
+		return map[string]any{}
+	}
+	var parsed any
+	if err := json.Unmarshal([]byte(s), &parsed); err != nil {
+		return map[string]any{"raw": s}
+	}
+	return parsed
+}
+
+func evComponentMetrics(s *AgentSession, cm *pb.ComponentMetricsEvent) {
+	s.Emit("component_metrics", map[string]any{"component": cm.GetComponent(), "metrics": parseMetricsJSON(cm.GetMetricsJson())})
+}
+
+func evTurnMetrics(s *AgentSession, tm *pb.TurnMetricsEvent) {
+	s.Emit("turn_metrics", map[string]any{"metrics": parseMetricsJSON(tm.GetMetricsJson())})
+}
+
 // ---- transcript / agent_speech / turn_complete (mode-divergent) ----
 
 func buildSTTResponse(t *pb.TranscriptEvent) STTResponse {
