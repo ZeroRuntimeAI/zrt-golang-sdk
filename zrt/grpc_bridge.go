@@ -361,6 +361,10 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		evWarning(s, ev.Warning)
 	case *pb.RuntimeEvent_Metrics:
 		evMetrics(s, ev.Metrics)
+	case *pb.RuntimeEvent_ComponentMetrics:
+		b.handleComponentMetrics(ev.ComponentMetrics)
+	case *pb.RuntimeEvent_TurnMetrics:
+		// Aggregate turn metrics — decoded but not surfaced as a component hook.
 	case *pb.RuntimeEvent_Dtmf:
 		evDTMF(s, ev.Dtmf)
 	case *pb.RuntimeEvent_VisionFrame:
@@ -474,6 +478,32 @@ func (b *grpcBridge) handleSTTHook(requestID string, ev *pb.SttHookEvent) {
 func (b *grpcBridge) handleTTSHook(requestID string, ev *pb.TtsHookEvent) {
 	modified, drop := runTTSHook(b.pipeline, ev)
 	b.sendTTSHookResult(requestID, modified, drop)
+}
+
+// handleComponentMetrics decodes a per-component metrics event and dispatches it
+// to hooks registered via pipeline.OnMetrics(component, ...).
+func (b *grpcBridge) handleComponentMetrics(cm *pb.ComponentMetricsEvent) {
+	hooks := b.pipeline.Hooks.metricsHooks(cm.GetComponent())
+	if len(hooks) == 0 {
+		return
+	}
+	var metrics map[string]any
+	if cm.GetMetricsJson() != "" {
+		if err := json.Unmarshal([]byte(cm.GetMetricsJson()), &metrics); err != nil {
+			logger.Debugf("component_metrics decode failed: %v", err)
+			return
+		}
+	}
+	for _, h := range hooks {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Errorf("%s metrics hook panicked: %v", cm.GetComponent(), r)
+				}
+			}()
+			h(metrics)
+		}()
+	}
 }
 
 func (b *grpcBridge) handleCustomSTTAudio(msg *pb.CustomSttAudioChunk) {

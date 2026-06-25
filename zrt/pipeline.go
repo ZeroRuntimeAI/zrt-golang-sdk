@@ -148,8 +148,16 @@ type PipelineHooks struct {
 	recordingFailed      []func(status map[string]any)
 	visionFrame          []func(frame map[string]any)
 	audioDelta           []func(frame map[string]any)
+	metrics              map[string][]func(metrics map[string]any)
 
 	registered map[string]bool
+}
+
+// metricsHooks returns the registered metrics callbacks for a component.
+func (h *PipelineHooks) metricsHooks(component string) []func(map[string]any) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.metrics[component]
 }
 
 func (h *PipelineHooks) mark(name string) {
@@ -297,6 +305,25 @@ func (p *Pipeline) OnSTTHook(h STTHookFunc) {
 func (p *Pipeline) OnTTSHook(h TTSHookFunc) {
 	p.Hooks.ttsHook = h
 	p.Hooks.mark("tts_hook")
+}
+
+// metricsComponents is the set of components the runtime emits metrics for.
+var metricsComponents = map[string]bool{"stt": true, "llm": true, "tts": true, "eou": true, "realtime": true}
+
+// OnMetrics registers a component-level observability hook. component is one of
+// "stt", "llm", "tts", "eou", "realtime"; the callback receives a per-turn
+// metrics map (latency, TTFB, token counts) emitted by the runtime.
+func (p *Pipeline) OnMetrics(component string, h func(metrics map[string]any)) {
+	if !metricsComponents[component] {
+		logger.Warnf("unknown metrics component %q", component)
+		return
+	}
+	p.Hooks.mu.Lock()
+	if p.Hooks.metrics == nil {
+		p.Hooks.metrics = map[string][]func(map[string]any){}
+	}
+	p.Hooks.metrics[component] = append(p.Hooks.metrics[component], h)
+	p.Hooks.mu.Unlock()
 }
 
 // OnLLMTokenForReview registers a fallback per-token review hook.
