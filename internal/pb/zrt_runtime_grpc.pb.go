@@ -26,20 +26,27 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentRuntime_CreateSession_FullMethodName    = "/agent_runtime.v1.AgentRuntime/CreateSession"
-	AgentRuntime_DestroySession_FullMethodName   = "/agent_runtime.v1.AgentRuntime/DestroySession"
-	AgentRuntime_GetSessionInfo_FullMethodName   = "/agent_runtime.v1.AgentRuntime/GetSessionInfo"
-	AgentRuntime_Health_FullMethodName           = "/agent_runtime.v1.AgentRuntime/Health"
-	AgentRuntime_InjectMessage_FullMethodName    = "/agent_runtime.v1.AgentRuntime/InjectMessage"
-	AgentRuntime_RemoveMessage_FullMethodName    = "/agent_runtime.v1.AgentRuntime/RemoveMessage"
-	AgentRuntime_GetContext_FullMethodName       = "/agent_runtime.v1.AgentRuntime/GetContext"
-	AgentRuntime_ClearContext_FullMethodName     = "/agent_runtime.v1.AgentRuntime/ClearContext"
-	AgentRuntime_EventStream_FullMethodName      = "/agent_runtime.v1.AgentRuntime/EventStream"
-	AgentRuntime_SendA2AMessage_FullMethodName   = "/agent_runtime.v1.AgentRuntime/SendA2AMessage"
-	AgentRuntime_RegisterAgent_FullMethodName    = "/agent_runtime.v1.AgentRuntime/RegisterAgent"
-	AgentRuntime_Dispatch_FullMethodName         = "/agent_runtime.v1.AgentRuntime/Dispatch"
-	AgentRuntime_Terminate_FullMethodName        = "/agent_runtime.v1.AgentRuntime/Terminate"
-	AgentRuntime_TestEmitToolCall_FullMethodName = "/agent_runtime.v1.AgentRuntime/TestEmitToolCall"
+	AgentRuntime_CreateSession_FullMethodName       = "/agent_runtime.v1.AgentRuntime/CreateSession"
+	AgentRuntime_DestroySession_FullMethodName      = "/agent_runtime.v1.AgentRuntime/DestroySession"
+	AgentRuntime_GetSessionInfo_FullMethodName      = "/agent_runtime.v1.AgentRuntime/GetSessionInfo"
+	AgentRuntime_Health_FullMethodName              = "/agent_runtime.v1.AgentRuntime/Health"
+	AgentRuntime_InjectMessage_FullMethodName       = "/agent_runtime.v1.AgentRuntime/InjectMessage"
+	AgentRuntime_RemoveMessage_FullMethodName       = "/agent_runtime.v1.AgentRuntime/RemoveMessage"
+	AgentRuntime_GetContext_FullMethodName          = "/agent_runtime.v1.AgentRuntime/GetContext"
+	AgentRuntime_ClearContext_FullMethodName        = "/agent_runtime.v1.AgentRuntime/ClearContext"
+	AgentRuntime_EventStream_FullMethodName         = "/agent_runtime.v1.AgentRuntime/EventStream"
+	AgentRuntime_SendA2AMessage_FullMethodName      = "/agent_runtime.v1.AgentRuntime/SendA2AMessage"
+	AgentRuntime_SipGetCallInfo_FullMethodName      = "/agent_runtime.v1.AgentRuntime/SipGetCallInfo"
+	AgentRuntime_SipCreateRoom_FullMethodName       = "/agent_runtime.v1.AgentRuntime/SipCreateRoom"
+	AgentRuntime_SipMakeOutboundCall_FullMethodName = "/agent_runtime.v1.AgentRuntime/SipMakeOutboundCall"
+	AgentRuntime_SipSwitchCallRoom_FullMethodName   = "/agent_runtime.v1.AgentRuntime/SipSwitchCallRoom"
+	AgentRuntime_SipListRoomCalls_FullMethodName    = "/agent_runtime.v1.AgentRuntime/SipListRoomCalls"
+	AgentRuntime_SipEndCall_FullMethodName          = "/agent_runtime.v1.AgentRuntime/SipEndCall"
+	AgentRuntime_LlmComplete_FullMethodName         = "/agent_runtime.v1.AgentRuntime/LlmComplete"
+	AgentRuntime_RegisterAgent_FullMethodName       = "/agent_runtime.v1.AgentRuntime/RegisterAgent"
+	AgentRuntime_Dispatch_FullMethodName            = "/agent_runtime.v1.AgentRuntime/Dispatch"
+	AgentRuntime_Terminate_FullMethodName           = "/agent_runtime.v1.AgentRuntime/Terminate"
+	AgentRuntime_TestEmitToolCall_FullMethodName    = "/agent_runtime.v1.AgentRuntime/TestEmitToolCall"
 )
 
 // AgentRuntimeClient is the client API for AgentRuntime service.
@@ -56,6 +63,13 @@ type AgentRuntimeClient interface {
 	ClearContext(ctx context.Context, in *ClearContextRequest, opts ...grpc.CallOption) (*ContextOpResult, error)
 	EventStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ClientEvent, RuntimeEvent], error)
 	SendA2AMessage(ctx context.Context, in *A2AMessageRequest, opts ...grpc.CallOption) (*A2AMessageResponse, error)
+	SipGetCallInfo(ctx context.Context, in *SipGetCallInfoRequest, opts ...grpc.CallOption) (*SipGetCallInfoResponse, error)
+	SipCreateRoom(ctx context.Context, in *SipCreateRoomRequest, opts ...grpc.CallOption) (*SipCreateRoomResponse, error)
+	SipMakeOutboundCall(ctx context.Context, in *SipMakeOutboundCallRequest, opts ...grpc.CallOption) (*SipMakeOutboundCallResponse, error)
+	SipSwitchCallRoom(ctx context.Context, in *SipSwitchCallRoomRequest, opts ...grpc.CallOption) (*SipSwitchCallRoomResponse, error)
+	SipListRoomCalls(ctx context.Context, in *SipListRoomCallsRequest, opts ...grpc.CallOption) (*SipListRoomCallsResponse, error)
+	SipEndCall(ctx context.Context, in *SipEndCallRequest, opts ...grpc.CallOption) (*SipEndCallResponse, error)
+	LlmComplete(ctx context.Context, in *LlmCompleteRequest, opts ...grpc.CallOption) (*LlmCompleteResponse, error)
 	// Registered-agent mode: SDK registers once, runtime pushes dispatched sessions.
 	RegisterAgent(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentStreamIn, AgentStreamOut], error)
 	// api-server-facing: requests a new session on a registered agent matching agent_kind/labels.
@@ -181,6 +195,76 @@ func (c *agentRuntimeClient) SendA2AMessage(ctx context.Context, in *A2AMessageR
 	return out, nil
 }
 
+func (c *agentRuntimeClient) SipGetCallInfo(ctx context.Context, in *SipGetCallInfoRequest, opts ...grpc.CallOption) (*SipGetCallInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SipGetCallInfoResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_SipGetCallInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeClient) SipCreateRoom(ctx context.Context, in *SipCreateRoomRequest, opts ...grpc.CallOption) (*SipCreateRoomResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SipCreateRoomResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_SipCreateRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeClient) SipMakeOutboundCall(ctx context.Context, in *SipMakeOutboundCallRequest, opts ...grpc.CallOption) (*SipMakeOutboundCallResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SipMakeOutboundCallResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_SipMakeOutboundCall_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeClient) SipSwitchCallRoom(ctx context.Context, in *SipSwitchCallRoomRequest, opts ...grpc.CallOption) (*SipSwitchCallRoomResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SipSwitchCallRoomResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_SipSwitchCallRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeClient) SipListRoomCalls(ctx context.Context, in *SipListRoomCallsRequest, opts ...grpc.CallOption) (*SipListRoomCallsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SipListRoomCallsResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_SipListRoomCalls_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeClient) SipEndCall(ctx context.Context, in *SipEndCallRequest, opts ...grpc.CallOption) (*SipEndCallResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SipEndCallResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_SipEndCall_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeClient) LlmComplete(ctx context.Context, in *LlmCompleteRequest, opts ...grpc.CallOption) (*LlmCompleteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LlmCompleteResponse)
+	err := c.cc.Invoke(ctx, AgentRuntime_LlmComplete_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentRuntimeClient) RegisterAgent(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentStreamIn, AgentStreamOut], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &AgentRuntime_ServiceDesc.Streams[1], AgentRuntime_RegisterAgent_FullMethodName, cOpts...)
@@ -238,6 +322,13 @@ type AgentRuntimeServer interface {
 	ClearContext(context.Context, *ClearContextRequest) (*ContextOpResult, error)
 	EventStream(grpc.BidiStreamingServer[ClientEvent, RuntimeEvent]) error
 	SendA2AMessage(context.Context, *A2AMessageRequest) (*A2AMessageResponse, error)
+	SipGetCallInfo(context.Context, *SipGetCallInfoRequest) (*SipGetCallInfoResponse, error)
+	SipCreateRoom(context.Context, *SipCreateRoomRequest) (*SipCreateRoomResponse, error)
+	SipMakeOutboundCall(context.Context, *SipMakeOutboundCallRequest) (*SipMakeOutboundCallResponse, error)
+	SipSwitchCallRoom(context.Context, *SipSwitchCallRoomRequest) (*SipSwitchCallRoomResponse, error)
+	SipListRoomCalls(context.Context, *SipListRoomCallsRequest) (*SipListRoomCallsResponse, error)
+	SipEndCall(context.Context, *SipEndCallRequest) (*SipEndCallResponse, error)
+	LlmComplete(context.Context, *LlmCompleteRequest) (*LlmCompleteResponse, error)
 	// Registered-agent mode: SDK registers once, runtime pushes dispatched sessions.
 	RegisterAgent(grpc.BidiStreamingServer[AgentStreamIn, AgentStreamOut]) error
 	// api-server-facing: requests a new session on a registered agent matching agent_kind/labels.
@@ -289,6 +380,27 @@ func (UnimplementedAgentRuntimeServer) EventStream(grpc.BidiStreamingServer[Clie
 }
 func (UnimplementedAgentRuntimeServer) SendA2AMessage(context.Context, *A2AMessageRequest) (*A2AMessageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SendA2AMessage not implemented")
+}
+func (UnimplementedAgentRuntimeServer) SipGetCallInfo(context.Context, *SipGetCallInfoRequest) (*SipGetCallInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SipGetCallInfo not implemented")
+}
+func (UnimplementedAgentRuntimeServer) SipCreateRoom(context.Context, *SipCreateRoomRequest) (*SipCreateRoomResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SipCreateRoom not implemented")
+}
+func (UnimplementedAgentRuntimeServer) SipMakeOutboundCall(context.Context, *SipMakeOutboundCallRequest) (*SipMakeOutboundCallResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SipMakeOutboundCall not implemented")
+}
+func (UnimplementedAgentRuntimeServer) SipSwitchCallRoom(context.Context, *SipSwitchCallRoomRequest) (*SipSwitchCallRoomResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SipSwitchCallRoom not implemented")
+}
+func (UnimplementedAgentRuntimeServer) SipListRoomCalls(context.Context, *SipListRoomCallsRequest) (*SipListRoomCallsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SipListRoomCalls not implemented")
+}
+func (UnimplementedAgentRuntimeServer) SipEndCall(context.Context, *SipEndCallRequest) (*SipEndCallResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SipEndCall not implemented")
+}
+func (UnimplementedAgentRuntimeServer) LlmComplete(context.Context, *LlmCompleteRequest) (*LlmCompleteResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LlmComplete not implemented")
 }
 func (UnimplementedAgentRuntimeServer) RegisterAgent(grpc.BidiStreamingServer[AgentStreamIn, AgentStreamOut]) error {
 	return status.Error(codes.Unimplemented, "method RegisterAgent not implemented")
@@ -492,6 +604,132 @@ func _AgentRuntime_SendA2AMessage_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentRuntime_SipGetCallInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SipGetCallInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).SipGetCallInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_SipGetCallInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).SipGetCallInfo(ctx, req.(*SipGetCallInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntime_SipCreateRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SipCreateRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).SipCreateRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_SipCreateRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).SipCreateRoom(ctx, req.(*SipCreateRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntime_SipMakeOutboundCall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SipMakeOutboundCallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).SipMakeOutboundCall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_SipMakeOutboundCall_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).SipMakeOutboundCall(ctx, req.(*SipMakeOutboundCallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntime_SipSwitchCallRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SipSwitchCallRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).SipSwitchCallRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_SipSwitchCallRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).SipSwitchCallRoom(ctx, req.(*SipSwitchCallRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntime_SipListRoomCalls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SipListRoomCallsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).SipListRoomCalls(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_SipListRoomCalls_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).SipListRoomCalls(ctx, req.(*SipListRoomCallsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntime_SipEndCall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SipEndCallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).SipEndCall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_SipEndCall_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).SipEndCall(ctx, req.(*SipEndCallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntime_LlmComplete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LlmCompleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeServer).LlmComplete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntime_LlmComplete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeServer).LlmComplete(ctx, req.(*LlmCompleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AgentRuntime_RegisterAgent_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(AgentRuntimeServer).RegisterAgent(&grpc.GenericServerStream[AgentStreamIn, AgentStreamOut]{ServerStream: stream})
 }
@@ -595,6 +833,34 @@ var AgentRuntime_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendA2AMessage",
 			Handler:    _AgentRuntime_SendA2AMessage_Handler,
+		},
+		{
+			MethodName: "SipGetCallInfo",
+			Handler:    _AgentRuntime_SipGetCallInfo_Handler,
+		},
+		{
+			MethodName: "SipCreateRoom",
+			Handler:    _AgentRuntime_SipCreateRoom_Handler,
+		},
+		{
+			MethodName: "SipMakeOutboundCall",
+			Handler:    _AgentRuntime_SipMakeOutboundCall_Handler,
+		},
+		{
+			MethodName: "SipSwitchCallRoom",
+			Handler:    _AgentRuntime_SipSwitchCallRoom_Handler,
+		},
+		{
+			MethodName: "SipListRoomCalls",
+			Handler:    _AgentRuntime_SipListRoomCalls_Handler,
+		},
+		{
+			MethodName: "SipEndCall",
+			Handler:    _AgentRuntime_SipEndCall_Handler,
+		},
+		{
+			MethodName: "LlmComplete",
+			Handler:    _AgentRuntime_LlmComplete_Handler,
 		},
 		{
 			MethodName: "Dispatch",

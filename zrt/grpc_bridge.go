@@ -239,6 +239,12 @@ func (b *grpcBridge) sendModifyLLMToken(tokenID uint64, replacement string, drop
 func (b *grpcBridge) sendBeforeLLMResult(requestID, modifiedMessages string, skip bool) {
 	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, RequestId: requestID, Event: &pb.ClientEvent_BeforeLlmResult{BeforeLlmResult: &pb.BeforeLLMResponse{ModifiedMessagesJson: modifiedMessages, SkipTurn: skip}}})
 }
+func (b *grpcBridge) sendSTTHookResult(requestID, modifiedText string, drop bool) {
+	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, RequestId: requestID, Event: &pb.ClientEvent_SttHookResult{SttHookResult: &pb.SttHookResponse{RequestId: requestID, ModifiedText: modifiedText, Drop: drop}}})
+}
+func (b *grpcBridge) sendTTSHookResult(requestID, modifiedText string, drop bool) {
+	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, RequestId: requestID, Event: &pb.ClientEvent_TtsHookResult{TtsHookResult: &pb.TtsHookResponse{RequestId: requestID, ModifiedText: modifiedText, Drop: drop}}})
+}
 func (b *grpcBridge) sendCustomSTTResult(r CustomSTTResult) {
 	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_CustomSttResult{CustomSttResult: &pb.CustomSttResult{UtteranceId: r.UtteranceID, Text: r.Text, IsFinal: r.IsFinal, Confidence: float32(r.Confidence), Language: r.Language, StartTimeUs: r.StartTimeUS, EndTimeUs: r.EndTimeUS}}})
 }
@@ -331,6 +337,10 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		b.handleCustomSTTAudio(ev.CustomSttAudio)
 	case *pb.RuntimeEvent_CustomTtsSynthesize:
 		b.handleCustomTTSSynthesize(ev.CustomTtsSynthesize)
+	case *pb.RuntimeEvent_SttHook:
+		go b.handleSTTHook(event.GetRequestId(), ev.SttHook)
+	case *pb.RuntimeEvent_TtsHook:
+		go b.handleTTSHook(event.GetRequestId(), ev.TtsHook)
 	case *pb.RuntimeEvent_Error:
 		b.handleError(ev.Error)
 	case *pb.RuntimeEvent_Transcript:
@@ -351,6 +361,10 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		evWarning(s, ev.Warning)
 	case *pb.RuntimeEvent_Metrics:
 		evMetrics(s, ev.Metrics)
+	case *pb.RuntimeEvent_ComponentMetrics:
+		b.handleComponentMetrics(ev.ComponentMetrics)
+	case *pb.RuntimeEvent_TurnMetrics:
+		// Aggregate turn metrics — decoded but not surfaced as a component hook.
 	case *pb.RuntimeEvent_Dtmf:
 		evDTMF(s, ev.Dtmf)
 	case *pb.RuntimeEvent_VisionFrame:
@@ -456,6 +470,42 @@ func (b *grpcBridge) handleLLMTokenForReview(t *pb.LLMTokenForReviewEvent) {
 	b.sendModifyLLMToken(t.GetTokenId(), replacement, drop)
 }
 
+func (b *grpcBridge) handleSTTHook(requestID string, ev *pb.SttHookEvent) {
+	modified, drop := runSTTHook(b.pipeline, ev)
+	b.sendSTTHookResult(requestID, modified, drop)
+}
+
+func (b *grpcBridge) handleTTSHook(requestID string, ev *pb.TtsHookEvent) {
+	modified, drop := runTTSHook(b.pipeline, ev)
+	b.sendTTSHookResult(requestID, modified, drop)
+}
+
+// handleComponentMetrics decodes a per-component metrics event and dispatches it
+// to hooks registered via pipeline.OnMetrics(component, ...).
+func (b *grpcBridge) handleComponentMetrics(cm *pb.ComponentMetricsEvent) {
+	hooks := b.pipeline.Hooks.metricsHooks(cm.GetComponent())
+	if len(hooks) == 0 {
+		return
+	}
+	var metrics map[string]any
+	if cm.GetMetricsJson() != "" {
+		if err := json.Unmarshal([]byte(cm.GetMetricsJson()), &metrics); err != nil {
+			logger.Debugf("component_metrics decode failed: %v", err)
+			return
+		}
+	}
+	for _, h := range hooks {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Errorf("%s metrics hook panicked: %v", cm.GetComponent(), r)
+				}
+			}()
+			h(metrics)
+		}()
+	}
+}
+
 func (b *grpcBridge) handleCustomSTTAudio(msg *pb.CustomSttAudioChunk) {
 	hook := b.pipeline.Hooks.customSTT
 	if hook == nil {
@@ -521,6 +571,74 @@ func runBeforeLLM(p *Pipeline, blh *pb.BeforeLLMHook) (string, bool) {
 		return "", false
 	case <-time.After(beforeLLMHookTimeout):
 		logger.Warnf("before_llm hook exceeded %.1fs SDK timeout; proceeding with original messages", beforeLLMHookTimeout.Seconds())
+		return "", false
+	}
+}
+
+func runSTTHook(p *Pipeline, ev *pb.SttHookEvent) (string, bool) {
+	hook := p.Hooks.sttHook
+	if hook == nil {
+		return "", false
+	}
+	data := STTHookData{Text: ev.GetText(), Language: ev.GetLanguage(), IsFinal: ev.GetIsFinal(), TurnNumber: ev.GetTurnNumber()}
+	resultCh := make(chan *STTHookResult, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Errorf("stt_hook hook panicked: %v", r)
+				resultCh <- nil
+			}
+		}()
+		resultCh <- hook(data)
+	}()
+	select {
+	case res := <-resultCh:
+		if res == nil {
+			return "", false
+		}
+		if res.Drop {
+			return "", true
+		}
+		if res.ModifiedText != "" && res.ModifiedText != ev.GetText() {
+			return res.ModifiedText, false
+		}
+		return "", false
+	case <-time.After(beforeLLMHookTimeout):
+		logger.Warnf("stt_hook hook exceeded %.1fs SDK timeout; using original transcript", beforeLLMHookTimeout.Seconds())
+		return "", false
+	}
+}
+
+func runTTSHook(p *Pipeline, ev *pb.TtsHookEvent) (string, bool) {
+	hook := p.Hooks.ttsHook
+	if hook == nil {
+		return "", false
+	}
+	data := TTSHookData{Text: ev.GetText(), UtteranceID: ev.GetUtteranceId(), Voice: ev.GetVoice()}
+	resultCh := make(chan *TTSHookResult, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Errorf("tts_hook hook panicked: %v", r)
+				resultCh <- nil
+			}
+		}()
+		resultCh <- hook(data)
+	}()
+	select {
+	case res := <-resultCh:
+		if res == nil {
+			return "", false
+		}
+		if res.Drop {
+			return "", true
+		}
+		if res.ModifiedText != "" && res.ModifiedText != ev.GetText() {
+			return res.ModifiedText, false
+		}
+		return "", false
+	case <-time.After(beforeLLMHookTimeout):
+		logger.Warnf("tts_hook hook exceeded %.1fs SDK timeout; using original text", beforeLLMHookTimeout.Seconds())
 		return "", false
 	}
 }

@@ -1145,6 +1145,8 @@ type CascadeConfig struct {
 	DtmfDetectionEnabled bool                      `protobuf:"varint,13,opt,name=dtmf_detection_enabled,json=dtmfDetectionEnabled,proto3" json:"dtmf_detection_enabled,omitempty"`
 	SttFilterPatterns    []string                  `protobuf:"bytes,14,rep,name=stt_filter_patterns,json=sttFilterPatterns,proto3" json:"stt_filter_patterns,omitempty"`
 	SttWordSubstitutions map[string]string         `protobuf:"bytes,15,rep,name=stt_word_substitutions,json=sttWordSubstitutions,proto3" json:"stt_word_substitutions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	TextProcessing       *TextProcessingConfig     `protobuf:"bytes,16,opt,name=text_processing,json=textProcessing,proto3" json:"text_processing,omitempty"`
+	Avatar               *AvatarProviderConfig     `protobuf:"bytes,17,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -1284,6 +1286,172 @@ func (x *CascadeConfig) GetSttWordSubstitutions() map[string]string {
 	return nil
 }
 
+func (x *CascadeConfig) GetTextProcessing() *TextProcessingConfig {
+	if x != nil {
+		return x.TextProcessing
+	}
+	return nil
+}
+
+func (x *CascadeConfig) GetAvatar() *AvatarProviderConfig {
+	if x != nil {
+		return x.Avatar
+	}
+	return nil
+}
+
+type AvatarProviderConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	AvatarId      string                 `protobuf:"bytes,2,opt,name=avatar_id,json=avatarId,proto3" json:"avatar_id,omitempty"`
+	FaceId        string                 `protobuf:"bytes,3,opt,name=face_id,json=faceId,proto3" json:"face_id,omitempty"`
+	Model         string                 `protobuf:"bytes,4,opt,name=model,proto3" json:"model,omitempty"`
+	IsTrinity     bool                   `protobuf:"varint,5,opt,name=is_trinity,json=isTrinity,proto3" json:"is_trinity,omitempty"`
+	Params        map[string]string      `protobuf:"bytes,10,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AvatarProviderConfig) Reset() {
+	*x = AvatarProviderConfig{}
+	mi := &file_zrt_runtime_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AvatarProviderConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AvatarProviderConfig) ProtoMessage() {}
+
+func (x *AvatarProviderConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AvatarProviderConfig.ProtoReflect.Descriptor instead.
+func (*AvatarProviderConfig) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *AvatarProviderConfig) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *AvatarProviderConfig) GetAvatarId() string {
+	if x != nil {
+		return x.AvatarId
+	}
+	return ""
+}
+
+func (x *AvatarProviderConfig) GetFaceId() string {
+	if x != nil {
+		return x.FaceId
+	}
+	return ""
+}
+
+func (x *AvatarProviderConfig) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *AvatarProviderConfig) GetIsTrinity() bool {
+	if x != nil {
+		return x.IsTrinity
+	}
+	return false
+}
+
+func (x *AvatarProviderConfig) GetParams() map[string]string {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+type TextProcessingConfig struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Language          string                 `protobuf:"bytes,1,opt,name=language,proto3" json:"language,omitempty"`
+	VerbalizeNumbers  bool                   `protobuf:"varint,2,opt,name=verbalize_numbers,json=verbalizeNumbers,proto3" json:"verbalize_numbers,omitempty"`
+	VerbalizeCurrency bool                   `protobuf:"varint,3,opt,name=verbalize_currency,json=verbalizeCurrency,proto3" json:"verbalize_currency,omitempty"`
+	CurrencyHint      string                 `protobuf:"bytes,4,opt,name=currency_hint,json=currencyHint,proto3" json:"currency_hint,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *TextProcessingConfig) Reset() {
+	*x = TextProcessingConfig{}
+	mi := &file_zrt_runtime_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TextProcessingConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TextProcessingConfig) ProtoMessage() {}
+
+func (x *TextProcessingConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TextProcessingConfig.ProtoReflect.Descriptor instead.
+func (*TextProcessingConfig) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *TextProcessingConfig) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
+func (x *TextProcessingConfig) GetVerbalizeNumbers() bool {
+	if x != nil {
+		return x.VerbalizeNumbers
+	}
+	return false
+}
+
+func (x *TextProcessingConfig) GetVerbalizeCurrency() bool {
+	if x != nil {
+		return x.VerbalizeCurrency
+	}
+	return false
+}
+
+func (x *TextProcessingConfig) GetCurrencyHint() string {
+	if x != nil {
+		return x.CurrencyHint
+	}
+	return ""
+}
+
 type OrchestratorTimingConfig struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	PollIntervalMs  uint32                 `protobuf:"varint,1,opt,name=poll_interval_ms,json=pollIntervalMs,proto3" json:"poll_interval_ms,omitempty"`
@@ -1295,7 +1463,7 @@ type OrchestratorTimingConfig struct {
 
 func (x *OrchestratorTimingConfig) Reset() {
 	*x = OrchestratorTimingConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[13]
+	mi := &file_zrt_runtime_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1307,7 +1475,7 @@ func (x *OrchestratorTimingConfig) String() string {
 func (*OrchestratorTimingConfig) ProtoMessage() {}
 
 func (x *OrchestratorTimingConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[13]
+	mi := &file_zrt_runtime_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1320,7 +1488,7 @@ func (x *OrchestratorTimingConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrchestratorTimingConfig.ProtoReflect.Descriptor instead.
 func (*OrchestratorTimingConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{13}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *OrchestratorTimingConfig) GetPollIntervalMs() uint32 {
@@ -1344,6 +1512,50 @@ func (x *OrchestratorTimingConfig) GetTtsDrainGraceMs() uint32 {
 	return 0
 }
 
+type InferenceConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BaseUrl       string                 `protobuf:"bytes,1,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InferenceConfig) Reset() {
+	*x = InferenceConfig{}
+	mi := &file_zrt_runtime_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InferenceConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InferenceConfig) ProtoMessage() {}
+
+func (x *InferenceConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InferenceConfig.ProtoReflect.Descriptor instead.
+func (*InferenceConfig) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *InferenceConfig) GetBaseUrl() string {
+	if x != nil {
+		return x.BaseUrl
+	}
+	return ""
+}
+
 type STTProviderConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
@@ -1352,13 +1564,14 @@ type STTProviderConfig struct {
 	EndpointingMs uint32                 `protobuf:"varint,4,opt,name=endpointing_ms,json=endpointingMs,proto3" json:"endpointing_ms,omitempty"`
 	Params        map[string]string      `protobuf:"bytes,10,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	Fallbacks     []*STTProviderConfig   `protobuf:"bytes,11,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
+	Inference     *InferenceConfig       `protobuf:"bytes,12,opt,name=inference,proto3,oneof" json:"inference,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *STTProviderConfig) Reset() {
 	*x = STTProviderConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[14]
+	mi := &file_zrt_runtime_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1370,7 +1583,7 @@ func (x *STTProviderConfig) String() string {
 func (*STTProviderConfig) ProtoMessage() {}
 
 func (x *STTProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[14]
+	mi := &file_zrt_runtime_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1383,7 +1596,7 @@ func (x *STTProviderConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use STTProviderConfig.ProtoReflect.Descriptor instead.
 func (*STTProviderConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{14}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *STTProviderConfig) GetProvider() string {
@@ -1428,22 +1641,32 @@ func (x *STTProviderConfig) GetFallbacks() []*STTProviderConfig {
 	return nil
 }
 
+func (x *STTProviderConfig) GetInference() *InferenceConfig {
+	if x != nil {
+		return x.Inference
+	}
+	return nil
+}
+
 type LLMProviderConfig struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Provider        string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
-	Model           string                 `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
-	Temperature     float32                `protobuf:"fixed32,3,opt,name=temperature,proto3" json:"temperature,omitempty"`
-	MaxOutputTokens uint32                 `protobuf:"varint,4,opt,name=max_output_tokens,json=maxOutputTokens,proto3" json:"max_output_tokens,omitempty"`
-	Params          map[string]string      `protobuf:"bytes,10,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Fallbacks       []*LLMProviderConfig   `protobuf:"bytes,11,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
-	GeminiExtras    *GeminiLLMExtras       `protobuf:"bytes,12,opt,name=gemini_extras,json=geminiExtras,proto3" json:"gemini_extras,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Provider               string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Model                  string                 `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
+	Temperature            float32                `protobuf:"fixed32,3,opt,name=temperature,proto3" json:"temperature,omitempty"`
+	MaxOutputTokens        uint32                 `protobuf:"varint,4,opt,name=max_output_tokens,json=maxOutputTokens,proto3" json:"max_output_tokens,omitempty"`
+	Params                 map[string]string      `protobuf:"bytes,10,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Fallbacks              []*LLMProviderConfig   `protobuf:"bytes,11,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
+	GeminiExtras           *GeminiLLMExtras       `protobuf:"bytes,12,opt,name=gemini_extras,json=geminiExtras,proto3" json:"gemini_extras,omitempty"`
+	LatencyThresholdMs     float32                `protobuf:"fixed32,13,opt,name=latency_threshold_ms,json=latencyThresholdMs,proto3" json:"latency_threshold_ms,omitempty"`            // 0 = disabled; TTFT ceiling for fallover
+	ConsecutiveLatencyHits uint32                 `protobuf:"varint,14,opt,name=consecutive_latency_hits,json=consecutiveLatencyHits,proto3" json:"consecutive_latency_hits,omitempty"` // consecutive breaches before fail-over
+	Inference              *InferenceConfig       `protobuf:"bytes,15,opt,name=inference,proto3,oneof" json:"inference,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *LLMProviderConfig) Reset() {
 	*x = LLMProviderConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[15]
+	mi := &file_zrt_runtime_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1455,7 +1678,7 @@ func (x *LLMProviderConfig) String() string {
 func (*LLMProviderConfig) ProtoMessage() {}
 
 func (x *LLMProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[15]
+	mi := &file_zrt_runtime_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1468,7 +1691,7 @@ func (x *LLMProviderConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMProviderConfig.ProtoReflect.Descriptor instead.
 func (*LLMProviderConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{15}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *LLMProviderConfig) GetProvider() string {
@@ -1520,20 +1743,46 @@ func (x *LLMProviderConfig) GetGeminiExtras() *GeminiLLMExtras {
 	return nil
 }
 
+func (x *LLMProviderConfig) GetLatencyThresholdMs() float32 {
+	if x != nil {
+		return x.LatencyThresholdMs
+	}
+	return 0
+}
+
+func (x *LLMProviderConfig) GetConsecutiveLatencyHits() uint32 {
+	if x != nil {
+		return x.ConsecutiveLatencyHits
+	}
+	return 0
+}
+
+func (x *LLMProviderConfig) GetInference() *InferenceConfig {
+	if x != nil {
+		return x.Inference
+	}
+	return nil
+}
+
 type TTSProviderConfig struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Provider       string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
-	Voice          string                 `protobuf:"bytes,2,opt,name=voice,proto3" json:"voice,omitempty"`
-	Params         map[string]string      `protobuf:"bytes,10,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Fallbacks      []*TTSProviderConfig   `protobuf:"bytes,11,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
-	CartesiaExtras *CartesiaExtras        `protobuf:"bytes,12,opt,name=cartesia_extras,json=cartesiaExtras,proto3" json:"cartesia_extras,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Provider               string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Voice                  string                 `protobuf:"bytes,2,opt,name=voice,proto3" json:"voice,omitempty"`
+	Model                  string                 `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	Language               string                 `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
+	Params                 map[string]string      `protobuf:"bytes,10,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Fallbacks              []*TTSProviderConfig   `protobuf:"bytes,11,rep,name=fallbacks,proto3" json:"fallbacks,omitempty"`
+	CartesiaExtras         *CartesiaExtras        `protobuf:"bytes,12,opt,name=cartesia_extras,json=cartesiaExtras,proto3" json:"cartesia_extras,omitempty"`
+	LatencyThresholdMs     float32                `protobuf:"fixed32,13,opt,name=latency_threshold_ms,json=latencyThresholdMs,proto3" json:"latency_threshold_ms,omitempty"`            // 0 = disabled; TTFB ceiling for fallover
+	ConsecutiveLatencyHits uint32                 `protobuf:"varint,14,opt,name=consecutive_latency_hits,json=consecutiveLatencyHits,proto3" json:"consecutive_latency_hits,omitempty"` // consecutive breaches before fail-over
+	Inference              *InferenceConfig       `protobuf:"bytes,15,opt,name=inference,proto3,oneof" json:"inference,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *TTSProviderConfig) Reset() {
 	*x = TTSProviderConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[16]
+	mi := &file_zrt_runtime_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1545,7 +1794,7 @@ func (x *TTSProviderConfig) String() string {
 func (*TTSProviderConfig) ProtoMessage() {}
 
 func (x *TTSProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[16]
+	mi := &file_zrt_runtime_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1558,7 +1807,7 @@ func (x *TTSProviderConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TTSProviderConfig.ProtoReflect.Descriptor instead.
 func (*TTSProviderConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{16}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *TTSProviderConfig) GetProvider() string {
@@ -1571,6 +1820,20 @@ func (x *TTSProviderConfig) GetProvider() string {
 func (x *TTSProviderConfig) GetVoice() string {
 	if x != nil {
 		return x.Voice
+	}
+	return ""
+}
+
+func (x *TTSProviderConfig) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *TTSProviderConfig) GetLanguage() string {
+	if x != nil {
+		return x.Language
 	}
 	return ""
 }
@@ -1596,6 +1859,27 @@ func (x *TTSProviderConfig) GetCartesiaExtras() *CartesiaExtras {
 	return nil
 }
 
+func (x *TTSProviderConfig) GetLatencyThresholdMs() float32 {
+	if x != nil {
+		return x.LatencyThresholdMs
+	}
+	return 0
+}
+
+func (x *TTSProviderConfig) GetConsecutiveLatencyHits() uint32 {
+	if x != nil {
+		return x.ConsecutiveLatencyHits
+	}
+	return 0
+}
+
+func (x *TTSProviderConfig) GetInference() *InferenceConfig {
+	if x != nil {
+		return x.Inference
+	}
+	return nil
+}
+
 type GeminiLLMExtras struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	ThinkingBudget  *int32                 `protobuf:"varint,1,opt,name=thinking_budget,json=thinkingBudget,proto3,oneof" json:"thinking_budget,omitempty"`
@@ -1608,7 +1892,7 @@ type GeminiLLMExtras struct {
 
 func (x *GeminiLLMExtras) Reset() {
 	*x = GeminiLLMExtras{}
-	mi := &file_zrt_runtime_proto_msgTypes[17]
+	mi := &file_zrt_runtime_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1620,7 +1904,7 @@ func (x *GeminiLLMExtras) String() string {
 func (*GeminiLLMExtras) ProtoMessage() {}
 
 func (x *GeminiLLMExtras) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[17]
+	mi := &file_zrt_runtime_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1633,7 +1917,7 @@ func (x *GeminiLLMExtras) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeminiLLMExtras.ProtoReflect.Descriptor instead.
 func (*GeminiLLMExtras) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{17}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GeminiLLMExtras) GetThinkingBudget() int32 {
@@ -1674,7 +1958,7 @@ type SafetySetting struct {
 
 func (x *SafetySetting) Reset() {
 	*x = SafetySetting{}
-	mi := &file_zrt_runtime_proto_msgTypes[18]
+	mi := &file_zrt_runtime_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1686,7 +1970,7 @@ func (x *SafetySetting) String() string {
 func (*SafetySetting) ProtoMessage() {}
 
 func (x *SafetySetting) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[18]
+	mi := &file_zrt_runtime_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1699,7 +1983,7 @@ func (x *SafetySetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafetySetting.ProtoReflect.Descriptor instead.
 func (*SafetySetting) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{18}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SafetySetting) GetCategory() string {
@@ -1728,7 +2012,7 @@ type VertexAIConfig struct {
 
 func (x *VertexAIConfig) Reset() {
 	*x = VertexAIConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[19]
+	mi := &file_zrt_runtime_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1740,7 +2024,7 @@ func (x *VertexAIConfig) String() string {
 func (*VertexAIConfig) ProtoMessage() {}
 
 func (x *VertexAIConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[19]
+	mi := &file_zrt_runtime_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1753,7 +2037,7 @@ func (x *VertexAIConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VertexAIConfig.ProtoReflect.Descriptor instead.
 func (*VertexAIConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{19}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *VertexAIConfig) GetProjectId() string {
@@ -1793,7 +2077,7 @@ type CartesiaExtras struct {
 
 func (x *CartesiaExtras) Reset() {
 	*x = CartesiaExtras{}
-	mi := &file_zrt_runtime_proto_msgTypes[20]
+	mi := &file_zrt_runtime_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1805,7 +2089,7 @@ func (x *CartesiaExtras) String() string {
 func (*CartesiaExtras) ProtoMessage() {}
 
 func (x *CartesiaExtras) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[20]
+	mi := &file_zrt_runtime_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1818,7 +2102,7 @@ func (x *CartesiaExtras) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CartesiaExtras.ProtoReflect.Descriptor instead.
 func (*CartesiaExtras) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{20}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CartesiaExtras) GetVoiceEmbedding() []float32 {
@@ -1846,7 +2130,7 @@ type VADProviderConfig struct {
 
 func (x *VADProviderConfig) Reset() {
 	*x = VADProviderConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[21]
+	mi := &file_zrt_runtime_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1858,7 +2142,7 @@ func (x *VADProviderConfig) String() string {
 func (*VADProviderConfig) ProtoMessage() {}
 
 func (x *VADProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[21]
+	mi := &file_zrt_runtime_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1871,7 +2155,7 @@ func (x *VADProviderConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VADProviderConfig.ProtoReflect.Descriptor instead.
 func (*VADProviderConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{21}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *VADProviderConfig) GetThreshold() float32 {
@@ -1959,7 +2243,7 @@ type InterruptConfig struct {
 
 func (x *InterruptConfig) Reset() {
 	*x = InterruptConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[22]
+	mi := &file_zrt_runtime_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1971,7 +2255,7 @@ func (x *InterruptConfig) String() string {
 func (*InterruptConfig) ProtoMessage() {}
 
 func (x *InterruptConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[22]
+	mi := &file_zrt_runtime_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1984,7 +2268,7 @@ func (x *InterruptConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InterruptConfig.ProtoReflect.Descriptor instead.
 func (*InterruptConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{22}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *InterruptConfig) GetMode() string {
@@ -2052,7 +2336,7 @@ type EOUConfig struct {
 
 func (x *EOUConfig) Reset() {
 	*x = EOUConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[23]
+	mi := &file_zrt_runtime_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2064,7 +2348,7 @@ func (x *EOUConfig) String() string {
 func (*EOUConfig) ProtoMessage() {}
 
 func (x *EOUConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[23]
+	mi := &file_zrt_runtime_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2077,7 +2361,7 @@ func (x *EOUConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EOUConfig.ProtoReflect.Descriptor instead.
 func (*EOUConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{23}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *EOUConfig) GetThreshold() float32 {
@@ -2149,7 +2433,7 @@ type FillerConfig struct {
 
 func (x *FillerConfig) Reset() {
 	*x = FillerConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[24]
+	mi := &file_zrt_runtime_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2161,7 +2445,7 @@ func (x *FillerConfig) String() string {
 func (*FillerConfig) ProtoMessage() {}
 
 func (x *FillerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[24]
+	mi := &file_zrt_runtime_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2174,7 +2458,7 @@ func (x *FillerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FillerConfig.ProtoReflect.Descriptor instead.
 func (*FillerConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{24}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *FillerConfig) GetFilterFillerWords() bool {
@@ -2222,7 +2506,7 @@ type AudioConfig struct {
 
 func (x *AudioConfig) Reset() {
 	*x = AudioConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[25]
+	mi := &file_zrt_runtime_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2234,7 +2518,7 @@ func (x *AudioConfig) String() string {
 func (*AudioConfig) ProtoMessage() {}
 
 func (x *AudioConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[25]
+	mi := &file_zrt_runtime_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2247,7 +2531,7 @@ func (x *AudioConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AudioConfig.ProtoReflect.Descriptor instead.
 func (*AudioConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{25}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AudioConfig) GetTtsSampleRate() uint32 {
@@ -2275,7 +2559,7 @@ type SentenceBufferConfig struct {
 
 func (x *SentenceBufferConfig) Reset() {
 	*x = SentenceBufferConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[26]
+	mi := &file_zrt_runtime_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2287,7 +2571,7 @@ func (x *SentenceBufferConfig) String() string {
 func (*SentenceBufferConfig) ProtoMessage() {}
 
 func (x *SentenceBufferConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[26]
+	mi := &file_zrt_runtime_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2300,7 +2584,7 @@ func (x *SentenceBufferConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SentenceBufferConfig.ProtoReflect.Descriptor instead.
 func (*SentenceBufferConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{26}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SentenceBufferConfig) GetMinClauseLen() uint32 {
@@ -2342,13 +2626,17 @@ type AgentConfig struct {
 	LlmStreamHookTimeoutMs   uint32                 `protobuf:"varint,14,opt,name=llm_stream_hook_timeout_ms,json=llmStreamHookTimeoutMs,proto3" json:"llm_stream_hook_timeout_ms,omitempty"`
 	Alternates               []*NamedAgentConfig    `protobuf:"bytes,15,rep,name=alternates,proto3" json:"alternates,omitempty"`
 	GreetingNonInterruptible bool                   `protobuf:"varint,16,opt,name=greeting_non_interruptible,json=greetingNonInterruptible,proto3" json:"greeting_non_interruptible,omitempty"`
+	SttHookEnabled           bool                   `protobuf:"varint,17,opt,name=stt_hook_enabled,json=sttHookEnabled,proto3" json:"stt_hook_enabled,omitempty"`
+	SttHookTimeoutMs         uint32                 `protobuf:"varint,18,opt,name=stt_hook_timeout_ms,json=sttHookTimeoutMs,proto3" json:"stt_hook_timeout_ms,omitempty"`
+	TtsHookEnabled           bool                   `protobuf:"varint,19,opt,name=tts_hook_enabled,json=ttsHookEnabled,proto3" json:"tts_hook_enabled,omitempty"`
+	TtsHookTimeoutMs         uint32                 `protobuf:"varint,20,opt,name=tts_hook_timeout_ms,json=ttsHookTimeoutMs,proto3" json:"tts_hook_timeout_ms,omitempty"`
 	unknownFields            protoimpl.UnknownFields
 	sizeCache                protoimpl.SizeCache
 }
 
 func (x *AgentConfig) Reset() {
 	*x = AgentConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[27]
+	mi := &file_zrt_runtime_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2360,7 +2648,7 @@ func (x *AgentConfig) String() string {
 func (*AgentConfig) ProtoMessage() {}
 
 func (x *AgentConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[27]
+	mi := &file_zrt_runtime_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2373,7 +2661,7 @@ func (x *AgentConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentConfig.ProtoReflect.Descriptor instead.
 func (*AgentConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{27}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AgentConfig) GetInstructions() string {
@@ -2488,6 +2776,34 @@ func (x *AgentConfig) GetGreetingNonInterruptible() bool {
 	return false
 }
 
+func (x *AgentConfig) GetSttHookEnabled() bool {
+	if x != nil {
+		return x.SttHookEnabled
+	}
+	return false
+}
+
+func (x *AgentConfig) GetSttHookTimeoutMs() uint32 {
+	if x != nil {
+		return x.SttHookTimeoutMs
+	}
+	return 0
+}
+
+func (x *AgentConfig) GetTtsHookEnabled() bool {
+	if x != nil {
+		return x.TtsHookEnabled
+	}
+	return false
+}
+
+func (x *AgentConfig) GetTtsHookTimeoutMs() uint32 {
+	if x != nil {
+		return x.TtsHookTimeoutMs
+	}
+	return 0
+}
+
 type NamedAgentConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
@@ -2500,7 +2816,7 @@ type NamedAgentConfig struct {
 
 func (x *NamedAgentConfig) Reset() {
 	*x = NamedAgentConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[28]
+	mi := &file_zrt_runtime_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2512,7 +2828,7 @@ func (x *NamedAgentConfig) String() string {
 func (*NamedAgentConfig) ProtoMessage() {}
 
 func (x *NamedAgentConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[28]
+	mi := &file_zrt_runtime_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2525,7 +2841,7 @@ func (x *NamedAgentConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NamedAgentConfig.ProtoReflect.Descriptor instead.
 func (*NamedAgentConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{28}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *NamedAgentConfig) GetAgentId() string {
@@ -2567,7 +2883,7 @@ type ToolSchemaProto struct {
 
 func (x *ToolSchemaProto) Reset() {
 	*x = ToolSchemaProto{}
-	mi := &file_zrt_runtime_proto_msgTypes[29]
+	mi := &file_zrt_runtime_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2579,7 +2895,7 @@ func (x *ToolSchemaProto) String() string {
 func (*ToolSchemaProto) ProtoMessage() {}
 
 func (x *ToolSchemaProto) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[29]
+	mi := &file_zrt_runtime_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2592,7 +2908,7 @@ func (x *ToolSchemaProto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolSchemaProto.ProtoReflect.Descriptor instead.
 func (*ToolSchemaProto) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{29}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ToolSchemaProto) GetName() string {
@@ -2628,7 +2944,7 @@ type ContextWindowConfig struct {
 
 func (x *ContextWindowConfig) Reset() {
 	*x = ContextWindowConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[30]
+	mi := &file_zrt_runtime_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2640,7 +2956,7 @@ func (x *ContextWindowConfig) String() string {
 func (*ContextWindowConfig) ProtoMessage() {}
 
 func (x *ContextWindowConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[30]
+	mi := &file_zrt_runtime_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2653,7 +2969,7 @@ func (x *ContextWindowConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContextWindowConfig.ProtoReflect.Descriptor instead.
 func (*ContextWindowConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{30}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ContextWindowConfig) GetMaxTokens() uint32 {
@@ -2701,13 +3017,15 @@ type RoomConfig struct {
 	DashboardLogLevel           string                 `protobuf:"bytes,13,opt,name=dashboard_log_level,json=dashboardLogLevel,proto3" json:"dashboard_log_level,omitempty"`
 	AudioListenerEnabled        bool                   `protobuf:"varint,14,opt,name=audio_listener_enabled,json=audioListenerEnabled,proto3" json:"audio_listener_enabled,omitempty"`
 	AgentParticipantId          string                 `protobuf:"bytes,15,opt,name=agent_participant_id,json=agentParticipantId,proto3" json:"agent_participant_id,omitempty"`
+	MetricsExportUrl            string                 `protobuf:"bytes,16,opt,name=metrics_export_url,json=metricsExportUrl,proto3" json:"metrics_export_url,omitempty"`
+	MetricsExportHeaders        map[string]string      `protobuf:"bytes,17,rep,name=metrics_export_headers,json=metricsExportHeaders,proto3" json:"metrics_export_headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *RoomConfig) Reset() {
 	*x = RoomConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[31]
+	mi := &file_zrt_runtime_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2719,7 +3037,7 @@ func (x *RoomConfig) String() string {
 func (*RoomConfig) ProtoMessage() {}
 
 func (x *RoomConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[31]
+	mi := &file_zrt_runtime_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2732,7 +3050,7 @@ func (x *RoomConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoomConfig.ProtoReflect.Descriptor instead.
 func (*RoomConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{31}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *RoomConfig) GetRoomId() string {
@@ -2840,6 +3158,20 @@ func (x *RoomConfig) GetAgentParticipantId() string {
 	return ""
 }
 
+func (x *RoomConfig) GetMetricsExportUrl() string {
+	if x != nil {
+		return x.MetricsExportUrl
+	}
+	return ""
+}
+
+func (x *RoomConfig) GetMetricsExportHeaders() map[string]string {
+	if x != nil {
+		return x.MetricsExportHeaders
+	}
+	return nil
+}
+
 type CredentialsConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProviderKeys  map[string]string      `protobuf:"bytes,1,rep,name=provider_keys,json=providerKeys,proto3" json:"provider_keys,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -2849,7 +3181,7 @@ type CredentialsConfig struct {
 
 func (x *CredentialsConfig) Reset() {
 	*x = CredentialsConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[32]
+	mi := &file_zrt_runtime_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2861,7 +3193,7 @@ func (x *CredentialsConfig) String() string {
 func (*CredentialsConfig) ProtoMessage() {}
 
 func (x *CredentialsConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[32]
+	mi := &file_zrt_runtime_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2874,7 +3206,7 @@ func (x *CredentialsConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CredentialsConfig.ProtoReflect.Descriptor instead.
 func (*CredentialsConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{32}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *CredentialsConfig) GetProviderKeys() map[string]string {
@@ -2895,7 +3227,7 @@ type VersionInfo struct {
 
 func (x *VersionInfo) Reset() {
 	*x = VersionInfo{}
-	mi := &file_zrt_runtime_proto_msgTypes[33]
+	mi := &file_zrt_runtime_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2907,7 +3239,7 @@ func (x *VersionInfo) String() string {
 func (*VersionInfo) ProtoMessage() {}
 
 func (x *VersionInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[33]
+	mi := &file_zrt_runtime_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2920,7 +3252,7 @@ func (x *VersionInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VersionInfo.ProtoReflect.Descriptor instead.
 func (*VersionInfo) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{33}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *VersionInfo) GetSdkVersion() string {
@@ -2955,7 +3287,7 @@ type InjectMessageRequest struct {
 
 func (x *InjectMessageRequest) Reset() {
 	*x = InjectMessageRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[34]
+	mi := &file_zrt_runtime_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2967,7 +3299,7 @@ func (x *InjectMessageRequest) String() string {
 func (*InjectMessageRequest) ProtoMessage() {}
 
 func (x *InjectMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[34]
+	mi := &file_zrt_runtime_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2980,7 +3312,7 @@ func (x *InjectMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InjectMessageRequest.ProtoReflect.Descriptor instead.
 func (*InjectMessageRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{34}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *InjectMessageRequest) GetSessionId() string {
@@ -3014,7 +3346,7 @@ type RemoveMessageRequest struct {
 
 func (x *RemoveMessageRequest) Reset() {
 	*x = RemoveMessageRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[35]
+	mi := &file_zrt_runtime_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3026,7 +3358,7 @@ func (x *RemoveMessageRequest) String() string {
 func (*RemoveMessageRequest) ProtoMessage() {}
 
 func (x *RemoveMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[35]
+	mi := &file_zrt_runtime_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3039,7 +3371,7 @@ func (x *RemoveMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveMessageRequest.ProtoReflect.Descriptor instead.
 func (*RemoveMessageRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{35}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *RemoveMessageRequest) GetSessionId() string {
@@ -3066,7 +3398,7 @@ type GetContextRequest struct {
 
 func (x *GetContextRequest) Reset() {
 	*x = GetContextRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[36]
+	mi := &file_zrt_runtime_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3078,7 +3410,7 @@ func (x *GetContextRequest) String() string {
 func (*GetContextRequest) ProtoMessage() {}
 
 func (x *GetContextRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[36]
+	mi := &file_zrt_runtime_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3091,7 +3423,7 @@ func (x *GetContextRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetContextRequest.ProtoReflect.Descriptor instead.
 func (*GetContextRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{36}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *GetContextRequest) GetSessionId() string {
@@ -3119,7 +3451,7 @@ type GetContextResponse struct {
 
 func (x *GetContextResponse) Reset() {
 	*x = GetContextResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[37]
+	mi := &file_zrt_runtime_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3131,7 +3463,7 @@ func (x *GetContextResponse) String() string {
 func (*GetContextResponse) ProtoMessage() {}
 
 func (x *GetContextResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[37]
+	mi := &file_zrt_runtime_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3144,7 +3476,7 @@ func (x *GetContextResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetContextResponse.ProtoReflect.Descriptor instead.
 func (*GetContextResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{37}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *GetContextResponse) GetMessages() []*ContextMessageProto {
@@ -3178,7 +3510,7 @@ type ClearContextRequest struct {
 
 func (x *ClearContextRequest) Reset() {
 	*x = ClearContextRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[38]
+	mi := &file_zrt_runtime_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3190,7 +3522,7 @@ func (x *ClearContextRequest) String() string {
 func (*ClearContextRequest) ProtoMessage() {}
 
 func (x *ClearContextRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[38]
+	mi := &file_zrt_runtime_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3203,7 +3535,7 @@ func (x *ClearContextRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearContextRequest.ProtoReflect.Descriptor instead.
 func (*ClearContextRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{38}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ClearContextRequest) GetSessionId() string {
@@ -3232,7 +3564,7 @@ type ContextOpResult struct {
 
 func (x *ContextOpResult) Reset() {
 	*x = ContextOpResult{}
-	mi := &file_zrt_runtime_proto_msgTypes[39]
+	mi := &file_zrt_runtime_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3244,7 +3576,7 @@ func (x *ContextOpResult) String() string {
 func (*ContextOpResult) ProtoMessage() {}
 
 func (x *ContextOpResult) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[39]
+	mi := &file_zrt_runtime_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3257,7 +3589,7 @@ func (x *ContextOpResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContextOpResult.ProtoReflect.Descriptor instead.
 func (*ContextOpResult) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{39}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ContextOpResult) GetSuccess() bool {
@@ -3300,7 +3632,7 @@ type ContextMessageProto struct {
 
 func (x *ContextMessageProto) Reset() {
 	*x = ContextMessageProto{}
-	mi := &file_zrt_runtime_proto_msgTypes[40]
+	mi := &file_zrt_runtime_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3312,7 +3644,7 @@ func (x *ContextMessageProto) String() string {
 func (*ContextMessageProto) ProtoMessage() {}
 
 func (x *ContextMessageProto) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[40]
+	mi := &file_zrt_runtime_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3325,7 +3657,7 @@ func (x *ContextMessageProto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContextMessageProto.ProtoReflect.Descriptor instead.
 func (*ContextMessageProto) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{40}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ContextMessageProto) GetRole() string {
@@ -3366,7 +3698,7 @@ type ImageContentProto struct {
 
 func (x *ImageContentProto) Reset() {
 	*x = ImageContentProto{}
-	mi := &file_zrt_runtime_proto_msgTypes[41]
+	mi := &file_zrt_runtime_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3378,7 +3710,7 @@ func (x *ImageContentProto) String() string {
 func (*ImageContentProto) ProtoMessage() {}
 
 func (x *ImageContentProto) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[41]
+	mi := &file_zrt_runtime_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3391,7 +3723,7 @@ func (x *ImageContentProto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImageContentProto.ProtoReflect.Descriptor instead.
 func (*ImageContentProto) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{41}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *ImageContentProto) GetUrl() string {
@@ -3416,7 +3748,7 @@ type HealthRequest struct {
 
 func (x *HealthRequest) Reset() {
 	*x = HealthRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[42]
+	mi := &file_zrt_runtime_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3428,7 +3760,7 @@ func (x *HealthRequest) String() string {
 func (*HealthRequest) ProtoMessage() {}
 
 func (x *HealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[42]
+	mi := &file_zrt_runtime_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3441,7 +3773,7 @@ func (x *HealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthRequest.ProtoReflect.Descriptor instead.
 func (*HealthRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{42}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{45}
 }
 
 type HealthResponse struct {
@@ -3456,7 +3788,7 @@ type HealthResponse struct {
 
 func (x *HealthResponse) Reset() {
 	*x = HealthResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[43]
+	mi := &file_zrt_runtime_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3468,7 +3800,7 @@ func (x *HealthResponse) String() string {
 func (*HealthResponse) ProtoMessage() {}
 
 func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[43]
+	mi := &file_zrt_runtime_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3481,7 +3813,7 @@ func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
 func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{43}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *HealthResponse) GetHealthy() bool {
@@ -3544,6 +3876,9 @@ type ClientEvent struct {
 	//	*ClientEvent_CustomSttResult
 	//	*ClientEvent_CustomTtsAudio
 	//	*ClientEvent_PreloadBackgroundAudio
+	//	*ClientEvent_SetUserInputEnabled
+	//	*ClientEvent_SttHookResult
+	//	*ClientEvent_TtsHookResult
 	Event         isClientEvent_Event `protobuf_oneof:"event"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3551,7 +3886,7 @@ type ClientEvent struct {
 
 func (x *ClientEvent) Reset() {
 	*x = ClientEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[44]
+	mi := &file_zrt_runtime_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3563,7 +3898,7 @@ func (x *ClientEvent) String() string {
 func (*ClientEvent) ProtoMessage() {}
 
 func (x *ClientEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[44]
+	mi := &file_zrt_runtime_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3576,7 +3911,7 @@ func (x *ClientEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientEvent.ProtoReflect.Descriptor instead.
 func (*ClientEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{44}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *ClientEvent) GetSessionId() string {
@@ -3834,6 +4169,33 @@ func (x *ClientEvent) GetPreloadBackgroundAudio() *PreloadBackgroundAudioCmd {
 	return nil
 }
 
+func (x *ClientEvent) GetSetUserInputEnabled() *SetUserInputEnabledCmd {
+	if x != nil {
+		if x, ok := x.Event.(*ClientEvent_SetUserInputEnabled); ok {
+			return x.SetUserInputEnabled
+		}
+	}
+	return nil
+}
+
+func (x *ClientEvent) GetSttHookResult() *SttHookResponse {
+	if x != nil {
+		if x, ok := x.Event.(*ClientEvent_SttHookResult); ok {
+			return x.SttHookResult
+		}
+	}
+	return nil
+}
+
+func (x *ClientEvent) GetTtsHookResult() *TtsHookResponse {
+	if x != nil {
+		if x, ok := x.Event.(*ClientEvent_TtsHookResult); ok {
+			return x.TtsHookResult
+		}
+	}
+	return nil
+}
+
 type isClientEvent_Event interface {
 	isClientEvent_Event()
 }
@@ -3942,6 +4304,18 @@ type ClientEvent_PreloadBackgroundAudio struct {
 	PreloadBackgroundAudio *PreloadBackgroundAudioCmd `protobuf:"bytes,43,opt,name=preload_background_audio,json=preloadBackgroundAudio,proto3,oneof"`
 }
 
+type ClientEvent_SetUserInputEnabled struct {
+	SetUserInputEnabled *SetUserInputEnabledCmd `protobuf:"bytes,44,opt,name=set_user_input_enabled,json=setUserInputEnabled,proto3,oneof"`
+}
+
+type ClientEvent_SttHookResult struct {
+	SttHookResult *SttHookResponse `protobuf:"bytes,47,opt,name=stt_hook_result,json=sttHookResult,proto3,oneof"`
+}
+
+type ClientEvent_TtsHookResult struct {
+	TtsHookResult *TtsHookResponse `protobuf:"bytes,48,opt,name=tts_hook_result,json=ttsHookResult,proto3,oneof"`
+}
+
 func (*ClientEvent_ToolResult) isClientEvent_Event() {}
 
 func (*ClientEvent_BeforeLlmResult) isClientEvent_Event() {}
@@ -3993,6 +4367,12 @@ func (*ClientEvent_CustomSttResult) isClientEvent_Event() {}
 func (*ClientEvent_CustomTtsAudio) isClientEvent_Event() {}
 
 func (*ClientEvent_PreloadBackgroundAudio) isClientEvent_Event() {}
+
+func (*ClientEvent_SetUserInputEnabled) isClientEvent_Event() {}
+
+func (*ClientEvent_SttHookResult) isClientEvent_Event() {}
+
+func (*ClientEvent_TtsHookResult) isClientEvent_Event() {}
 
 type RuntimeEvent struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
@@ -4046,6 +4426,10 @@ type RuntimeEvent struct {
 	//	*RuntimeEvent_CustomTtsSynthesize
 	//	*RuntimeEvent_SignalingSessionAssigned
 	//	*RuntimeEvent_LlmCompleted
+	//	*RuntimeEvent_ComponentMetrics
+	//	*RuntimeEvent_TurnMetrics
+	//	*RuntimeEvent_SttHook
+	//	*RuntimeEvent_TtsHook
 	Event         isRuntimeEvent_Event `protobuf_oneof:"event"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4053,7 +4437,7 @@ type RuntimeEvent struct {
 
 func (x *RuntimeEvent) Reset() {
 	*x = RuntimeEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[45]
+	mi := &file_zrt_runtime_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4065,7 +4449,7 @@ func (x *RuntimeEvent) String() string {
 func (*RuntimeEvent) ProtoMessage() {}
 
 func (x *RuntimeEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[45]
+	mi := &file_zrt_runtime_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4078,7 +4462,7 @@ func (x *RuntimeEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeEvent.ProtoReflect.Descriptor instead.
 func (*RuntimeEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{45}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *RuntimeEvent) GetSessionId() string {
@@ -4516,6 +4900,42 @@ func (x *RuntimeEvent) GetLlmCompleted() *LLMCompletedEvent {
 	return nil
 }
 
+func (x *RuntimeEvent) GetComponentMetrics() *ComponentMetricsEvent {
+	if x != nil {
+		if x, ok := x.Event.(*RuntimeEvent_ComponentMetrics); ok {
+			return x.ComponentMetrics
+		}
+	}
+	return nil
+}
+
+func (x *RuntimeEvent) GetTurnMetrics() *TurnMetricsEvent {
+	if x != nil {
+		if x, ok := x.Event.(*RuntimeEvent_TurnMetrics); ok {
+			return x.TurnMetrics
+		}
+	}
+	return nil
+}
+
+func (x *RuntimeEvent) GetSttHook() *SttHookEvent {
+	if x != nil {
+		if x, ok := x.Event.(*RuntimeEvent_SttHook); ok {
+			return x.SttHook
+		}
+	}
+	return nil
+}
+
+func (x *RuntimeEvent) GetTtsHook() *TtsHookEvent {
+	if x != nil {
+		if x, ok := x.Event.(*RuntimeEvent_TtsHook); ok {
+			return x.TtsHook
+		}
+	}
+	return nil
+}
+
 type isRuntimeEvent_Event interface {
 	isRuntimeEvent_Event()
 }
@@ -4704,6 +5124,22 @@ type RuntimeEvent_LlmCompleted struct {
 	LlmCompleted *LLMCompletedEvent `protobuf:"bytes,65,opt,name=llm_completed,json=llmCompleted,proto3,oneof"`
 }
 
+type RuntimeEvent_ComponentMetrics struct {
+	ComponentMetrics *ComponentMetricsEvent `protobuf:"bytes,66,opt,name=component_metrics,json=componentMetrics,proto3,oneof"`
+}
+
+type RuntimeEvent_TurnMetrics struct {
+	TurnMetrics *TurnMetricsEvent `protobuf:"bytes,67,opt,name=turn_metrics,json=turnMetrics,proto3,oneof"`
+}
+
+type RuntimeEvent_SttHook struct {
+	SttHook *SttHookEvent `protobuf:"bytes,69,opt,name=stt_hook,json=sttHook,proto3,oneof"`
+}
+
+type RuntimeEvent_TtsHook struct {
+	TtsHook *TtsHookEvent `protobuf:"bytes,70,opt,name=tts_hook,json=ttsHook,proto3,oneof"`
+}
+
 func (*RuntimeEvent_ToolCall) isRuntimeEvent_Event() {}
 
 func (*RuntimeEvent_BeforeLlm) isRuntimeEvent_Event() {}
@@ -4796,6 +5232,14 @@ func (*RuntimeEvent_SignalingSessionAssigned) isRuntimeEvent_Event() {}
 
 func (*RuntimeEvent_LlmCompleted) isRuntimeEvent_Event() {}
 
+func (*RuntimeEvent_ComponentMetrics) isRuntimeEvent_Event() {}
+
+func (*RuntimeEvent_TurnMetrics) isRuntimeEvent_Event() {}
+
+func (*RuntimeEvent_SttHook) isRuntimeEvent_Event() {}
+
+func (*RuntimeEvent_TtsHook) isRuntimeEvent_Event() {}
+
 type ToolCallRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CallId        string                 `protobuf:"bytes,1,opt,name=call_id,json=callId,proto3" json:"call_id,omitempty"`
@@ -4807,7 +5251,7 @@ type ToolCallRequest struct {
 
 func (x *ToolCallRequest) Reset() {
 	*x = ToolCallRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[46]
+	mi := &file_zrt_runtime_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4819,7 +5263,7 @@ func (x *ToolCallRequest) String() string {
 func (*ToolCallRequest) ProtoMessage() {}
 
 func (x *ToolCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[46]
+	mi := &file_zrt_runtime_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4832,7 +5276,7 @@ func (x *ToolCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolCallRequest.ProtoReflect.Descriptor instead.
 func (*ToolCallRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{46}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ToolCallRequest) GetCallId() string {
@@ -4867,7 +5311,7 @@ type ToolCallResponse struct {
 
 func (x *ToolCallResponse) Reset() {
 	*x = ToolCallResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[47]
+	mi := &file_zrt_runtime_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4879,7 +5323,7 @@ func (x *ToolCallResponse) String() string {
 func (*ToolCallResponse) ProtoMessage() {}
 
 func (x *ToolCallResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[47]
+	mi := &file_zrt_runtime_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4892,7 +5336,7 @@ func (x *ToolCallResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolCallResponse.ProtoReflect.Descriptor instead.
 func (*ToolCallResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{47}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *ToolCallResponse) GetCallId() string {
@@ -4927,7 +5371,7 @@ type BeforeLLMHook struct {
 
 func (x *BeforeLLMHook) Reset() {
 	*x = BeforeLLMHook{}
-	mi := &file_zrt_runtime_proto_msgTypes[48]
+	mi := &file_zrt_runtime_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4939,7 +5383,7 @@ func (x *BeforeLLMHook) String() string {
 func (*BeforeLLMHook) ProtoMessage() {}
 
 func (x *BeforeLLMHook) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[48]
+	mi := &file_zrt_runtime_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4952,7 +5396,7 @@ func (x *BeforeLLMHook) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeforeLLMHook.ProtoReflect.Descriptor instead.
 func (*BeforeLLMHook) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{48}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *BeforeLLMHook) GetMessagesJson() string {
@@ -4986,7 +5430,7 @@ type BeforeLLMResponse struct {
 
 func (x *BeforeLLMResponse) Reset() {
 	*x = BeforeLLMResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[49]
+	mi := &file_zrt_runtime_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4998,7 +5442,7 @@ func (x *BeforeLLMResponse) String() string {
 func (*BeforeLLMResponse) ProtoMessage() {}
 
 func (x *BeforeLLMResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[49]
+	mi := &file_zrt_runtime_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5011,7 +5455,7 @@ func (x *BeforeLLMResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BeforeLLMResponse.ProtoReflect.Descriptor instead.
 func (*BeforeLLMResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{49}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *BeforeLLMResponse) GetModifiedMessagesJson() string {
@@ -5024,6 +5468,270 @@ func (x *BeforeLLMResponse) GetModifiedMessagesJson() string {
 func (x *BeforeLLMResponse) GetSkipTurn() bool {
 	if x != nil {
 		return x.SkipTurn
+	}
+	return false
+}
+
+type SttHookEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	Language      string                 `protobuf:"bytes,3,opt,name=language,proto3" json:"language,omitempty"`
+	IsFinal       bool                   `protobuf:"varint,4,opt,name=is_final,json=isFinal,proto3" json:"is_final,omitempty"`
+	TurnNumber    uint32                 `protobuf:"varint,5,opt,name=turn_number,json=turnNumber,proto3" json:"turn_number,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SttHookEvent) Reset() {
+	*x = SttHookEvent{}
+	mi := &file_zrt_runtime_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SttHookEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SttHookEvent) ProtoMessage() {}
+
+func (x *SttHookEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SttHookEvent.ProtoReflect.Descriptor instead.
+func (*SttHookEvent) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *SttHookEvent) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *SttHookEvent) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *SttHookEvent) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
+func (x *SttHookEvent) GetIsFinal() bool {
+	if x != nil {
+		return x.IsFinal
+	}
+	return false
+}
+
+func (x *SttHookEvent) GetTurnNumber() uint32 {
+	if x != nil {
+		return x.TurnNumber
+	}
+	return 0
+}
+
+type SttHookResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	ModifiedText  string                 `protobuf:"bytes,2,opt,name=modified_text,json=modifiedText,proto3" json:"modified_text,omitempty"`
+	Drop          bool                   `protobuf:"varint,3,opt,name=drop,proto3" json:"drop,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SttHookResponse) Reset() {
+	*x = SttHookResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SttHookResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SttHookResponse) ProtoMessage() {}
+
+func (x *SttHookResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SttHookResponse.ProtoReflect.Descriptor instead.
+func (*SttHookResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *SttHookResponse) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *SttHookResponse) GetModifiedText() string {
+	if x != nil {
+		return x.ModifiedText
+	}
+	return ""
+}
+
+func (x *SttHookResponse) GetDrop() bool {
+	if x != nil {
+		return x.Drop
+	}
+	return false
+}
+
+type TtsHookEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	UtteranceId   string                 `protobuf:"bytes,3,opt,name=utterance_id,json=utteranceId,proto3" json:"utterance_id,omitempty"`
+	Voice         string                 `protobuf:"bytes,4,opt,name=voice,proto3" json:"voice,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TtsHookEvent) Reset() {
+	*x = TtsHookEvent{}
+	mi := &file_zrt_runtime_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TtsHookEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TtsHookEvent) ProtoMessage() {}
+
+func (x *TtsHookEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TtsHookEvent.ProtoReflect.Descriptor instead.
+func (*TtsHookEvent) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *TtsHookEvent) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *TtsHookEvent) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *TtsHookEvent) GetUtteranceId() string {
+	if x != nil {
+		return x.UtteranceId
+	}
+	return ""
+}
+
+func (x *TtsHookEvent) GetVoice() string {
+	if x != nil {
+		return x.Voice
+	}
+	return ""
+}
+
+type TtsHookResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	ModifiedText  string                 `protobuf:"bytes,2,opt,name=modified_text,json=modifiedText,proto3" json:"modified_text,omitempty"`
+	Drop          bool                   `protobuf:"varint,3,opt,name=drop,proto3" json:"drop,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TtsHookResponse) Reset() {
+	*x = TtsHookResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TtsHookResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TtsHookResponse) ProtoMessage() {}
+
+func (x *TtsHookResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TtsHookResponse.ProtoReflect.Descriptor instead.
+func (*TtsHookResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *TtsHookResponse) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *TtsHookResponse) GetModifiedText() string {
+	if x != nil {
+		return x.ModifiedText
+	}
+	return ""
+}
+
+func (x *TtsHookResponse) GetDrop() bool {
+	if x != nil {
+		return x.Drop
 	}
 	return false
 }
@@ -5045,7 +5753,7 @@ type TranscriptEvent struct {
 
 func (x *TranscriptEvent) Reset() {
 	*x = TranscriptEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[50]
+	mi := &file_zrt_runtime_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5057,7 +5765,7 @@ func (x *TranscriptEvent) String() string {
 func (*TranscriptEvent) ProtoMessage() {}
 
 func (x *TranscriptEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[50]
+	mi := &file_zrt_runtime_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5070,7 +5778,7 @@ func (x *TranscriptEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscriptEvent.ProtoReflect.Descriptor instead.
 func (*TranscriptEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{50}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *TranscriptEvent) GetParticipantId() string {
@@ -5150,7 +5858,7 @@ type TurnComplete struct {
 
 func (x *TurnComplete) Reset() {
 	*x = TurnComplete{}
-	mi := &file_zrt_runtime_proto_msgTypes[51]
+	mi := &file_zrt_runtime_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5162,7 +5870,7 @@ func (x *TurnComplete) String() string {
 func (*TurnComplete) ProtoMessage() {}
 
 func (x *TurnComplete) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[51]
+	mi := &file_zrt_runtime_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5175,7 +5883,7 @@ func (x *TurnComplete) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TurnComplete.ProtoReflect.Descriptor instead.
 func (*TurnComplete) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{51}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *TurnComplete) GetUserTranscript() string {
@@ -5230,7 +5938,7 @@ type SessionStateChange struct {
 
 func (x *SessionStateChange) Reset() {
 	*x = SessionStateChange{}
-	mi := &file_zrt_runtime_proto_msgTypes[52]
+	mi := &file_zrt_runtime_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5242,7 +5950,7 @@ func (x *SessionStateChange) String() string {
 func (*SessionStateChange) ProtoMessage() {}
 
 func (x *SessionStateChange) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[52]
+	mi := &file_zrt_runtime_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5255,7 +5963,7 @@ func (x *SessionStateChange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SessionStateChange.ProtoReflect.Descriptor instead.
 func (*SessionStateChange) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{52}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *SessionStateChange) GetState() string {
@@ -5283,7 +5991,7 @@ type ParticipantEventProto struct {
 
 func (x *ParticipantEventProto) Reset() {
 	*x = ParticipantEventProto{}
-	mi := &file_zrt_runtime_proto_msgTypes[53]
+	mi := &file_zrt_runtime_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5295,7 +6003,7 @@ func (x *ParticipantEventProto) String() string {
 func (*ParticipantEventProto) ProtoMessage() {}
 
 func (x *ParticipantEventProto) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[53]
+	mi := &file_zrt_runtime_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5308,7 +6016,7 @@ func (x *ParticipantEventProto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParticipantEventProto.ProtoReflect.Descriptor instead.
 func (*ParticipantEventProto) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{53}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *ParticipantEventProto) GetType() string {
@@ -5344,7 +6052,7 @@ type AgentSpeechEvent struct {
 
 func (x *AgentSpeechEvent) Reset() {
 	*x = AgentSpeechEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[54]
+	mi := &file_zrt_runtime_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5356,7 +6064,7 @@ func (x *AgentSpeechEvent) String() string {
 func (*AgentSpeechEvent) ProtoMessage() {}
 
 func (x *AgentSpeechEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[54]
+	mi := &file_zrt_runtime_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5369,7 +6077,7 @@ func (x *AgentSpeechEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentSpeechEvent.ProtoReflect.Descriptor instead.
 func (*AgentSpeechEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{54}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *AgentSpeechEvent) GetText() string {
@@ -5410,7 +6118,7 @@ type InterruptEvent struct {
 
 func (x *InterruptEvent) Reset() {
 	*x = InterruptEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[55]
+	mi := &file_zrt_runtime_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5422,7 +6130,7 @@ func (x *InterruptEvent) String() string {
 func (*InterruptEvent) ProtoMessage() {}
 
 func (x *InterruptEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[55]
+	mi := &file_zrt_runtime_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5435,7 +6143,7 @@ func (x *InterruptEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InterruptEvent.ProtoReflect.Descriptor instead.
 func (*InterruptEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{55}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *InterruptEvent) GetReason() string {
@@ -5479,7 +6187,7 @@ type MetricsSnapshot struct {
 
 func (x *MetricsSnapshot) Reset() {
 	*x = MetricsSnapshot{}
-	mi := &file_zrt_runtime_proto_msgTypes[56]
+	mi := &file_zrt_runtime_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5491,7 +6199,7 @@ func (x *MetricsSnapshot) String() string {
 func (*MetricsSnapshot) ProtoMessage() {}
 
 func (x *MetricsSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[56]
+	mi := &file_zrt_runtime_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5504,7 +6212,7 @@ func (x *MetricsSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricsSnapshot.ProtoReflect.Descriptor instead.
 func (*MetricsSnapshot) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{56}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *MetricsSnapshot) GetSttTtfbMs() float32 {
@@ -5646,13 +6354,16 @@ type SayCommand struct {
 	InterruptCurrent bool                   `protobuf:"varint,2,opt,name=interrupt_current,json=interruptCurrent,proto3" json:"interrupt_current,omitempty"`
 	Voice            string                 `protobuf:"bytes,3,opt,name=voice,proto3" json:"voice,omitempty"`
 	NonInterruptible bool                   `protobuf:"varint,4,opt,name=non_interruptible,json=nonInterruptible,proto3" json:"non_interruptible,omitempty"`
+	AudioData        []byte                 `protobuf:"bytes,5,opt,name=audio_data,json=audioData,proto3" json:"audio_data,omitempty"`
+	AudioSampleRate  uint32                 `protobuf:"varint,6,opt,name=audio_sample_rate,json=audioSampleRate,proto3" json:"audio_sample_rate,omitempty"`
+	SkipChatContext  bool                   `protobuf:"varint,7,opt,name=skip_chat_context,json=skipChatContext,proto3" json:"skip_chat_context,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *SayCommand) Reset() {
 	*x = SayCommand{}
-	mi := &file_zrt_runtime_proto_msgTypes[57]
+	mi := &file_zrt_runtime_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5664,7 +6375,7 @@ func (x *SayCommand) String() string {
 func (*SayCommand) ProtoMessage() {}
 
 func (x *SayCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[57]
+	mi := &file_zrt_runtime_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5677,7 +6388,7 @@ func (x *SayCommand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SayCommand.ProtoReflect.Descriptor instead.
 func (*SayCommand) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{57}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *SayCommand) GetText() string {
@@ -5708,6 +6419,27 @@ func (x *SayCommand) GetNonInterruptible() bool {
 	return false
 }
 
+func (x *SayCommand) GetAudioData() []byte {
+	if x != nil {
+		return x.AudioData
+	}
+	return nil
+}
+
+func (x *SayCommand) GetAudioSampleRate() uint32 {
+	if x != nil {
+		return x.AudioSampleRate
+	}
+	return 0
+}
+
+func (x *SayCommand) GetSkipChatContext() bool {
+	if x != nil {
+		return x.SkipChatContext
+	}
+	return false
+}
+
 type SayComplete struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	DurationSeconds float32                `protobuf:"fixed32,1,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
@@ -5717,7 +6449,7 @@ type SayComplete struct {
 
 func (x *SayComplete) Reset() {
 	*x = SayComplete{}
-	mi := &file_zrt_runtime_proto_msgTypes[58]
+	mi := &file_zrt_runtime_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5729,7 +6461,7 @@ func (x *SayComplete) String() string {
 func (*SayComplete) ProtoMessage() {}
 
 func (x *SayComplete) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[58]
+	mi := &file_zrt_runtime_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5742,7 +6474,7 @@ func (x *SayComplete) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SayComplete.ProtoReflect.Descriptor instead.
 func (*SayComplete) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{58}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *SayComplete) GetDurationSeconds() float32 {
@@ -5761,7 +6493,7 @@ type UpdateInstructionsCmd struct {
 
 func (x *UpdateInstructionsCmd) Reset() {
 	*x = UpdateInstructionsCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[59]
+	mi := &file_zrt_runtime_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5773,7 +6505,7 @@ func (x *UpdateInstructionsCmd) String() string {
 func (*UpdateInstructionsCmd) ProtoMessage() {}
 
 func (x *UpdateInstructionsCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[59]
+	mi := &file_zrt_runtime_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5786,7 +6518,7 @@ func (x *UpdateInstructionsCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateInstructionsCmd.ProtoReflect.Descriptor instead.
 func (*UpdateInstructionsCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{59}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *UpdateInstructionsCmd) GetInstructions() string {
@@ -5805,7 +6537,7 @@ type UpdateToolsCmd struct {
 
 func (x *UpdateToolsCmd) Reset() {
 	*x = UpdateToolsCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[60]
+	mi := &file_zrt_runtime_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5817,7 +6549,7 @@ func (x *UpdateToolsCmd) String() string {
 func (*UpdateToolsCmd) ProtoMessage() {}
 
 func (x *UpdateToolsCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[60]
+	mi := &file_zrt_runtime_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5830,7 +6562,7 @@ func (x *UpdateToolsCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateToolsCmd.ProtoReflect.Descriptor instead.
 func (*UpdateToolsCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{60}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *UpdateToolsCmd) GetTools() []*ToolSchemaProto {
@@ -5849,7 +6581,7 @@ type UpdateConfigCmd struct {
 
 func (x *UpdateConfigCmd) Reset() {
 	*x = UpdateConfigCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[61]
+	mi := &file_zrt_runtime_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5861,7 +6593,7 @@ func (x *UpdateConfigCmd) String() string {
 func (*UpdateConfigCmd) ProtoMessage() {}
 
 func (x *UpdateConfigCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[61]
+	mi := &file_zrt_runtime_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5874,7 +6606,7 @@ func (x *UpdateConfigCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConfigCmd.ProtoReflect.Descriptor instead.
 func (*UpdateConfigCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{61}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *UpdateConfigCmd) GetConfigJson() string {
@@ -5893,7 +6625,7 @@ type ShutdownCommand struct {
 
 func (x *ShutdownCommand) Reset() {
 	*x = ShutdownCommand{}
-	mi := &file_zrt_runtime_proto_msgTypes[62]
+	mi := &file_zrt_runtime_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5905,7 +6637,7 @@ func (x *ShutdownCommand) String() string {
 func (*ShutdownCommand) ProtoMessage() {}
 
 func (x *ShutdownCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[62]
+	mi := &file_zrt_runtime_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5918,7 +6650,7 @@ func (x *ShutdownCommand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShutdownCommand.ProtoReflect.Descriptor instead.
 func (*ShutdownCommand) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{62}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *ShutdownCommand) GetReason() string {
@@ -5936,7 +6668,7 @@ type Keepalive struct {
 
 func (x *Keepalive) Reset() {
 	*x = Keepalive{}
-	mi := &file_zrt_runtime_proto_msgTypes[63]
+	mi := &file_zrt_runtime_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5948,7 +6680,7 @@ func (x *Keepalive) String() string {
 func (*Keepalive) ProtoMessage() {}
 
 func (x *Keepalive) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[63]
+	mi := &file_zrt_runtime_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5961,7 +6693,7 @@ func (x *Keepalive) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Keepalive.ProtoReflect.Descriptor instead.
 func (*Keepalive) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{63}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{70}
 }
 
 type CancelGenerationCmd struct {
@@ -5972,7 +6704,7 @@ type CancelGenerationCmd struct {
 
 func (x *CancelGenerationCmd) Reset() {
 	*x = CancelGenerationCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[64]
+	mi := &file_zrt_runtime_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5984,7 +6716,7 @@ func (x *CancelGenerationCmd) String() string {
 func (*CancelGenerationCmd) ProtoMessage() {}
 
 func (x *CancelGenerationCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[64]
+	mi := &file_zrt_runtime_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5997,7 +6729,7 @@ func (x *CancelGenerationCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelGenerationCmd.ProtoReflect.Descriptor instead.
 func (*CancelGenerationCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{64}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{71}
 }
 
 type KnowledgeBaseUpsertCmd struct {
@@ -6009,7 +6741,7 @@ type KnowledgeBaseUpsertCmd struct {
 
 func (x *KnowledgeBaseUpsertCmd) Reset() {
 	*x = KnowledgeBaseUpsertCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[65]
+	mi := &file_zrt_runtime_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6021,7 +6753,7 @@ func (x *KnowledgeBaseUpsertCmd) String() string {
 func (*KnowledgeBaseUpsertCmd) ProtoMessage() {}
 
 func (x *KnowledgeBaseUpsertCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[65]
+	mi := &file_zrt_runtime_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6034,7 +6766,7 @@ func (x *KnowledgeBaseUpsertCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KnowledgeBaseUpsertCmd.ProtoReflect.Descriptor instead.
 func (*KnowledgeBaseUpsertCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{65}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *KnowledgeBaseUpsertCmd) GetDocuments() []*KbDocument {
@@ -6053,7 +6785,7 @@ type KnowledgeBaseDeleteCmd struct {
 
 func (x *KnowledgeBaseDeleteCmd) Reset() {
 	*x = KnowledgeBaseDeleteCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[66]
+	mi := &file_zrt_runtime_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6065,7 +6797,7 @@ func (x *KnowledgeBaseDeleteCmd) String() string {
 func (*KnowledgeBaseDeleteCmd) ProtoMessage() {}
 
 func (x *KnowledgeBaseDeleteCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[66]
+	mi := &file_zrt_runtime_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6078,7 +6810,7 @@ func (x *KnowledgeBaseDeleteCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KnowledgeBaseDeleteCmd.ProtoReflect.Descriptor instead.
 func (*KnowledgeBaseDeleteCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{66}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *KnowledgeBaseDeleteCmd) GetIds() []string {
@@ -6097,7 +6829,7 @@ type GenerateCmd struct {
 
 func (x *GenerateCmd) Reset() {
 	*x = GenerateCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[67]
+	mi := &file_zrt_runtime_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6109,7 +6841,7 @@ func (x *GenerateCmd) String() string {
 func (*GenerateCmd) ProtoMessage() {}
 
 func (x *GenerateCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[67]
+	mi := &file_zrt_runtime_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6122,7 +6854,7 @@ func (x *GenerateCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateCmd.ProtoReflect.Descriptor instead.
 func (*GenerateCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{67}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *GenerateCmd) GetText() string {
@@ -6147,7 +6879,7 @@ type ErrorEvent struct {
 
 func (x *ErrorEvent) Reset() {
 	*x = ErrorEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[68]
+	mi := &file_zrt_runtime_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6159,7 +6891,7 @@ func (x *ErrorEvent) String() string {
 func (*ErrorEvent) ProtoMessage() {}
 
 func (x *ErrorEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[68]
+	mi := &file_zrt_runtime_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6172,7 +6904,7 @@ func (x *ErrorEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ErrorEvent.ProtoReflect.Descriptor instead.
 func (*ErrorEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{68}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *ErrorEvent) GetComponent() string {
@@ -6233,7 +6965,7 @@ type SignalingSessionAssignedEvent struct {
 
 func (x *SignalingSessionAssignedEvent) Reset() {
 	*x = SignalingSessionAssignedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[69]
+	mi := &file_zrt_runtime_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6245,7 +6977,7 @@ func (x *SignalingSessionAssignedEvent) String() string {
 func (*SignalingSessionAssignedEvent) ProtoMessage() {}
 
 func (x *SignalingSessionAssignedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[69]
+	mi := &file_zrt_runtime_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6258,7 +6990,7 @@ func (x *SignalingSessionAssignedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignalingSessionAssignedEvent.ProtoReflect.Descriptor instead.
 func (*SignalingSessionAssignedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{69}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *SignalingSessionAssignedEvent) GetSessionId() string {
@@ -6278,7 +7010,7 @@ type WarningEvent struct {
 
 func (x *WarningEvent) Reset() {
 	*x = WarningEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[70]
+	mi := &file_zrt_runtime_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6290,7 +7022,7 @@ func (x *WarningEvent) String() string {
 func (*WarningEvent) ProtoMessage() {}
 
 func (x *WarningEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[70]
+	mi := &file_zrt_runtime_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6303,7 +7035,7 @@ func (x *WarningEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WarningEvent.ProtoReflect.Descriptor instead.
 func (*WarningEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{70}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *WarningEvent) GetCode() string {
@@ -6331,7 +7063,7 @@ type EouDetectedEvent struct {
 
 func (x *EouDetectedEvent) Reset() {
 	*x = EouDetectedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[71]
+	mi := &file_zrt_runtime_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6343,7 +7075,7 @@ func (x *EouDetectedEvent) String() string {
 func (*EouDetectedEvent) ProtoMessage() {}
 
 func (x *EouDetectedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[71]
+	mi := &file_zrt_runtime_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6356,7 +7088,7 @@ func (x *EouDetectedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EouDetectedEvent.ProtoReflect.Descriptor instead.
 func (*EouDetectedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{71}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *EouDetectedEvent) GetProbability() float32 {
@@ -6390,7 +7122,7 @@ type GenerationChunkEvent struct {
 
 func (x *GenerationChunkEvent) Reset() {
 	*x = GenerationChunkEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[72]
+	mi := &file_zrt_runtime_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6402,7 +7134,7 @@ func (x *GenerationChunkEvent) String() string {
 func (*GenerationChunkEvent) ProtoMessage() {}
 
 func (x *GenerationChunkEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[72]
+	mi := &file_zrt_runtime_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6415,7 +7147,7 @@ func (x *GenerationChunkEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerationChunkEvent.ProtoReflect.Descriptor instead.
 func (*GenerationChunkEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{72}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *GenerationChunkEvent) GetText() string {
@@ -6443,7 +7175,7 @@ type AgentSwitchedEvent struct {
 
 func (x *AgentSwitchedEvent) Reset() {
 	*x = AgentSwitchedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[73]
+	mi := &file_zrt_runtime_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6455,7 +7187,7 @@ func (x *AgentSwitchedEvent) String() string {
 func (*AgentSwitchedEvent) ProtoMessage() {}
 
 func (x *AgentSwitchedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[73]
+	mi := &file_zrt_runtime_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6468,7 +7200,7 @@ func (x *AgentSwitchedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentSwitchedEvent.ProtoReflect.Descriptor instead.
 func (*AgentSwitchedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{73}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *AgentSwitchedEvent) GetFrom() string {
@@ -6501,7 +7233,7 @@ type TranscriptPreflightEvent struct {
 
 func (x *TranscriptPreflightEvent) Reset() {
 	*x = TranscriptPreflightEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[74]
+	mi := &file_zrt_runtime_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6513,7 +7245,7 @@ func (x *TranscriptPreflightEvent) String() string {
 func (*TranscriptPreflightEvent) ProtoMessage() {}
 
 func (x *TranscriptPreflightEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[74]
+	mi := &file_zrt_runtime_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6526,7 +7258,7 @@ func (x *TranscriptPreflightEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscriptPreflightEvent.ProtoReflect.Descriptor instead.
 func (*TranscriptPreflightEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{74}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *TranscriptPreflightEvent) GetText() string {
@@ -6549,7 +7281,7 @@ type VadEventProto struct {
 
 func (x *VadEventProto) Reset() {
 	*x = VadEventProto{}
-	mi := &file_zrt_runtime_proto_msgTypes[75]
+	mi := &file_zrt_runtime_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6561,7 +7293,7 @@ func (x *VadEventProto) String() string {
 func (*VadEventProto) ProtoMessage() {}
 
 func (x *VadEventProto) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[75]
+	mi := &file_zrt_runtime_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6574,7 +7306,7 @@ func (x *VadEventProto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VadEventProto.ProtoReflect.Descriptor instead.
 func (*VadEventProto) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{75}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *VadEventProto) GetKind() string {
@@ -6621,7 +7353,7 @@ type GenerationStartedEvent struct {
 
 func (x *GenerationStartedEvent) Reset() {
 	*x = GenerationStartedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[76]
+	mi := &file_zrt_runtime_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6633,7 +7365,7 @@ func (x *GenerationStartedEvent) String() string {
 func (*GenerationStartedEvent) ProtoMessage() {}
 
 func (x *GenerationStartedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[76]
+	mi := &file_zrt_runtime_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6646,7 +7378,7 @@ func (x *GenerationStartedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerationStartedEvent.ProtoReflect.Descriptor instead.
 func (*GenerationStartedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{76}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *GenerationStartedEvent) GetTurnNumber() uint32 {
@@ -6666,7 +7398,7 @@ type GenerationCompleteEvent struct {
 
 func (x *GenerationCompleteEvent) Reset() {
 	*x = GenerationCompleteEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[77]
+	mi := &file_zrt_runtime_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6678,7 +7410,7 @@ func (x *GenerationCompleteEvent) String() string {
 func (*GenerationCompleteEvent) ProtoMessage() {}
 
 func (x *GenerationCompleteEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[77]
+	mi := &file_zrt_runtime_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6691,7 +7423,7 @@ func (x *GenerationCompleteEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerationCompleteEvent.ProtoReflect.Descriptor instead.
 func (*GenerationCompleteEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{77}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *GenerationCompleteEvent) GetTurnNumber() uint32 {
@@ -6717,7 +7449,7 @@ type SynthesisStartedEvent struct {
 
 func (x *SynthesisStartedEvent) Reset() {
 	*x = SynthesisStartedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[78]
+	mi := &file_zrt_runtime_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6729,7 +7461,7 @@ func (x *SynthesisStartedEvent) String() string {
 func (*SynthesisStartedEvent) ProtoMessage() {}
 
 func (x *SynthesisStartedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[78]
+	mi := &file_zrt_runtime_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6742,7 +7474,7 @@ func (x *SynthesisStartedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SynthesisStartedEvent.ProtoReflect.Descriptor instead.
 func (*SynthesisStartedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{78}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *SynthesisStartedEvent) GetText() string {
@@ -6762,7 +7494,7 @@ type FirstAudioByteEvent struct {
 
 func (x *FirstAudioByteEvent) Reset() {
 	*x = FirstAudioByteEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[79]
+	mi := &file_zrt_runtime_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6774,7 +7506,7 @@ func (x *FirstAudioByteEvent) String() string {
 func (*FirstAudioByteEvent) ProtoMessage() {}
 
 func (x *FirstAudioByteEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[79]
+	mi := &file_zrt_runtime_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6787,7 +7519,7 @@ func (x *FirstAudioByteEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FirstAudioByteEvent.ProtoReflect.Descriptor instead.
 func (*FirstAudioByteEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{79}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *FirstAudioByteEvent) GetTtfbMs() uint32 {
@@ -6813,7 +7545,7 @@ type LastAudioByteEvent struct {
 
 func (x *LastAudioByteEvent) Reset() {
 	*x = LastAudioByteEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[80]
+	mi := &file_zrt_runtime_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6825,7 +7557,7 @@ func (x *LastAudioByteEvent) String() string {
 func (*LastAudioByteEvent) ProtoMessage() {}
 
 func (x *LastAudioByteEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[80]
+	mi := &file_zrt_runtime_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6838,7 +7570,7 @@ func (x *LastAudioByteEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LastAudioByteEvent.ProtoReflect.Descriptor instead.
 func (*LastAudioByteEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{80}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *LastAudioByteEvent) GetDurationSeconds() float32 {
@@ -6857,7 +7589,7 @@ type SynthesisInterruptedEvent struct {
 
 func (x *SynthesisInterruptedEvent) Reset() {
 	*x = SynthesisInterruptedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[81]
+	mi := &file_zrt_runtime_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6869,7 +7601,7 @@ func (x *SynthesisInterruptedEvent) String() string {
 func (*SynthesisInterruptedEvent) ProtoMessage() {}
 
 func (x *SynthesisInterruptedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[81]
+	mi := &file_zrt_runtime_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6882,7 +7614,7 @@ func (x *SynthesisInterruptedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SynthesisInterruptedEvent.ProtoReflect.Descriptor instead.
 func (*SynthesisInterruptedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{81}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *SynthesisInterruptedEvent) GetReason() string {
@@ -6904,7 +7636,7 @@ type WordTimingEvent struct {
 
 func (x *WordTimingEvent) Reset() {
 	*x = WordTimingEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[82]
+	mi := &file_zrt_runtime_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6916,7 +7648,7 @@ func (x *WordTimingEvent) String() string {
 func (*WordTimingEvent) ProtoMessage() {}
 
 func (x *WordTimingEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[82]
+	mi := &file_zrt_runtime_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6929,7 +7661,7 @@ func (x *WordTimingEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WordTimingEvent.ProtoReflect.Descriptor instead.
 func (*WordTimingEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{82}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *WordTimingEvent) GetWord() string {
@@ -6972,7 +7704,7 @@ type TtsCapabilitiesEvent struct {
 
 func (x *TtsCapabilitiesEvent) Reset() {
 	*x = TtsCapabilitiesEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[83]
+	mi := &file_zrt_runtime_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6984,7 +7716,7 @@ func (x *TtsCapabilitiesEvent) String() string {
 func (*TtsCapabilitiesEvent) ProtoMessage() {}
 
 func (x *TtsCapabilitiesEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[83]
+	mi := &file_zrt_runtime_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6997,7 +7729,7 @@ func (x *TtsCapabilitiesEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TtsCapabilitiesEvent.ProtoReflect.Descriptor instead.
 func (*TtsCapabilitiesEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{83}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *TtsCapabilitiesEvent) GetCanPause() bool {
@@ -7040,7 +7772,7 @@ type KbDocument struct {
 
 func (x *KbDocument) Reset() {
 	*x = KbDocument{}
-	mi := &file_zrt_runtime_proto_msgTypes[84]
+	mi := &file_zrt_runtime_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7052,7 +7784,7 @@ func (x *KbDocument) String() string {
 func (*KbDocument) ProtoMessage() {}
 
 func (x *KbDocument) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[84]
+	mi := &file_zrt_runtime_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7065,7 +7797,7 @@ func (x *KbDocument) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KbDocument.ProtoReflect.Descriptor instead.
 func (*KbDocument) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{84}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *KbDocument) GetId() string {
@@ -7107,7 +7839,7 @@ type KbHitsEvent struct {
 
 func (x *KbHitsEvent) Reset() {
 	*x = KbHitsEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[85]
+	mi := &file_zrt_runtime_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7119,7 +7851,7 @@ func (x *KbHitsEvent) String() string {
 func (*KbHitsEvent) ProtoMessage() {}
 
 func (x *KbHitsEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[85]
+	mi := &file_zrt_runtime_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7132,7 +7864,7 @@ func (x *KbHitsEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KbHitsEvent.ProtoReflect.Descriptor instead.
 func (*KbHitsEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{85}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *KbHitsEvent) GetQuery() string {
@@ -7156,6 +7888,102 @@ func (x *KbHitsEvent) GetLatencyMs() uint32 {
 	return 0
 }
 
+type ComponentMetricsEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	MetricsJson   string                 `protobuf:"bytes,2,opt,name=metrics_json,json=metricsJson,proto3" json:"metrics_json,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentMetricsEvent) Reset() {
+	*x = ComponentMetricsEvent{}
+	mi := &file_zrt_runtime_proto_msgTypes[93]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentMetricsEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentMetricsEvent) ProtoMessage() {}
+
+func (x *ComponentMetricsEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[93]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentMetricsEvent.ProtoReflect.Descriptor instead.
+func (*ComponentMetricsEvent) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{93}
+}
+
+func (x *ComponentMetricsEvent) GetComponent() string {
+	if x != nil {
+		return x.Component
+	}
+	return ""
+}
+
+func (x *ComponentMetricsEvent) GetMetricsJson() string {
+	if x != nil {
+		return x.MetricsJson
+	}
+	return ""
+}
+
+type TurnMetricsEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MetricsJson   string                 `protobuf:"bytes,1,opt,name=metrics_json,json=metricsJson,proto3" json:"metrics_json,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TurnMetricsEvent) Reset() {
+	*x = TurnMetricsEvent{}
+	mi := &file_zrt_runtime_proto_msgTypes[94]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TurnMetricsEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TurnMetricsEvent) ProtoMessage() {}
+
+func (x *TurnMetricsEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[94]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TurnMetricsEvent.ProtoReflect.Descriptor instead.
+func (*TurnMetricsEvent) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{94}
+}
+
+func (x *TurnMetricsEvent) GetMetricsJson() string {
+	if x != nil {
+		return x.MetricsJson
+	}
+	return ""
+}
+
 type SttStreamStartedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
@@ -7166,7 +7994,7 @@ type SttStreamStartedEvent struct {
 
 func (x *SttStreamStartedEvent) Reset() {
 	*x = SttStreamStartedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[86]
+	mi := &file_zrt_runtime_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7178,7 +8006,7 @@ func (x *SttStreamStartedEvent) String() string {
 func (*SttStreamStartedEvent) ProtoMessage() {}
 
 func (x *SttStreamStartedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[86]
+	mi := &file_zrt_runtime_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7191,7 +8019,7 @@ func (x *SttStreamStartedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SttStreamStartedEvent.ProtoReflect.Descriptor instead.
 func (*SttStreamStartedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{86}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *SttStreamStartedEvent) GetProvider() string {
@@ -7218,7 +8046,7 @@ type SttStreamEndedEvent struct {
 
 func (x *SttStreamEndedEvent) Reset() {
 	*x = SttStreamEndedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[87]
+	mi := &file_zrt_runtime_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7230,7 +8058,7 @@ func (x *SttStreamEndedEvent) String() string {
 func (*SttStreamEndedEvent) ProtoMessage() {}
 
 func (x *SttStreamEndedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[87]
+	mi := &file_zrt_runtime_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7243,7 +8071,7 @@ func (x *SttStreamEndedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SttStreamEndedEvent.ProtoReflect.Descriptor instead.
 func (*SttStreamEndedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{87}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *SttStreamEndedEvent) GetProvider() string {
@@ -7270,7 +8098,7 @@ type AgentStateChangedEvent struct {
 
 func (x *AgentStateChangedEvent) Reset() {
 	*x = AgentStateChangedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[88]
+	mi := &file_zrt_runtime_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7282,7 +8110,7 @@ func (x *AgentStateChangedEvent) String() string {
 func (*AgentStateChangedEvent) ProtoMessage() {}
 
 func (x *AgentStateChangedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[88]
+	mi := &file_zrt_runtime_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7295,7 +8123,7 @@ func (x *AgentStateChangedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentStateChangedEvent.ProtoReflect.Descriptor instead.
 func (*AgentStateChangedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{88}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{97}
 }
 
 func (x *AgentStateChangedEvent) GetState() string {
@@ -7322,7 +8150,7 @@ type UserStateChangedEvent struct {
 
 func (x *UserStateChangedEvent) Reset() {
 	*x = UserStateChangedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[89]
+	mi := &file_zrt_runtime_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7334,7 +8162,7 @@ func (x *UserStateChangedEvent) String() string {
 func (*UserStateChangedEvent) ProtoMessage() {}
 
 func (x *UserStateChangedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[89]
+	mi := &file_zrt_runtime_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7347,7 +8175,7 @@ func (x *UserStateChangedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserStateChangedEvent.ProtoReflect.Descriptor instead.
 func (*UserStateChangedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{89}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{98}
 }
 
 func (x *UserStateChangedEvent) GetState() string {
@@ -7373,7 +8201,7 @@ type UserTurnStartEvent struct {
 
 func (x *UserTurnStartEvent) Reset() {
 	*x = UserTurnStartEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[90]
+	mi := &file_zrt_runtime_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7385,7 +8213,7 @@ func (x *UserTurnStartEvent) String() string {
 func (*UserTurnStartEvent) ProtoMessage() {}
 
 func (x *UserTurnStartEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[90]
+	mi := &file_zrt_runtime_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7398,7 +8226,7 @@ func (x *UserTurnStartEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserTurnStartEvent.ProtoReflect.Descriptor instead.
 func (*UserTurnStartEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{90}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{99}
 }
 
 func (x *UserTurnStartEvent) GetTranscript() string {
@@ -7418,7 +8246,7 @@ type UserTurnEndEvent struct {
 
 func (x *UserTurnEndEvent) Reset() {
 	*x = UserTurnEndEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[91]
+	mi := &file_zrt_runtime_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7430,7 +8258,7 @@ func (x *UserTurnEndEvent) String() string {
 func (*UserTurnEndEvent) ProtoMessage() {}
 
 func (x *UserTurnEndEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[91]
+	mi := &file_zrt_runtime_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7443,7 +8271,7 @@ func (x *UserTurnEndEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserTurnEndEvent.ProtoReflect.Descriptor instead.
 func (*UserTurnEndEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{91}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{100}
 }
 
 func (x *UserTurnEndEvent) GetResponseText() string {
@@ -7470,7 +8298,7 @@ type LLMCompletedEvent struct {
 
 func (x *LLMCompletedEvent) Reset() {
 	*x = LLMCompletedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[92]
+	mi := &file_zrt_runtime_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7482,7 +8310,7 @@ func (x *LLMCompletedEvent) String() string {
 func (*LLMCompletedEvent) ProtoMessage() {}
 
 func (x *LLMCompletedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[92]
+	mi := &file_zrt_runtime_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7495,7 +8323,7 @@ func (x *LLMCompletedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMCompletedEvent.ProtoReflect.Descriptor instead.
 func (*LLMCompletedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{92}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{101}
 }
 
 func (x *LLMCompletedEvent) GetResponseText() string {
@@ -7522,7 +8350,7 @@ type LLMTokenForReviewEvent struct {
 
 func (x *LLMTokenForReviewEvent) Reset() {
 	*x = LLMTokenForReviewEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[93]
+	mi := &file_zrt_runtime_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7534,7 +8362,7 @@ func (x *LLMTokenForReviewEvent) String() string {
 func (*LLMTokenForReviewEvent) ProtoMessage() {}
 
 func (x *LLMTokenForReviewEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[93]
+	mi := &file_zrt_runtime_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7547,7 +8375,7 @@ func (x *LLMTokenForReviewEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMTokenForReviewEvent.ProtoReflect.Descriptor instead.
 func (*LLMTokenForReviewEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{93}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{102}
 }
 
 func (x *LLMTokenForReviewEvent) GetTokenId() uint64 {
@@ -7573,7 +8401,7 @@ type AgentTurnStartEvent struct {
 
 func (x *AgentTurnStartEvent) Reset() {
 	*x = AgentTurnStartEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[94]
+	mi := &file_zrt_runtime_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7585,7 +8413,7 @@ func (x *AgentTurnStartEvent) String() string {
 func (*AgentTurnStartEvent) ProtoMessage() {}
 
 func (x *AgentTurnStartEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[94]
+	mi := &file_zrt_runtime_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7598,7 +8426,7 @@ func (x *AgentTurnStartEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentTurnStartEvent.ProtoReflect.Descriptor instead.
 func (*AgentTurnStartEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{94}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{103}
 }
 
 func (x *AgentTurnStartEvent) GetTurnNumber() uint32 {
@@ -7618,7 +8446,7 @@ type AgentTurnEndEvent struct {
 
 func (x *AgentTurnEndEvent) Reset() {
 	*x = AgentTurnEndEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[95]
+	mi := &file_zrt_runtime_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7630,7 +8458,7 @@ func (x *AgentTurnEndEvent) String() string {
 func (*AgentTurnEndEvent) ProtoMessage() {}
 
 func (x *AgentTurnEndEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[95]
+	mi := &file_zrt_runtime_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7643,7 +8471,7 @@ func (x *AgentTurnEndEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentTurnEndEvent.ProtoReflect.Descriptor instead.
 func (*AgentTurnEndEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{95}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{104}
 }
 
 func (x *AgentTurnEndEvent) GetTurnNumber() uint32 {
@@ -7672,7 +8500,7 @@ type CustomSttAudioChunk struct {
 
 func (x *CustomSttAudioChunk) Reset() {
 	*x = CustomSttAudioChunk{}
-	mi := &file_zrt_runtime_proto_msgTypes[96]
+	mi := &file_zrt_runtime_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7684,7 +8512,7 @@ func (x *CustomSttAudioChunk) String() string {
 func (*CustomSttAudioChunk) ProtoMessage() {}
 
 func (x *CustomSttAudioChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[96]
+	mi := &file_zrt_runtime_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7697,7 +8525,7 @@ func (x *CustomSttAudioChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomSttAudioChunk.ProtoReflect.Descriptor instead.
 func (*CustomSttAudioChunk) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{96}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{105}
 }
 
 func (x *CustomSttAudioChunk) GetPcm() []byte {
@@ -7743,7 +8571,7 @@ type CustomSttResult struct {
 
 func (x *CustomSttResult) Reset() {
 	*x = CustomSttResult{}
-	mi := &file_zrt_runtime_proto_msgTypes[97]
+	mi := &file_zrt_runtime_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7755,7 +8583,7 @@ func (x *CustomSttResult) String() string {
 func (*CustomSttResult) ProtoMessage() {}
 
 func (x *CustomSttResult) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[97]
+	mi := &file_zrt_runtime_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7768,7 +8596,7 @@ func (x *CustomSttResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomSttResult.ProtoReflect.Descriptor instead.
 func (*CustomSttResult) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{97}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{106}
 }
 
 func (x *CustomSttResult) GetUtteranceId() string {
@@ -7831,7 +8659,7 @@ type CustomTtsSynthesize struct {
 
 func (x *CustomTtsSynthesize) Reset() {
 	*x = CustomTtsSynthesize{}
-	mi := &file_zrt_runtime_proto_msgTypes[98]
+	mi := &file_zrt_runtime_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7843,7 +8671,7 @@ func (x *CustomTtsSynthesize) String() string {
 func (*CustomTtsSynthesize) ProtoMessage() {}
 
 func (x *CustomTtsSynthesize) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[98]
+	mi := &file_zrt_runtime_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7856,7 +8684,7 @@ func (x *CustomTtsSynthesize) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomTtsSynthesize.ProtoReflect.Descriptor instead.
 func (*CustomTtsSynthesize) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{98}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{107}
 }
 
 func (x *CustomTtsSynthesize) GetText() string {
@@ -7892,7 +8720,7 @@ type CustomTtsAudioChunk struct {
 
 func (x *CustomTtsAudioChunk) Reset() {
 	*x = CustomTtsAudioChunk{}
-	mi := &file_zrt_runtime_proto_msgTypes[99]
+	mi := &file_zrt_runtime_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7904,7 +8732,7 @@ func (x *CustomTtsAudioChunk) String() string {
 func (*CustomTtsAudioChunk) ProtoMessage() {}
 
 func (x *CustomTtsAudioChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[99]
+	mi := &file_zrt_runtime_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7917,7 +8745,7 @@ func (x *CustomTtsAudioChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomTtsAudioChunk.ProtoReflect.Descriptor instead.
 func (*CustomTtsAudioChunk) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{99}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{108}
 }
 
 func (x *CustomTtsAudioChunk) GetUtteranceId() string {
@@ -7977,7 +8805,7 @@ type RecordingConfig struct {
 
 func (x *RecordingConfig) Reset() {
 	*x = RecordingConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[100]
+	mi := &file_zrt_runtime_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7989,7 +8817,7 @@ func (x *RecordingConfig) String() string {
 func (*RecordingConfig) ProtoMessage() {}
 
 func (x *RecordingConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[100]
+	mi := &file_zrt_runtime_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8002,7 +8830,7 @@ func (x *RecordingConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordingConfig.ProtoReflect.Descriptor instead.
 func (*RecordingConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{100}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{109}
 }
 
 func (x *RecordingConfig) GetEnabled() bool {
@@ -8164,7 +8992,7 @@ type RecordingStorageConfig struct {
 
 func (x *RecordingStorageConfig) Reset() {
 	*x = RecordingStorageConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[101]
+	mi := &file_zrt_runtime_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8176,7 +9004,7 @@ func (x *RecordingStorageConfig) String() string {
 func (*RecordingStorageConfig) ProtoMessage() {}
 
 func (x *RecordingStorageConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[101]
+	mi := &file_zrt_runtime_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8189,7 +9017,7 @@ func (x *RecordingStorageConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordingStorageConfig.ProtoReflect.Descriptor instead.
 func (*RecordingStorageConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{101}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{110}
 }
 
 func (x *RecordingStorageConfig) GetStorage() isRecordingStorageConfig_Storage {
@@ -8244,7 +9072,7 @@ type S3StorageConfig struct {
 
 func (x *S3StorageConfig) Reset() {
 	*x = S3StorageConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[102]
+	mi := &file_zrt_runtime_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8256,7 +9084,7 @@ func (x *S3StorageConfig) String() string {
 func (*S3StorageConfig) ProtoMessage() {}
 
 func (x *S3StorageConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[102]
+	mi := &file_zrt_runtime_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8269,7 +9097,7 @@ func (x *S3StorageConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use S3StorageConfig.ProtoReflect.Descriptor instead.
 func (*S3StorageConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{102}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{111}
 }
 
 func (x *S3StorageConfig) GetBucket() string {
@@ -8412,7 +9240,7 @@ type RecordingTranscriptConfig struct {
 
 func (x *RecordingTranscriptConfig) Reset() {
 	*x = RecordingTranscriptConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[103]
+	mi := &file_zrt_runtime_proto_msgTypes[112]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8424,7 +9252,7 @@ func (x *RecordingTranscriptConfig) String() string {
 func (*RecordingTranscriptConfig) ProtoMessage() {}
 
 func (x *RecordingTranscriptConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[103]
+	mi := &file_zrt_runtime_proto_msgTypes[112]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8437,7 +9265,7 @@ func (x *RecordingTranscriptConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordingTranscriptConfig.ProtoReflect.Descriptor instead.
 func (*RecordingTranscriptConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{103}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{112}
 }
 
 func (x *RecordingTranscriptConfig) GetEnabled() bool {
@@ -8499,7 +9327,7 @@ type RecordingStatusEvent struct {
 
 func (x *RecordingStatusEvent) Reset() {
 	*x = RecordingStatusEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[104]
+	mi := &file_zrt_runtime_proto_msgTypes[113]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8511,7 +9339,7 @@ func (x *RecordingStatusEvent) String() string {
 func (*RecordingStatusEvent) ProtoMessage() {}
 
 func (x *RecordingStatusEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[104]
+	mi := &file_zrt_runtime_proto_msgTypes[113]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8524,7 +9352,7 @@ func (x *RecordingStatusEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordingStatusEvent.ProtoReflect.Descriptor instead.
 func (*RecordingStatusEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{104}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{113}
 }
 
 func (x *RecordingStatusEvent) GetRecordingId() string {
@@ -8601,7 +9429,7 @@ type PreloadBackgroundAudioCmd struct {
 
 func (x *PreloadBackgroundAudioCmd) Reset() {
 	*x = PreloadBackgroundAudioCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[105]
+	mi := &file_zrt_runtime_proto_msgTypes[114]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8613,7 +9441,7 @@ func (x *PreloadBackgroundAudioCmd) String() string {
 func (*PreloadBackgroundAudioCmd) ProtoMessage() {}
 
 func (x *PreloadBackgroundAudioCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[105]
+	mi := &file_zrt_runtime_proto_msgTypes[114]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8626,7 +9454,7 @@ func (x *PreloadBackgroundAudioCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreloadBackgroundAudioCmd.ProtoReflect.Descriptor instead.
 func (*PreloadBackgroundAudioCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{105}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{114}
 }
 
 func (x *PreloadBackgroundAudioCmd) GetFileUrl() string {
@@ -8649,13 +9477,14 @@ type PlayBackgroundAudioCmd struct {
 	Volume        float32                `protobuf:"fixed32,2,opt,name=volume,proto3" json:"volume,omitempty"`
 	Looping       bool                   `protobuf:"varint,3,opt,name=looping,proto3" json:"looping,omitempty"`
 	PlaybackMode  bool                   `protobuf:"varint,4,opt,name=playback_mode,json=playbackMode,proto3" json:"playback_mode,omitempty"`
+	IsThinking    bool                   `protobuf:"varint,5,opt,name=is_thinking,json=isThinking,proto3" json:"is_thinking,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PlayBackgroundAudioCmd) Reset() {
 	*x = PlayBackgroundAudioCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[106]
+	mi := &file_zrt_runtime_proto_msgTypes[115]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8667,7 +9496,7 @@ func (x *PlayBackgroundAudioCmd) String() string {
 func (*PlayBackgroundAudioCmd) ProtoMessage() {}
 
 func (x *PlayBackgroundAudioCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[106]
+	mi := &file_zrt_runtime_proto_msgTypes[115]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8680,7 +9509,7 @@ func (x *PlayBackgroundAudioCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayBackgroundAudioCmd.ProtoReflect.Descriptor instead.
 func (*PlayBackgroundAudioCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{106}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{115}
 }
 
 func (x *PlayBackgroundAudioCmd) GetFileUrl() string {
@@ -8711,15 +9540,23 @@ func (x *PlayBackgroundAudioCmd) GetPlaybackMode() bool {
 	return false
 }
 
+func (x *PlayBackgroundAudioCmd) GetIsThinking() bool {
+	if x != nil {
+		return x.IsThinking
+	}
+	return false
+}
+
 type StopBackgroundAudioCmd struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	IsThinking    bool                   `protobuf:"varint,1,opt,name=is_thinking,json=isThinking,proto3" json:"is_thinking,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StopBackgroundAudioCmd) Reset() {
 	*x = StopBackgroundAudioCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[107]
+	mi := &file_zrt_runtime_proto_msgTypes[116]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8731,7 +9568,7 @@ func (x *StopBackgroundAudioCmd) String() string {
 func (*StopBackgroundAudioCmd) ProtoMessage() {}
 
 func (x *StopBackgroundAudioCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[107]
+	mi := &file_zrt_runtime_proto_msgTypes[116]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8744,7 +9581,14 @@ func (x *StopBackgroundAudioCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopBackgroundAudioCmd.ProtoReflect.Descriptor instead.
 func (*StopBackgroundAudioCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{107}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{116}
+}
+
+func (x *StopBackgroundAudioCmd) GetIsThinking() bool {
+	if x != nil {
+		return x.IsThinking
+	}
+	return false
 }
 
 type PushAudioFrameCmd struct {
@@ -8757,7 +9601,7 @@ type PushAudioFrameCmd struct {
 
 func (x *PushAudioFrameCmd) Reset() {
 	*x = PushAudioFrameCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[108]
+	mi := &file_zrt_runtime_proto_msgTypes[117]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8769,7 +9613,7 @@ func (x *PushAudioFrameCmd) String() string {
 func (*PushAudioFrameCmd) ProtoMessage() {}
 
 func (x *PushAudioFrameCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[108]
+	mi := &file_zrt_runtime_proto_msgTypes[117]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8782,7 +9626,7 @@ func (x *PushAudioFrameCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PushAudioFrameCmd.ProtoReflect.Descriptor instead.
 func (*PushAudioFrameCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{108}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{117}
 }
 
 func (x *PushAudioFrameCmd) GetPcm() []byte {
@@ -8808,7 +9652,7 @@ type RecordingStartCmd struct {
 
 func (x *RecordingStartCmd) Reset() {
 	*x = RecordingStartCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[109]
+	mi := &file_zrt_runtime_proto_msgTypes[118]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8820,7 +9664,7 @@ func (x *RecordingStartCmd) String() string {
 func (*RecordingStartCmd) ProtoMessage() {}
 
 func (x *RecordingStartCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[109]
+	mi := &file_zrt_runtime_proto_msgTypes[118]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8833,7 +9677,7 @@ func (x *RecordingStartCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordingStartCmd.ProtoReflect.Descriptor instead.
 func (*RecordingStartCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{109}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{118}
 }
 
 func (x *RecordingStartCmd) GetConfig() *RecordingConfig {
@@ -8851,7 +9695,7 @@ type RecordingStopCmd struct {
 
 func (x *RecordingStopCmd) Reset() {
 	*x = RecordingStopCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[110]
+	mi := &file_zrt_runtime_proto_msgTypes[119]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8863,7 +9707,7 @@ func (x *RecordingStopCmd) String() string {
 func (*RecordingStopCmd) ProtoMessage() {}
 
 func (x *RecordingStopCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[110]
+	mi := &file_zrt_runtime_proto_msgTypes[119]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8876,7 +9720,7 @@ func (x *RecordingStopCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordingStopCmd.ProtoReflect.Descriptor instead.
 func (*RecordingStopCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{110}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{119}
 }
 
 type SendImageCmd struct {
@@ -8889,7 +9733,7 @@ type SendImageCmd struct {
 
 func (x *SendImageCmd) Reset() {
 	*x = SendImageCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[111]
+	mi := &file_zrt_runtime_proto_msgTypes[120]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8901,7 +9745,7 @@ func (x *SendImageCmd) String() string {
 func (*SendImageCmd) ProtoMessage() {}
 
 func (x *SendImageCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[111]
+	mi := &file_zrt_runtime_proto_msgTypes[120]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8914,7 +9758,7 @@ func (x *SendImageCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendImageCmd.ProtoReflect.Descriptor instead.
 func (*SendImageCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{111}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{120}
 }
 
 func (x *SendImageCmd) GetMimeType() string {
@@ -8941,7 +9785,7 @@ type MessageFrame struct {
 
 func (x *MessageFrame) Reset() {
 	*x = MessageFrame{}
-	mi := &file_zrt_runtime_proto_msgTypes[112]
+	mi := &file_zrt_runtime_proto_msgTypes[121]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8953,7 +9797,7 @@ func (x *MessageFrame) String() string {
 func (*MessageFrame) ProtoMessage() {}
 
 func (x *MessageFrame) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[112]
+	mi := &file_zrt_runtime_proto_msgTypes[121]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8966,7 +9810,7 @@ func (x *MessageFrame) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessageFrame.ProtoReflect.Descriptor instead.
 func (*MessageFrame) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{112}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{121}
 }
 
 func (x *MessageFrame) GetMimeType() string {
@@ -8993,7 +9837,7 @@ type SendMessageWithFramesCmd struct {
 
 func (x *SendMessageWithFramesCmd) Reset() {
 	*x = SendMessageWithFramesCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[113]
+	mi := &file_zrt_runtime_proto_msgTypes[122]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9005,7 +9849,7 @@ func (x *SendMessageWithFramesCmd) String() string {
 func (*SendMessageWithFramesCmd) ProtoMessage() {}
 
 func (x *SendMessageWithFramesCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[113]
+	mi := &file_zrt_runtime_proto_msgTypes[122]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9018,7 +9862,7 @@ func (x *SendMessageWithFramesCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendMessageWithFramesCmd.ProtoReflect.Descriptor instead.
 func (*SendMessageWithFramesCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{113}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{122}
 }
 
 func (x *SendMessageWithFramesCmd) GetText() string {
@@ -9044,7 +9888,7 @@ type SendDTMFCmd struct {
 
 func (x *SendDTMFCmd) Reset() {
 	*x = SendDTMFCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[114]
+	mi := &file_zrt_runtime_proto_msgTypes[123]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9056,7 +9900,7 @@ func (x *SendDTMFCmd) String() string {
 func (*SendDTMFCmd) ProtoMessage() {}
 
 func (x *SendDTMFCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[114]
+	mi := &file_zrt_runtime_proto_msgTypes[123]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9069,7 +9913,7 @@ func (x *SendDTMFCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendDTMFCmd.ProtoReflect.Descriptor instead.
 func (*SendDTMFCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{114}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{123}
 }
 
 func (x *SendDTMFCmd) GetDigits() string {
@@ -9089,7 +9933,7 @@ type DTMFEvent struct {
 
 func (x *DTMFEvent) Reset() {
 	*x = DTMFEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[115]
+	mi := &file_zrt_runtime_proto_msgTypes[124]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9101,7 +9945,7 @@ func (x *DTMFEvent) String() string {
 func (*DTMFEvent) ProtoMessage() {}
 
 func (x *DTMFEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[115]
+	mi := &file_zrt_runtime_proto_msgTypes[124]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9114,7 +9958,7 @@ func (x *DTMFEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DTMFEvent.ProtoReflect.Descriptor instead.
 func (*DTMFEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{115}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{124}
 }
 
 func (x *DTMFEvent) GetDigit() string {
@@ -9142,7 +9986,7 @@ type StreamEventProto struct {
 
 func (x *StreamEventProto) Reset() {
 	*x = StreamEventProto{}
-	mi := &file_zrt_runtime_proto_msgTypes[116]
+	mi := &file_zrt_runtime_proto_msgTypes[125]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9154,7 +9998,7 @@ func (x *StreamEventProto) String() string {
 func (*StreamEventProto) ProtoMessage() {}
 
 func (x *StreamEventProto) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[116]
+	mi := &file_zrt_runtime_proto_msgTypes[125]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9167,7 +10011,7 @@ func (x *StreamEventProto) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamEventProto.ProtoReflect.Descriptor instead.
 func (*StreamEventProto) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{116}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{125}
 }
 
 func (x *StreamEventProto) GetParticipantId() string {
@@ -9204,7 +10048,7 @@ type AudioFrameEvent struct {
 
 func (x *AudioFrameEvent) Reset() {
 	*x = AudioFrameEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[117]
+	mi := &file_zrt_runtime_proto_msgTypes[126]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9216,7 +10060,7 @@ func (x *AudioFrameEvent) String() string {
 func (*AudioFrameEvent) ProtoMessage() {}
 
 func (x *AudioFrameEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[117]
+	mi := &file_zrt_runtime_proto_msgTypes[126]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9229,7 +10073,7 @@ func (x *AudioFrameEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AudioFrameEvent.ProtoReflect.Descriptor instead.
 func (*AudioFrameEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{117}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{126}
 }
 
 func (x *AudioFrameEvent) GetPcm() []byte {
@@ -9281,7 +10125,7 @@ type VisionFrameEvent struct {
 
 func (x *VisionFrameEvent) Reset() {
 	*x = VisionFrameEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[118]
+	mi := &file_zrt_runtime_proto_msgTypes[127]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9293,7 +10137,7 @@ func (x *VisionFrameEvent) String() string {
 func (*VisionFrameEvent) ProtoMessage() {}
 
 func (x *VisionFrameEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[118]
+	mi := &file_zrt_runtime_proto_msgTypes[127]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9306,7 +10150,7 @@ func (x *VisionFrameEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VisionFrameEvent.ProtoReflect.Descriptor instead.
 func (*VisionFrameEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{118}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{127}
 }
 
 func (x *VisionFrameEvent) GetData() []byte {
@@ -9361,7 +10205,7 @@ type CallTransferCmd struct {
 
 func (x *CallTransferCmd) Reset() {
 	*x = CallTransferCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[119]
+	mi := &file_zrt_runtime_proto_msgTypes[128]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9373,7 +10217,7 @@ func (x *CallTransferCmd) String() string {
 func (*CallTransferCmd) ProtoMessage() {}
 
 func (x *CallTransferCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[119]
+	mi := &file_zrt_runtime_proto_msgTypes[128]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9386,7 +10230,7 @@ func (x *CallTransferCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CallTransferCmd.ProtoReflect.Descriptor instead.
 func (*CallTransferCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{119}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{128}
 }
 
 func (x *CallTransferCmd) GetTransferTo() string {
@@ -9403,6 +10247,834 @@ func (x *CallTransferCmd) GetToken() string {
 	return ""
 }
 
+type SipGetCallInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipGetCallInfoRequest) Reset() {
+	*x = SipGetCallInfoRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[129]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipGetCallInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipGetCallInfoRequest) ProtoMessage() {}
+
+func (x *SipGetCallInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[129]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipGetCallInfoRequest.ProtoReflect.Descriptor instead.
+func (*SipGetCallInfoRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{129}
+}
+
+func (x *SipGetCallInfoRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type SipGetCallInfoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CallId        string                 `protobuf:"bytes,1,opt,name=call_id,json=callId,proto3" json:"call_id,omitempty"` // empty when found == false
+	Found         bool                   `protobuf:"varint,2,opt,name=found,proto3" json:"found,omitempty"`                // true if the caller is an active SIP participant
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`                 // non-empty on failure
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipGetCallInfoResponse) Reset() {
+	*x = SipGetCallInfoResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[130]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipGetCallInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipGetCallInfoResponse) ProtoMessage() {}
+
+func (x *SipGetCallInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[130]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipGetCallInfoResponse.ProtoReflect.Descriptor instead.
+func (*SipGetCallInfoResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{130}
+}
+
+func (x *SipGetCallInfoResponse) GetCallId() string {
+	if x != nil {
+		return x.CallId
+	}
+	return ""
+}
+
+func (x *SipGetCallInfoResponse) GetFound() bool {
+	if x != nil {
+		return x.Found
+	}
+	return false
+}
+
+func (x *SipGetCallInfoResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type SipCreateRoomRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipCreateRoomRequest) Reset() {
+	*x = SipCreateRoomRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[131]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipCreateRoomRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipCreateRoomRequest) ProtoMessage() {}
+
+func (x *SipCreateRoomRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[131]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipCreateRoomRequest.ProtoReflect.Descriptor instead.
+func (*SipCreateRoomRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{131}
+}
+
+func (x *SipCreateRoomRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type SipCreateRoomResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RoomId        string                 `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipCreateRoomResponse) Reset() {
+	*x = SipCreateRoomResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[132]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipCreateRoomResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipCreateRoomResponse) ProtoMessage() {}
+
+func (x *SipCreateRoomResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[132]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipCreateRoomResponse.ProtoReflect.Descriptor instead.
+func (*SipCreateRoomResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{132}
+}
+
+func (x *SipCreateRoomResponse) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+func (x *SipCreateRoomResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type SipMakeOutboundCallRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	SessionId         string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	RoutingRuleId     string                 `protobuf:"bytes,2,opt,name=routing_rule_id,json=routingRuleId,proto3" json:"routing_rule_id,omitempty"`
+	SipCallTo         string                 `protobuf:"bytes,3,opt,name=sip_call_to,json=sipCallTo,proto3" json:"sip_call_to,omitempty"`
+	SipCallFrom       string                 `protobuf:"bytes,4,opt,name=sip_call_from,json=sipCallFrom,proto3" json:"sip_call_from,omitempty"`
+	DestinationRoomId string                 `protobuf:"bytes,5,opt,name=destination_room_id,json=destinationRoomId,proto3" json:"destination_room_id,omitempty"` // optional; empty = omit
+	ParticipantName   string                 `protobuf:"bytes,6,opt,name=participant_name,json=participantName,proto3" json:"participant_name,omitempty"`         // optional; empty = omit
+	ExtraOptionsJson  string                 `protobuf:"bytes,7,opt,name=extra_options_json,json=extraOptionsJson,proto3" json:"extra_options_json,omitempty"`    // optional JSON object forwarded verbatim
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *SipMakeOutboundCallRequest) Reset() {
+	*x = SipMakeOutboundCallRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[133]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipMakeOutboundCallRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipMakeOutboundCallRequest) ProtoMessage() {}
+
+func (x *SipMakeOutboundCallRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[133]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipMakeOutboundCallRequest.ProtoReflect.Descriptor instead.
+func (*SipMakeOutboundCallRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{133}
+}
+
+func (x *SipMakeOutboundCallRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallRequest) GetRoutingRuleId() string {
+	if x != nil {
+		return x.RoutingRuleId
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallRequest) GetSipCallTo() string {
+	if x != nil {
+		return x.SipCallTo
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallRequest) GetSipCallFrom() string {
+	if x != nil {
+		return x.SipCallFrom
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallRequest) GetDestinationRoomId() string {
+	if x != nil {
+		return x.DestinationRoomId
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallRequest) GetParticipantName() string {
+	if x != nil {
+		return x.ParticipantName
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallRequest) GetExtraOptionsJson() string {
+	if x != nil {
+		return x.ExtraOptionsJson
+	}
+	return ""
+}
+
+type SipMakeOutboundCallResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CallId        string                 `protobuf:"bytes,1,opt,name=call_id,json=callId,proto3" json:"call_id,omitempty"`
+	ResponseJson  string                 `protobuf:"bytes,2,opt,name=response_json,json=responseJson,proto3" json:"response_json,omitempty"` // raw backend response
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipMakeOutboundCallResponse) Reset() {
+	*x = SipMakeOutboundCallResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[134]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipMakeOutboundCallResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipMakeOutboundCallResponse) ProtoMessage() {}
+
+func (x *SipMakeOutboundCallResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[134]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipMakeOutboundCallResponse.ProtoReflect.Descriptor instead.
+func (*SipMakeOutboundCallResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{134}
+}
+
+func (x *SipMakeOutboundCallResponse) GetCallId() string {
+	if x != nil {
+		return x.CallId
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallResponse) GetResponseJson() string {
+	if x != nil {
+		return x.ResponseJson
+	}
+	return ""
+}
+
+func (x *SipMakeOutboundCallResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type SipSwitchCallRoomRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	RoomId        string                 `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"` // target (consultation) room to move the caller into
+	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
+	ParticipantId string                 `protobuf:"bytes,4,opt,name=participant_id,json=participantId,proto3" json:"participant_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipSwitchCallRoomRequest) Reset() {
+	*x = SipSwitchCallRoomRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[135]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipSwitchCallRoomRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipSwitchCallRoomRequest) ProtoMessage() {}
+
+func (x *SipSwitchCallRoomRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[135]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipSwitchCallRoomRequest.ProtoReflect.Descriptor instead.
+func (*SipSwitchCallRoomRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{135}
+}
+
+func (x *SipSwitchCallRoomRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *SipSwitchCallRoomRequest) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+func (x *SipSwitchCallRoomRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *SipSwitchCallRoomRequest) GetParticipantId() string {
+	if x != nil {
+		return x.ParticipantId
+	}
+	return ""
+}
+
+type SipSwitchCallRoomResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResponseJson  string                 `protobuf:"bytes,1,opt,name=response_json,json=responseJson,proto3" json:"response_json,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipSwitchCallRoomResponse) Reset() {
+	*x = SipSwitchCallRoomResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[136]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipSwitchCallRoomResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipSwitchCallRoomResponse) ProtoMessage() {}
+
+func (x *SipSwitchCallRoomResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[136]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipSwitchCallRoomResponse.ProtoReflect.Descriptor instead.
+func (*SipSwitchCallRoomResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{136}
+}
+
+func (x *SipSwitchCallRoomResponse) GetResponseJson() string {
+	if x != nil {
+		return x.ResponseJson
+	}
+	return ""
+}
+
+func (x *SipSwitchCallRoomResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type SipListRoomCallsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	RoomId        string                 `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipListRoomCallsRequest) Reset() {
+	*x = SipListRoomCallsRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[137]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipListRoomCallsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipListRoomCallsRequest) ProtoMessage() {}
+
+func (x *SipListRoomCallsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[137]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipListRoomCallsRequest.ProtoReflect.Descriptor instead.
+func (*SipListRoomCallsRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{137}
+}
+
+func (x *SipListRoomCallsRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *SipListRoomCallsRequest) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+type SipListRoomCallsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CallsJson     string                 `protobuf:"bytes,1,opt,name=calls_json,json=callsJson,proto3" json:"calls_json,omitempty"` // raw "data" array from GET /v2/sip/call
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipListRoomCallsResponse) Reset() {
+	*x = SipListRoomCallsResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[138]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipListRoomCallsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipListRoomCallsResponse) ProtoMessage() {}
+
+func (x *SipListRoomCallsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[138]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipListRoomCallsResponse.ProtoReflect.Descriptor instead.
+func (*SipListRoomCallsResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{138}
+}
+
+func (x *SipListRoomCallsResponse) GetCallsJson() string {
+	if x != nil {
+		return x.CallsJson
+	}
+	return ""
+}
+
+func (x *SipListRoomCallsResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type SipEndCallRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipEndCallRequest) Reset() {
+	*x = SipEndCallRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[139]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipEndCallRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipEndCallRequest) ProtoMessage() {}
+
+func (x *SipEndCallRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[139]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipEndCallRequest.ProtoReflect.Descriptor instead.
+func (*SipEndCallRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{139}
+}
+
+func (x *SipEndCallRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type SipEndCallResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SipEndCallResponse) Reset() {
+	*x = SipEndCallResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[140]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SipEndCallResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SipEndCallResponse) ProtoMessage() {}
+
+func (x *SipEndCallResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[140]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SipEndCallResponse.ProtoReflect.Descriptor instead.
+func (*SipEndCallResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{140}
+}
+
+func (x *SipEndCallResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SipEndCallResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type LlmCompleteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	SystemPrompt  string                 `protobuf:"bytes,2,opt,name=system_prompt,json=systemPrompt,proto3" json:"system_prompt,omitempty"`
+	UserPrompt    string                 `protobuf:"bytes,3,opt,name=user_prompt,json=userPrompt,proto3" json:"user_prompt,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LlmCompleteRequest) Reset() {
+	*x = LlmCompleteRequest{}
+	mi := &file_zrt_runtime_proto_msgTypes[141]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LlmCompleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LlmCompleteRequest) ProtoMessage() {}
+
+func (x *LlmCompleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[141]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LlmCompleteRequest.ProtoReflect.Descriptor instead.
+func (*LlmCompleteRequest) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{141}
+}
+
+func (x *LlmCompleteRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *LlmCompleteRequest) GetSystemPrompt() string {
+	if x != nil {
+		return x.SystemPrompt
+	}
+	return ""
+}
+
+func (x *LlmCompleteRequest) GetUserPrompt() string {
+	if x != nil {
+		return x.UserPrompt
+	}
+	return ""
+}
+
+type LlmCompleteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LlmCompleteResponse) Reset() {
+	*x = LlmCompleteResponse{}
+	mi := &file_zrt_runtime_proto_msgTypes[142]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LlmCompleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LlmCompleteResponse) ProtoMessage() {}
+
+func (x *LlmCompleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[142]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LlmCompleteResponse.ProtoReflect.Descriptor instead.
+func (*LlmCompleteResponse) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{142}
+}
+
+func (x *LlmCompleteResponse) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *LlmCompleteResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type SetUserInputEnabledCmd struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Enabled       bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetUserInputEnabledCmd) Reset() {
+	*x = SetUserInputEnabledCmd{}
+	mi := &file_zrt_runtime_proto_msgTypes[143]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetUserInputEnabledCmd) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetUserInputEnabledCmd) ProtoMessage() {}
+
+func (x *SetUserInputEnabledCmd) ProtoReflect() protoreflect.Message {
+	mi := &file_zrt_runtime_proto_msgTypes[143]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetUserInputEnabledCmd.ProtoReflect.Descriptor instead.
+func (*SetUserInputEnabledCmd) Descriptor() ([]byte, []int) {
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{143}
+}
+
+func (x *SetUserInputEnabledCmd) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
 type UpdateProviderCmd struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
@@ -9414,7 +11086,7 @@ type UpdateProviderCmd struct {
 
 func (x *UpdateProviderCmd) Reset() {
 	*x = UpdateProviderCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[120]
+	mi := &file_zrt_runtime_proto_msgTypes[144]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9426,7 +11098,7 @@ func (x *UpdateProviderCmd) String() string {
 func (*UpdateProviderCmd) ProtoMessage() {}
 
 func (x *UpdateProviderCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[120]
+	mi := &file_zrt_runtime_proto_msgTypes[144]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9439,7 +11111,7 @@ func (x *UpdateProviderCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProviderCmd.ProtoReflect.Descriptor instead.
 func (*UpdateProviderCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{120}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{144}
 }
 
 func (x *UpdateProviderCmd) GetComponent() string {
@@ -9474,7 +11146,7 @@ type ModifyLLMTokenCmd struct {
 
 func (x *ModifyLLMTokenCmd) Reset() {
 	*x = ModifyLLMTokenCmd{}
-	mi := &file_zrt_runtime_proto_msgTypes[121]
+	mi := &file_zrt_runtime_proto_msgTypes[145]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9486,7 +11158,7 @@ func (x *ModifyLLMTokenCmd) String() string {
 func (*ModifyLLMTokenCmd) ProtoMessage() {}
 
 func (x *ModifyLLMTokenCmd) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[121]
+	mi := &file_zrt_runtime_proto_msgTypes[145]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9499,7 +11171,7 @@ func (x *ModifyLLMTokenCmd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModifyLLMTokenCmd.ProtoReflect.Descriptor instead.
 func (*ModifyLLMTokenCmd) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{121}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{145}
 }
 
 func (x *ModifyLLMTokenCmd) GetTokenId() uint64 {
@@ -9536,7 +11208,7 @@ type VoicemailConfig struct {
 
 func (x *VoicemailConfig) Reset() {
 	*x = VoicemailConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[122]
+	mi := &file_zrt_runtime_proto_msgTypes[146]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9548,7 +11220,7 @@ func (x *VoicemailConfig) String() string {
 func (*VoicemailConfig) ProtoMessage() {}
 
 func (x *VoicemailConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[122]
+	mi := &file_zrt_runtime_proto_msgTypes[146]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9561,7 +11233,7 @@ func (x *VoicemailConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VoicemailConfig.ProtoReflect.Descriptor instead.
 func (*VoicemailConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{122}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{146}
 }
 
 func (x *VoicemailConfig) GetEnabled() bool {
@@ -9610,7 +11282,7 @@ type VoicemailDetectedEvent struct {
 
 func (x *VoicemailDetectedEvent) Reset() {
 	*x = VoicemailDetectedEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[123]
+	mi := &file_zrt_runtime_proto_msgTypes[147]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9622,7 +11294,7 @@ func (x *VoicemailDetectedEvent) String() string {
 func (*VoicemailDetectedEvent) ProtoMessage() {}
 
 func (x *VoicemailDetectedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[123]
+	mi := &file_zrt_runtime_proto_msgTypes[147]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9635,7 +11307,7 @@ func (x *VoicemailDetectedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VoicemailDetectedEvent.ProtoReflect.Descriptor instead.
 func (*VoicemailDetectedEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{123}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{147}
 }
 
 func (x *VoicemailDetectedEvent) GetConfidence() float32 {
@@ -9669,7 +11341,7 @@ type DenoiseConfig struct {
 
 func (x *DenoiseConfig) Reset() {
 	*x = DenoiseConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[124]
+	mi := &file_zrt_runtime_proto_msgTypes[148]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9681,7 +11353,7 @@ func (x *DenoiseConfig) String() string {
 func (*DenoiseConfig) ProtoMessage() {}
 
 func (x *DenoiseConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[124]
+	mi := &file_zrt_runtime_proto_msgTypes[148]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9694,7 +11366,7 @@ func (x *DenoiseConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DenoiseConfig.ProtoReflect.Descriptor instead.
 func (*DenoiseConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{124}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{148}
 }
 
 func (x *DenoiseConfig) GetEnabled() bool {
@@ -9724,7 +11396,7 @@ type MCPServerConfig struct {
 
 func (x *MCPServerConfig) Reset() {
 	*x = MCPServerConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[125]
+	mi := &file_zrt_runtime_proto_msgTypes[149]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9736,7 +11408,7 @@ func (x *MCPServerConfig) String() string {
 func (*MCPServerConfig) ProtoMessage() {}
 
 func (x *MCPServerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[125]
+	mi := &file_zrt_runtime_proto_msgTypes[149]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9749,7 +11421,7 @@ func (x *MCPServerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MCPServerConfig.ProtoReflect.Descriptor instead.
 func (*MCPServerConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{125}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{149}
 }
 
 func (x *MCPServerConfig) GetType() string {
@@ -9801,7 +11473,7 @@ type KnowledgeBaseConfig struct {
 
 func (x *KnowledgeBaseConfig) Reset() {
 	*x = KnowledgeBaseConfig{}
-	mi := &file_zrt_runtime_proto_msgTypes[126]
+	mi := &file_zrt_runtime_proto_msgTypes[150]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9813,7 +11485,7 @@ func (x *KnowledgeBaseConfig) String() string {
 func (*KnowledgeBaseConfig) ProtoMessage() {}
 
 func (x *KnowledgeBaseConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[126]
+	mi := &file_zrt_runtime_proto_msgTypes[150]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9826,7 +11498,7 @@ func (x *KnowledgeBaseConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KnowledgeBaseConfig.ProtoReflect.Descriptor instead.
 func (*KnowledgeBaseConfig) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{126}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{150}
 }
 
 func (x *KnowledgeBaseConfig) GetEnabled() bool {
@@ -9883,7 +11555,7 @@ type A2AMessageRequest struct {
 
 func (x *A2AMessageRequest) Reset() {
 	*x = A2AMessageRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[127]
+	mi := &file_zrt_runtime_proto_msgTypes[151]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9895,7 +11567,7 @@ func (x *A2AMessageRequest) String() string {
 func (*A2AMessageRequest) ProtoMessage() {}
 
 func (x *A2AMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[127]
+	mi := &file_zrt_runtime_proto_msgTypes[151]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9908,7 +11580,7 @@ func (x *A2AMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use A2AMessageRequest.ProtoReflect.Descriptor instead.
 func (*A2AMessageRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{127}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{151}
 }
 
 func (x *A2AMessageRequest) GetSessionId() string {
@@ -9950,7 +11622,7 @@ type A2AMessageResponse struct {
 
 func (x *A2AMessageResponse) Reset() {
 	*x = A2AMessageResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[128]
+	mi := &file_zrt_runtime_proto_msgTypes[152]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9962,7 +11634,7 @@ func (x *A2AMessageResponse) String() string {
 func (*A2AMessageResponse) ProtoMessage() {}
 
 func (x *A2AMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[128]
+	mi := &file_zrt_runtime_proto_msgTypes[152]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9975,7 +11647,7 @@ func (x *A2AMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use A2AMessageResponse.ProtoReflect.Descriptor instead.
 func (*A2AMessageResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{128}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{152}
 }
 
 func (x *A2AMessageResponse) GetSuccess() bool {
@@ -10010,7 +11682,7 @@ type A2AMessageEvent struct {
 
 func (x *A2AMessageEvent) Reset() {
 	*x = A2AMessageEvent{}
-	mi := &file_zrt_runtime_proto_msgTypes[129]
+	mi := &file_zrt_runtime_proto_msgTypes[153]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10022,7 +11694,7 @@ func (x *A2AMessageEvent) String() string {
 func (*A2AMessageEvent) ProtoMessage() {}
 
 func (x *A2AMessageEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[129]
+	mi := &file_zrt_runtime_proto_msgTypes[153]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10035,7 +11707,7 @@ func (x *A2AMessageEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use A2AMessageEvent.ProtoReflect.Descriptor instead.
 func (*A2AMessageEvent) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{129}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{153}
 }
 
 func (x *A2AMessageEvent) GetSourceAgentId() string {
@@ -10094,6 +11766,7 @@ type AgentStreamIn struct {
 	//	*AgentStreamIn_CustomSttResult
 	//	*AgentStreamIn_CustomTtsAudio
 	//	*AgentStreamIn_PreloadBackgroundAudio
+	//	*AgentStreamIn_SetUserInputEnabled
 	Payload       isAgentStreamIn_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -10101,7 +11774,7 @@ type AgentStreamIn struct {
 
 func (x *AgentStreamIn) Reset() {
 	*x = AgentStreamIn{}
-	mi := &file_zrt_runtime_proto_msgTypes[130]
+	mi := &file_zrt_runtime_proto_msgTypes[154]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10113,7 +11786,7 @@ func (x *AgentStreamIn) String() string {
 func (*AgentStreamIn) ProtoMessage() {}
 
 func (x *AgentStreamIn) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[130]
+	mi := &file_zrt_runtime_proto_msgTypes[154]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10126,7 +11799,7 @@ func (x *AgentStreamIn) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentStreamIn.ProtoReflect.Descriptor instead.
 func (*AgentStreamIn) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{130}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{154}
 }
 
 func (x *AgentStreamIn) GetSessionId() string {
@@ -10411,6 +12084,15 @@ func (x *AgentStreamIn) GetPreloadBackgroundAudio() *PreloadBackgroundAudioCmd {
 	return nil
 }
 
+func (x *AgentStreamIn) GetSetUserInputEnabled() *SetUserInputEnabledCmd {
+	if x != nil {
+		if x, ok := x.Payload.(*AgentStreamIn_SetUserInputEnabled); ok {
+			return x.SetUserInputEnabled
+		}
+	}
+	return nil
+}
+
 type isAgentStreamIn_Payload interface {
 	isAgentStreamIn_Payload()
 }
@@ -10531,6 +12213,10 @@ type AgentStreamIn_PreloadBackgroundAudio struct {
 	PreloadBackgroundAudio *PreloadBackgroundAudioCmd `protobuf:"bytes,44,opt,name=preload_background_audio,json=preloadBackgroundAudio,proto3,oneof"`
 }
 
+type AgentStreamIn_SetUserInputEnabled struct {
+	SetUserInputEnabled *SetUserInputEnabledCmd `protobuf:"bytes,45,opt,name=set_user_input_enabled,json=setUserInputEnabled,proto3,oneof"`
+}
+
 func (*AgentStreamIn_Register) isAgentStreamIn_Payload() {}
 
 func (*AgentStreamIn_SessionAck) isAgentStreamIn_Payload() {}
@@ -10589,6 +12275,8 @@ func (*AgentStreamIn_CustomTtsAudio) isAgentStreamIn_Payload() {}
 
 func (*AgentStreamIn_PreloadBackgroundAudio) isAgentStreamIn_Payload() {}
 
+func (*AgentStreamIn_SetUserInputEnabled) isAgentStreamIn_Payload() {}
+
 type AgentStreamOut struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	SessionId string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
@@ -10644,6 +12332,8 @@ type AgentStreamOut struct {
 	//	*AgentStreamOut_CustomTtsSynthesize
 	//	*AgentStreamOut_SignalingSessionAssigned
 	//	*AgentStreamOut_LlmCompleted
+	//	*AgentStreamOut_ComponentMetrics
+	//	*AgentStreamOut_TurnMetrics
 	Payload       isAgentStreamOut_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -10651,7 +12341,7 @@ type AgentStreamOut struct {
 
 func (x *AgentStreamOut) Reset() {
 	*x = AgentStreamOut{}
-	mi := &file_zrt_runtime_proto_msgTypes[131]
+	mi := &file_zrt_runtime_proto_msgTypes[155]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10663,7 +12353,7 @@ func (x *AgentStreamOut) String() string {
 func (*AgentStreamOut) ProtoMessage() {}
 
 func (x *AgentStreamOut) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[131]
+	mi := &file_zrt_runtime_proto_msgTypes[155]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10676,7 +12366,7 @@ func (x *AgentStreamOut) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentStreamOut.ProtoReflect.Descriptor instead.
 func (*AgentStreamOut) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{131}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{155}
 }
 
 func (x *AgentStreamOut) GetSessionId() string {
@@ -11141,6 +12831,24 @@ func (x *AgentStreamOut) GetLlmCompleted() *LLMCompletedEvent {
 	return nil
 }
 
+func (x *AgentStreamOut) GetComponentMetrics() *ComponentMetricsEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*AgentStreamOut_ComponentMetrics); ok {
+			return x.ComponentMetrics
+		}
+	}
+	return nil
+}
+
+func (x *AgentStreamOut) GetTurnMetrics() *TurnMetricsEvent {
+	if x != nil {
+		if x, ok := x.Payload.(*AgentStreamOut_TurnMetrics); ok {
+			return x.TurnMetrics
+		}
+	}
+	return nil
+}
+
 type isAgentStreamOut_Payload interface {
 	isAgentStreamOut_Payload()
 }
@@ -11341,6 +13049,14 @@ type AgentStreamOut_LlmCompleted struct {
 	LlmCompleted *LLMCompletedEvent `protobuf:"bytes,73,opt,name=llm_completed,json=llmCompleted,proto3,oneof"`
 }
 
+type AgentStreamOut_ComponentMetrics struct {
+	ComponentMetrics *ComponentMetricsEvent `protobuf:"bytes,74,opt,name=component_metrics,json=componentMetrics,proto3,oneof"`
+}
+
+type AgentStreamOut_TurnMetrics struct {
+	TurnMetrics *TurnMetricsEvent `protobuf:"bytes,75,opt,name=turn_metrics,json=turnMetrics,proto3,oneof"`
+}
+
 func (*AgentStreamOut_Registered) isAgentStreamOut_Payload() {}
 
 func (*AgentStreamOut_SessionStarted) isAgentStreamOut_Payload() {}
@@ -11439,6 +13155,10 @@ func (*AgentStreamOut_SignalingSessionAssigned) isAgentStreamOut_Payload() {}
 
 func (*AgentStreamOut_LlmCompleted) isAgentStreamOut_Payload() {}
 
+func (*AgentStreamOut_ComponentMetrics) isAgentStreamOut_Payload() {}
+
+func (*AgentStreamOut_TurnMetrics) isAgentStreamOut_Payload() {}
+
 type AgentRegistration struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	AgentKind             string                 `protobuf:"bytes,1,opt,name=agent_kind,json=agentKind,proto3" json:"agent_kind,omitempty"`                                                    // logical name, used by Dispatch to target
@@ -11456,7 +13176,7 @@ type AgentRegistration struct {
 
 func (x *AgentRegistration) Reset() {
 	*x = AgentRegistration{}
-	mi := &file_zrt_runtime_proto_msgTypes[132]
+	mi := &file_zrt_runtime_proto_msgTypes[156]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11468,7 +13188,7 @@ func (x *AgentRegistration) String() string {
 func (*AgentRegistration) ProtoMessage() {}
 
 func (x *AgentRegistration) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[132]
+	mi := &file_zrt_runtime_proto_msgTypes[156]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11481,7 +13201,7 @@ func (x *AgentRegistration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRegistration.ProtoReflect.Descriptor instead.
 func (*AgentRegistration) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{132}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{156}
 }
 
 func (x *AgentRegistration) GetAgentKind() string {
@@ -11558,7 +13278,7 @@ type AgentRegistered struct {
 
 func (x *AgentRegistered) Reset() {
 	*x = AgentRegistered{}
-	mi := &file_zrt_runtime_proto_msgTypes[133]
+	mi := &file_zrt_runtime_proto_msgTypes[157]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11570,7 +13290,7 @@ func (x *AgentRegistered) String() string {
 func (*AgentRegistered) ProtoMessage() {}
 
 func (x *AgentRegistered) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[133]
+	mi := &file_zrt_runtime_proto_msgTypes[157]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11583,7 +13303,7 @@ func (x *AgentRegistered) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRegistered.ProtoReflect.Descriptor instead.
 func (*AgentRegistered) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{133}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{157}
 }
 
 func (x *AgentRegistered) GetAgentId() string {
@@ -11620,7 +13340,7 @@ type AgentConfigOverride struct {
 
 func (x *AgentConfigOverride) Reset() {
 	*x = AgentConfigOverride{}
-	mi := &file_zrt_runtime_proto_msgTypes[134]
+	mi := &file_zrt_runtime_proto_msgTypes[158]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11632,7 +13352,7 @@ func (x *AgentConfigOverride) String() string {
 func (*AgentConfigOverride) ProtoMessage() {}
 
 func (x *AgentConfigOverride) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[134]
+	mi := &file_zrt_runtime_proto_msgTypes[158]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11645,7 +13365,7 @@ func (x *AgentConfigOverride) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentConfigOverride.ProtoReflect.Descriptor instead.
 func (*AgentConfigOverride) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{134}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{158}
 }
 
 func (x *AgentConfigOverride) GetInstructions() string {
@@ -11698,7 +13418,7 @@ type SessionStarted struct {
 
 func (x *SessionStarted) Reset() {
 	*x = SessionStarted{}
-	mi := &file_zrt_runtime_proto_msgTypes[135]
+	mi := &file_zrt_runtime_proto_msgTypes[159]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11710,7 +13430,7 @@ func (x *SessionStarted) String() string {
 func (*SessionStarted) ProtoMessage() {}
 
 func (x *SessionStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[135]
+	mi := &file_zrt_runtime_proto_msgTypes[159]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11723,7 +13443,7 @@ func (x *SessionStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SessionStarted.ProtoReflect.Descriptor instead.
 func (*SessionStarted) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{135}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{159}
 }
 
 func (x *SessionStarted) GetSessionId() string {
@@ -11787,7 +13507,7 @@ type SessionEnded struct {
 
 func (x *SessionEnded) Reset() {
 	*x = SessionEnded{}
-	mi := &file_zrt_runtime_proto_msgTypes[136]
+	mi := &file_zrt_runtime_proto_msgTypes[160]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11799,7 +13519,7 @@ func (x *SessionEnded) String() string {
 func (*SessionEnded) ProtoMessage() {}
 
 func (x *SessionEnded) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[136]
+	mi := &file_zrt_runtime_proto_msgTypes[160]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11812,7 +13532,7 @@ func (x *SessionEnded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SessionEnded.ProtoReflect.Descriptor instead.
 func (*SessionEnded) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{136}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{160}
 }
 
 func (x *SessionEnded) GetSessionId() string {
@@ -11854,7 +13574,7 @@ type SessionAck struct {
 
 func (x *SessionAck) Reset() {
 	*x = SessionAck{}
-	mi := &file_zrt_runtime_proto_msgTypes[137]
+	mi := &file_zrt_runtime_proto_msgTypes[161]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11866,7 +13586,7 @@ func (x *SessionAck) String() string {
 func (*SessionAck) ProtoMessage() {}
 
 func (x *SessionAck) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[137]
+	mi := &file_zrt_runtime_proto_msgTypes[161]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11879,7 +13599,7 @@ func (x *SessionAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SessionAck.ProtoReflect.Descriptor instead.
 func (*SessionAck) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{137}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{161}
 }
 
 func (x *SessionAck) GetSessionId() string {
@@ -11912,7 +13632,7 @@ type AgentDraining struct {
 
 func (x *AgentDraining) Reset() {
 	*x = AgentDraining{}
-	mi := &file_zrt_runtime_proto_msgTypes[138]
+	mi := &file_zrt_runtime_proto_msgTypes[162]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11924,7 +13644,7 @@ func (x *AgentDraining) String() string {
 func (*AgentDraining) ProtoMessage() {}
 
 func (x *AgentDraining) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[138]
+	mi := &file_zrt_runtime_proto_msgTypes[162]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11937,7 +13657,7 @@ func (x *AgentDraining) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentDraining.ProtoReflect.Descriptor instead.
 func (*AgentDraining) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{138}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{162}
 }
 
 func (x *AgentDraining) GetReason() string {
@@ -11963,7 +13683,7 @@ type DispatchRequest struct {
 
 func (x *DispatchRequest) Reset() {
 	*x = DispatchRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[139]
+	mi := &file_zrt_runtime_proto_msgTypes[163]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11975,7 +13695,7 @@ func (x *DispatchRequest) String() string {
 func (*DispatchRequest) ProtoMessage() {}
 
 func (x *DispatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[139]
+	mi := &file_zrt_runtime_proto_msgTypes[163]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11988,7 +13708,7 @@ func (x *DispatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DispatchRequest.ProtoReflect.Descriptor instead.
 func (*DispatchRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{139}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{163}
 }
 
 func (x *DispatchRequest) GetAgentKind() string {
@@ -12060,7 +13780,7 @@ type DispatchResponse struct {
 
 func (x *DispatchResponse) Reset() {
 	*x = DispatchResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[140]
+	mi := &file_zrt_runtime_proto_msgTypes[164]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12072,7 +13792,7 @@ func (x *DispatchResponse) String() string {
 func (*DispatchResponse) ProtoMessage() {}
 
 func (x *DispatchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[140]
+	mi := &file_zrt_runtime_proto_msgTypes[164]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12085,7 +13805,7 @@ func (x *DispatchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DispatchResponse.ProtoReflect.Descriptor instead.
 func (*DispatchResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{140}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{164}
 }
 
 func (x *DispatchResponse) GetResult() isDispatchResponse_Result {
@@ -12139,7 +13859,7 @@ type DispatchAccepted struct {
 
 func (x *DispatchAccepted) Reset() {
 	*x = DispatchAccepted{}
-	mi := &file_zrt_runtime_proto_msgTypes[141]
+	mi := &file_zrt_runtime_proto_msgTypes[165]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12151,7 +13871,7 @@ func (x *DispatchAccepted) String() string {
 func (*DispatchAccepted) ProtoMessage() {}
 
 func (x *DispatchAccepted) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[141]
+	mi := &file_zrt_runtime_proto_msgTypes[165]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12164,7 +13884,7 @@ func (x *DispatchAccepted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DispatchAccepted.ProtoReflect.Descriptor instead.
 func (*DispatchAccepted) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{141}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{165}
 }
 
 func (x *DispatchAccepted) GetSessionId() string {
@@ -12193,7 +13913,7 @@ type DispatchRejected struct {
 
 func (x *DispatchRejected) Reset() {
 	*x = DispatchRejected{}
-	mi := &file_zrt_runtime_proto_msgTypes[142]
+	mi := &file_zrt_runtime_proto_msgTypes[166]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12205,7 +13925,7 @@ func (x *DispatchRejected) String() string {
 func (*DispatchRejected) ProtoMessage() {}
 
 func (x *DispatchRejected) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[142]
+	mi := &file_zrt_runtime_proto_msgTypes[166]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12218,7 +13938,7 @@ func (x *DispatchRejected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DispatchRejected.ProtoReflect.Descriptor instead.
 func (*DispatchRejected) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{142}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{166}
 }
 
 func (x *DispatchRejected) GetReason() string {
@@ -12259,7 +13979,7 @@ type TerminateRequest struct {
 
 func (x *TerminateRequest) Reset() {
 	*x = TerminateRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[143]
+	mi := &file_zrt_runtime_proto_msgTypes[167]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12271,7 +13991,7 @@ func (x *TerminateRequest) String() string {
 func (*TerminateRequest) ProtoMessage() {}
 
 func (x *TerminateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[143]
+	mi := &file_zrt_runtime_proto_msgTypes[167]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12284,7 +14004,7 @@ func (x *TerminateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerminateRequest.ProtoReflect.Descriptor instead.
 func (*TerminateRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{143}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{167}
 }
 
 func (x *TerminateRequest) GetSessionId() string {
@@ -12314,7 +14034,7 @@ type TerminateResponse struct {
 
 func (x *TerminateResponse) Reset() {
 	*x = TerminateResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[144]
+	mi := &file_zrt_runtime_proto_msgTypes[168]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12326,7 +14046,7 @@ func (x *TerminateResponse) String() string {
 func (*TerminateResponse) ProtoMessage() {}
 
 func (x *TerminateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[144]
+	mi := &file_zrt_runtime_proto_msgTypes[168]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12339,7 +14059,7 @@ func (x *TerminateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerminateResponse.ProtoReflect.Descriptor instead.
 func (*TerminateResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{144}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{168}
 }
 
 func (x *TerminateResponse) GetResult() isTerminateResponse_Result {
@@ -12393,7 +14113,7 @@ type TerminateAccepted struct {
 
 func (x *TerminateAccepted) Reset() {
 	*x = TerminateAccepted{}
-	mi := &file_zrt_runtime_proto_msgTypes[145]
+	mi := &file_zrt_runtime_proto_msgTypes[169]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12405,7 +14125,7 @@ func (x *TerminateAccepted) String() string {
 func (*TerminateAccepted) ProtoMessage() {}
 
 func (x *TerminateAccepted) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[145]
+	mi := &file_zrt_runtime_proto_msgTypes[169]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12418,7 +14138,7 @@ func (x *TerminateAccepted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerminateAccepted.ProtoReflect.Descriptor instead.
 func (*TerminateAccepted) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{145}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{169}
 }
 
 func (x *TerminateAccepted) GetSessionId() string {
@@ -12445,7 +14165,7 @@ type TerminateRejected struct {
 
 func (x *TerminateRejected) Reset() {
 	*x = TerminateRejected{}
-	mi := &file_zrt_runtime_proto_msgTypes[146]
+	mi := &file_zrt_runtime_proto_msgTypes[170]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12457,7 +14177,7 @@ func (x *TerminateRejected) String() string {
 func (*TerminateRejected) ProtoMessage() {}
 
 func (x *TerminateRejected) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[146]
+	mi := &file_zrt_runtime_proto_msgTypes[170]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12470,7 +14190,7 @@ func (x *TerminateRejected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerminateRejected.ProtoReflect.Descriptor instead.
 func (*TerminateRejected) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{146}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{170}
 }
 
 func (x *TerminateRejected) GetReason() string {
@@ -12499,7 +14219,7 @@ type TestEmitToolCallRequest struct {
 
 func (x *TestEmitToolCallRequest) Reset() {
 	*x = TestEmitToolCallRequest{}
-	mi := &file_zrt_runtime_proto_msgTypes[147]
+	mi := &file_zrt_runtime_proto_msgTypes[171]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12511,7 +14231,7 @@ func (x *TestEmitToolCallRequest) String() string {
 func (*TestEmitToolCallRequest) ProtoMessage() {}
 
 func (x *TestEmitToolCallRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[147]
+	mi := &file_zrt_runtime_proto_msgTypes[171]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12524,7 +14244,7 @@ func (x *TestEmitToolCallRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TestEmitToolCallRequest.ProtoReflect.Descriptor instead.
 func (*TestEmitToolCallRequest) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{147}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{171}
 }
 
 func (x *TestEmitToolCallRequest) GetSessionId() string {
@@ -12566,7 +14286,7 @@ type TestEmitToolCallResponse struct {
 
 func (x *TestEmitToolCallResponse) Reset() {
 	*x = TestEmitToolCallResponse{}
-	mi := &file_zrt_runtime_proto_msgTypes[148]
+	mi := &file_zrt_runtime_proto_msgTypes[172]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12578,7 +14298,7 @@ func (x *TestEmitToolCallResponse) String() string {
 func (*TestEmitToolCallResponse) ProtoMessage() {}
 
 func (x *TestEmitToolCallResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_zrt_runtime_proto_msgTypes[148]
+	mi := &file_zrt_runtime_proto_msgTypes[172]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12591,7 +14311,7 @@ func (x *TestEmitToolCallResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TestEmitToolCallResponse.ProtoReflect.Descriptor instead.
 func (*TestEmitToolCallResponse) Descriptor() ([]byte, []int) {
-	return file_zrt_runtime_proto_rawDescGZIP(), []int{148}
+	return file_zrt_runtime_proto_rawDescGZIP(), []int{172}
 }
 
 func (x *TestEmitToolCallResponse) GetSent() bool {
@@ -12713,7 +14433,7 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x12_start_sensitivityB\x12\n" +
 	"\x10_end_sensitivityB\x14\n" +
 	"\x12_prefix_padding_msB\x16\n" +
-	"\x14_silence_duration_ms\"\x92\b\n" +
+	"\x14_silence_duration_ms\"\xa3\t\n" +
 	"\rCascadeConfig\x125\n" +
 	"\x03stt\x18\x01 \x01(\v2#.agent_runtime.v1.STTProviderConfigR\x03stt\x125\n" +
 	"\x03llm\x18\x02 \x01(\v2#.agent_runtime.v1.LLMProviderConfigR\x03llm\x125\n" +
@@ -12730,14 +14450,35 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\adenoise\x18\f \x01(\v2\x1f.agent_runtime.v1.DenoiseConfigR\adenoise\x124\n" +
 	"\x16dtmf_detection_enabled\x18\r \x01(\bR\x14dtmfDetectionEnabled\x12.\n" +
 	"\x13stt_filter_patterns\x18\x0e \x03(\tR\x11sttFilterPatterns\x12o\n" +
-	"\x16stt_word_substitutions\x18\x0f \x03(\v29.agent_runtime.v1.CascadeConfig.SttWordSubstitutionsEntryR\x14sttWordSubstitutions\x1aG\n" +
+	"\x16stt_word_substitutions\x18\x0f \x03(\v29.agent_runtime.v1.CascadeConfig.SttWordSubstitutionsEntryR\x14sttWordSubstitutions\x12O\n" +
+	"\x0ftext_processing\x18\x10 \x01(\v2&.agent_runtime.v1.TextProcessingConfigR\x0etextProcessing\x12>\n" +
+	"\x06avatar\x18\x11 \x01(\v2&.agent_runtime.v1.AvatarProviderConfigR\x06avatar\x1aG\n" +
 	"\x19SttWordSubstitutionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x97\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xa4\x02\n" +
+	"\x14AvatarProviderConfig\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1b\n" +
+	"\tavatar_id\x18\x02 \x01(\tR\bavatarId\x12\x17\n" +
+	"\aface_id\x18\x03 \x01(\tR\x06faceId\x12\x14\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x12\x1d\n" +
+	"\n" +
+	"is_trinity\x18\x05 \x01(\bR\tisTrinity\x12J\n" +
+	"\x06params\x18\n" +
+	" \x03(\v22.agent_runtime.v1.AvatarProviderConfig.ParamsEntryR\x06params\x1a9\n" +
+	"\vParamsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb3\x01\n" +
+	"\x14TextProcessingConfig\x12\x1a\n" +
+	"\blanguage\x18\x01 \x01(\tR\blanguage\x12+\n" +
+	"\x11verbalize_numbers\x18\x02 \x01(\bR\x10verbalizeNumbers\x12-\n" +
+	"\x12verbalize_currency\x18\x03 \x01(\bR\x11verbalizeCurrency\x12#\n" +
+	"\rcurrency_hint\x18\x04 \x01(\tR\fcurrencyHint\"\x97\x01\n" +
 	"\x18OrchestratorTimingConfig\x12(\n" +
 	"\x10poll_interval_ms\x18\x01 \x01(\rR\x0epollIntervalMs\x12$\n" +
 	"\x0emax_drain_secs\x18\x02 \x01(\rR\fmaxDrainSecs\x12+\n" +
-	"\x12tts_drain_grace_ms\x18\x03 \x01(\rR\x0fttsDrainGraceMs\"\xcf\x02\n" +
+	"\x12tts_drain_grace_ms\x18\x03 \x01(\rR\x0fttsDrainGraceMs\",\n" +
+	"\x0fInferenceConfig\x12\x19\n" +
+	"\bbase_url\x18\x01 \x01(\tR\abaseUrl\"\xa3\x03\n" +
 	"\x11STTProviderConfig\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
 	"\x05model\x18\x02 \x01(\tR\x05model\x12\x1a\n" +
@@ -12745,10 +14486,13 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x0eendpointing_ms\x18\x04 \x01(\rR\rendpointingMs\x12G\n" +
 	"\x06params\x18\n" +
 	" \x03(\v2/.agent_runtime.v1.STTProviderConfig.ParamsEntryR\x06params\x12A\n" +
-	"\tfallbacks\x18\v \x03(\v2#.agent_runtime.v1.STTProviderConfigR\tfallbacks\x1a9\n" +
+	"\tfallbacks\x18\v \x03(\v2#.agent_runtime.v1.STTProviderConfigR\tfallbacks\x12D\n" +
+	"\tinference\x18\f \x01(\v2!.agent_runtime.v1.InferenceConfigH\x00R\tinference\x88\x01\x01\x1a9\n" +
 	"\vParamsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xa2\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\f\n" +
+	"\n" +
+	"_inference\"\xe2\x04\n" +
 	"\x11LLMProviderConfig\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
 	"\x05model\x18\x02 \x01(\tR\x05model\x12 \n" +
@@ -12757,20 +14501,32 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x06params\x18\n" +
 	" \x03(\v2/.agent_runtime.v1.LLMProviderConfig.ParamsEntryR\x06params\x12A\n" +
 	"\tfallbacks\x18\v \x03(\v2#.agent_runtime.v1.LLMProviderConfigR\tfallbacks\x12F\n" +
-	"\rgemini_extras\x18\f \x01(\v2!.agent_runtime.v1.GeminiLLMExtrasR\fgeminiExtras\x1a9\n" +
+	"\rgemini_extras\x18\f \x01(\v2!.agent_runtime.v1.GeminiLLMExtrasR\fgeminiExtras\x120\n" +
+	"\x14latency_threshold_ms\x18\r \x01(\x02R\x12latencyThresholdMs\x128\n" +
+	"\x18consecutive_latency_hits\x18\x0e \x01(\rR\x16consecutiveLatencyHits\x12D\n" +
+	"\tinference\x18\x0f \x01(\v2!.agent_runtime.v1.InferenceConfigH\x00R\tinference\x88\x01\x01\x1a9\n" +
 	"\vParamsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xd7\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\f\n" +
+	"\n" +
+	"_inference\"\xc9\x04\n" +
 	"\x11TTSProviderConfig\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
-	"\x05voice\x18\x02 \x01(\tR\x05voice\x12G\n" +
+	"\x05voice\x18\x02 \x01(\tR\x05voice\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12\x1a\n" +
+	"\blanguage\x18\x04 \x01(\tR\blanguage\x12G\n" +
 	"\x06params\x18\n" +
 	" \x03(\v2/.agent_runtime.v1.TTSProviderConfig.ParamsEntryR\x06params\x12A\n" +
 	"\tfallbacks\x18\v \x03(\v2#.agent_runtime.v1.TTSProviderConfigR\tfallbacks\x12I\n" +
-	"\x0fcartesia_extras\x18\f \x01(\v2 .agent_runtime.v1.CartesiaExtrasR\x0ecartesiaExtras\x1a9\n" +
+	"\x0fcartesia_extras\x18\f \x01(\v2 .agent_runtime.v1.CartesiaExtrasR\x0ecartesiaExtras\x120\n" +
+	"\x14latency_threshold_ms\x18\r \x01(\x02R\x12latencyThresholdMs\x128\n" +
+	"\x18consecutive_latency_hits\x18\x0e \x01(\rR\x16consecutiveLatencyHits\x12D\n" +
+	"\tinference\x18\x0f \x01(\v2!.agent_runtime.v1.InferenceConfigH\x00R\tinference\x88\x01\x01\x1a9\n" +
 	"\vParamsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x9c\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\f\n" +
+	"\n" +
+	"_inference\"\x9c\x02\n" +
 	"\x0fGeminiLLMExtras\x12,\n" +
 	"\x0fthinking_budget\x18\x01 \x01(\x05H\x00R\x0ethinkingBudget\x88\x01\x01\x12.\n" +
 	"\x10include_thoughts\x18\x02 \x01(\bH\x01R\x0fincludeThoughts\x88\x01\x01\x12H\n" +
@@ -12832,7 +14588,7 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x14SentenceBufferConfig\x12$\n" +
 	"\x0emin_clause_len\x18\x01 \x01(\rR\fminClauseLen\x12(\n" +
 	"\x10first_clause_len\x18\x02 \x01(\rR\x0efirstClauseLen\x12(\n" +
-	"\x10min_sentence_len\x18\x03 \x01(\rR\x0eminSentenceLen\"\xc5\x06\n" +
+	"\x10min_sentence_len\x18\x03 \x01(\rR\x0eminSentenceLen\"\xf7\a\n" +
 	"\vAgentConfig\x12\"\n" +
 	"\finstructions\x18\x01 \x01(\tR\finstructions\x127\n" +
 	"\x05tools\x18\x02 \x03(\v2!.agent_runtime.v1.ToolSchemaProtoR\x05tools\x12)\n" +
@@ -12853,7 +14609,11 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\n" +
 	"alternates\x18\x0f \x03(\v2\".agent_runtime.v1.NamedAgentConfigR\n" +
 	"alternates\x12<\n" +
-	"\x1agreeting_non_interruptible\x18\x10 \x01(\bR\x18greetingNonInterruptible\"\xa6\x01\n" +
+	"\x1agreeting_non_interruptible\x18\x10 \x01(\bR\x18greetingNonInterruptible\x12(\n" +
+	"\x10stt_hook_enabled\x18\x11 \x01(\bR\x0esttHookEnabled\x12-\n" +
+	"\x13stt_hook_timeout_ms\x18\x12 \x01(\rR\x10sttHookTimeoutMs\x12(\n" +
+	"\x10tts_hook_enabled\x18\x13 \x01(\bR\x0ettsHookEnabled\x12-\n" +
+	"\x13tts_hook_timeout_ms\x18\x14 \x01(\rR\x10ttsHookTimeoutMs\"\xa6\x01\n" +
 	"\x10NamedAgentConfig\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\"\n" +
 	"\finstructions\x18\x02 \x01(\tR\finstructions\x127\n" +
@@ -12868,7 +14628,7 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"max_tokens\x18\x01 \x01(\rR\tmaxTokens\x12*\n" +
 	"\x11max_context_items\x18\x02 \x01(\rR\x0fmaxContextItems\x12*\n" +
 	"\x11keep_recent_turns\x18\x03 \x01(\rR\x0fkeepRecentTurns\x124\n" +
-	"\x17max_tool_calls_per_turn\x18\x04 \x01(\rR\x13maxToolCallsPerTurn\"\xa4\x05\n" +
+	"\x17max_tool_calls_per_turn\x18\x04 \x01(\rR\x13maxToolCallsPerTurn\"\x89\a\n" +
 	"\n" +
 	"RoomConfig\x12\x17\n" +
 	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x1d\n" +
@@ -12890,7 +14650,12 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x16send_logs_to_dashboard\x18\f \x01(\bR\x13sendLogsToDashboard\x12.\n" +
 	"\x13dashboard_log_level\x18\r \x01(\tR\x11dashboardLogLevel\x124\n" +
 	"\x16audio_listener_enabled\x18\x0e \x01(\bR\x14audioListenerEnabled\x120\n" +
-	"\x14agent_participant_id\x18\x0f \x01(\tR\x12agentParticipantId\"\xb0\x01\n" +
+	"\x14agent_participant_id\x18\x0f \x01(\tR\x12agentParticipantId\x12,\n" +
+	"\x12metrics_export_url\x18\x10 \x01(\tR\x10metricsExportUrl\x12l\n" +
+	"\x16metrics_export_headers\x18\x11 \x03(\v26.agent_runtime.v1.RoomConfig.MetricsExportHeadersEntryR\x14metricsExportHeaders\x1aG\n" +
+	"\x19MetricsExportHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb0\x01\n" +
 	"\x11CredentialsConfig\x12Z\n" +
 	"\rprovider_keys\x18\x01 \x03(\v25.agent_runtime.v1.CredentialsConfig.ProviderKeysEntryR\fproviderKeys\x1a?\n" +
 	"\x11ProviderKeysEntry\x12\x10\n" +
@@ -12942,7 +14707,7 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12'\n" +
 	"\x0factive_sessions\x18\x02 \x01(\rR\x0eactiveSessions\x12!\n" +
 	"\fmax_sessions\x18\x03 \x01(\rR\vmaxSessions\x12\x18\n" +
-	"\aversion\x18\x04 \x01(\tR\aversion\"\xbc\x10\n" +
+	"\aversion\x18\x04 \x01(\tR\aversion\"\xb7\x12\n" +
 	"\vClientEvent\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
@@ -12976,8 +14741,11 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x18send_message_with_frames\x18( \x01(\v2*.agent_runtime.v1.SendMessageWithFramesCmdH\x00R\x15sendMessageWithFrames\x12O\n" +
 	"\x11custom_stt_result\x18) \x01(\v2!.agent_runtime.v1.CustomSttResultH\x00R\x0fcustomSttResult\x12Q\n" +
 	"\x10custom_tts_audio\x18* \x01(\v2%.agent_runtime.v1.CustomTtsAudioChunkH\x00R\x0ecustomTtsAudio\x12g\n" +
-	"\x18preload_background_audio\x18+ \x01(\v2+.agent_runtime.v1.PreloadBackgroundAudioCmdH\x00R\x16preloadBackgroundAudioB\a\n" +
-	"\x05event\"\xea\x1c\n" +
+	"\x18preload_background_audio\x18+ \x01(\v2+.agent_runtime.v1.PreloadBackgroundAudioCmdH\x00R\x16preloadBackgroundAudio\x12_\n" +
+	"\x16set_user_input_enabled\x18, \x01(\v2(.agent_runtime.v1.SetUserInputEnabledCmdH\x00R\x13setUserInputEnabled\x12K\n" +
+	"\x0fstt_hook_result\x18/ \x01(\v2!.agent_runtime.v1.SttHookResponseH\x00R\rsttHookResult\x12K\n" +
+	"\x0ftts_hook_result\x180 \x01(\v2!.agent_runtime.v1.TtsHookResponseH\x00R\rttsHookResultB\a\n" +
+	"\x05event\"\x85\x1f\n" +
 	"\fRuntimeEvent\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
@@ -13035,7 +14803,11 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x10custom_stt_audio\x18> \x01(\v2%.agent_runtime.v1.CustomSttAudioChunkH\x00R\x0ecustomSttAudio\x12[\n" +
 	"\x15custom_tts_synthesize\x18? \x01(\v2%.agent_runtime.v1.CustomTtsSynthesizeH\x00R\x13customTtsSynthesize\x12o\n" +
 	"\x1asignaling_session_assigned\x18@ \x01(\v2/.agent_runtime.v1.SignalingSessionAssignedEventH\x00R\x18signalingSessionAssigned\x12J\n" +
-	"\rllm_completed\x18A \x01(\v2#.agent_runtime.v1.LLMCompletedEventH\x00R\fllmCompletedB\a\n" +
+	"\rllm_completed\x18A \x01(\v2#.agent_runtime.v1.LLMCompletedEventH\x00R\fllmCompleted\x12V\n" +
+	"\x11component_metrics\x18B \x01(\v2'.agent_runtime.v1.ComponentMetricsEventH\x00R\x10componentMetrics\x12G\n" +
+	"\fturn_metrics\x18C \x01(\v2\".agent_runtime.v1.TurnMetricsEventH\x00R\vturnMetrics\x12;\n" +
+	"\bstt_hook\x18E \x01(\v2\x1e.agent_runtime.v1.SttHookEventH\x00R\asttHook\x12;\n" +
+	"\btts_hook\x18F \x01(\v2\x1e.agent_runtime.v1.TtsHookEventH\x00R\attsHookB\a\n" +
 	"\x05eventJ\x04\b\x1a\x10\x1bJ\x04\b\x1d\x10\x1e\"n\n" +
 	"\x0fToolCallRequest\x12\x17\n" +
 	"\acall_id\x18\x01 \x01(\tR\x06callId\x12\x1b\n" +
@@ -13054,7 +14826,31 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"turnNumber\"f\n" +
 	"\x11BeforeLLMResponse\x124\n" +
 	"\x16modified_messages_json\x18\x01 \x01(\tR\x14modifiedMessagesJson\x12\x1b\n" +
-	"\tskip_turn\x18\x02 \x01(\bR\bskipTurn\"\xa3\x02\n" +
+	"\tskip_turn\x18\x02 \x01(\bR\bskipTurn\"\x99\x01\n" +
+	"\fSttHookEvent\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\x12\x1a\n" +
+	"\blanguage\x18\x03 \x01(\tR\blanguage\x12\x19\n" +
+	"\bis_final\x18\x04 \x01(\bR\aisFinal\x12\x1f\n" +
+	"\vturn_number\x18\x05 \x01(\rR\n" +
+	"turnNumber\"i\n" +
+	"\x0fSttHookResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12#\n" +
+	"\rmodified_text\x18\x02 \x01(\tR\fmodifiedText\x12\x12\n" +
+	"\x04drop\x18\x03 \x01(\bR\x04drop\"z\n" +
+	"\fTtsHookEvent\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\x12!\n" +
+	"\futterance_id\x18\x03 \x01(\tR\vutteranceId\x12\x14\n" +
+	"\x05voice\x18\x04 \x01(\tR\x05voice\"i\n" +
+	"\x0fTtsHookResponse\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12#\n" +
+	"\rmodified_text\x18\x02 \x01(\tR\fmodifiedText\x12\x12\n" +
+	"\x04drop\x18\x03 \x01(\bR\x04drop\"\xa3\x02\n" +
 	"\x0fTranscriptEvent\x12%\n" +
 	"\x0eparticipant_id\x18\x01 \x01(\tR\rparticipantId\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\x12\x19\n" +
@@ -13112,13 +14908,17 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x13cached_audio_tokens\x18\x11 \x01(\rR\x11cachedAudioTokens\x12.\n" +
 	"\x13cached_image_tokens\x18\x12 \x01(\rR\x11cachedImageTokens\x12'\n" +
 	"\x0fthoughts_tokens\x18\x13 \x01(\rR\x0ethoughtsTokensB\x0e\n" +
-	"\f_stt_ttfb_ms\"\x90\x01\n" +
+	"\f_stt_ttfb_ms\"\x87\x02\n" +
 	"\n" +
 	"SayCommand\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x12+\n" +
 	"\x11interrupt_current\x18\x02 \x01(\bR\x10interruptCurrent\x12\x14\n" +
 	"\x05voice\x18\x03 \x01(\tR\x05voice\x12+\n" +
-	"\x11non_interruptible\x18\x04 \x01(\bR\x10nonInterruptible\"8\n" +
+	"\x11non_interruptible\x18\x04 \x01(\bR\x10nonInterruptible\x12\x1d\n" +
+	"\n" +
+	"audio_data\x18\x05 \x01(\fR\taudioData\x12*\n" +
+	"\x11audio_sample_rate\x18\x06 \x01(\rR\x0faudioSampleRate\x12*\n" +
+	"\x11skip_chat_context\x18\a \x01(\bR\x0fskipChatContext\"8\n" +
 	"\vSayComplete\x12)\n" +
 	"\x10duration_seconds\x18\x01 \x01(\x02R\x0fdurationSeconds\";\n" +
 	"\x15UpdateInstructionsCmd\x12\"\n" +
@@ -13220,7 +15020,12 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12:\n" +
 	"\tdocuments\x18\x02 \x03(\v2\x1c.agent_runtime.v1.KbDocumentR\tdocuments\x12\x1d\n" +
 	"\n" +
-	"latency_ms\x18\x03 \x01(\rR\tlatencyMs\"I\n" +
+	"latency_ms\x18\x03 \x01(\rR\tlatencyMs\"X\n" +
+	"\x15ComponentMetricsEvent\x12\x1c\n" +
+	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12!\n" +
+	"\fmetrics_json\x18\x02 \x01(\tR\vmetricsJson\"5\n" +
+	"\x10TurnMetricsEvent\x12!\n" +
+	"\fmetrics_json\x18\x01 \x01(\tR\vmetricsJson\"I\n" +
 	"\x15SttStreamStartedEvent\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x14\n" +
 	"\x05model\x18\x02 \x01(\tR\x05model\"I\n" +
@@ -13364,13 +15169,17 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"N\n" +
 	"\x19PreloadBackgroundAudioCmd\x12\x19\n" +
 	"\bfile_url\x18\x01 \x01(\tR\afileUrl\x12\x16\n" +
-	"\x06volume\x18\x02 \x01(\x02R\x06volume\"\x8a\x01\n" +
+	"\x06volume\x18\x02 \x01(\x02R\x06volume\"\xab\x01\n" +
 	"\x16PlayBackgroundAudioCmd\x12\x19\n" +
 	"\bfile_url\x18\x01 \x01(\tR\afileUrl\x12\x16\n" +
 	"\x06volume\x18\x02 \x01(\x02R\x06volume\x12\x18\n" +
 	"\alooping\x18\x03 \x01(\bR\alooping\x12#\n" +
-	"\rplayback_mode\x18\x04 \x01(\bR\fplaybackMode\"\x18\n" +
-	"\x16StopBackgroundAudioCmd\"F\n" +
+	"\rplayback_mode\x18\x04 \x01(\bR\fplaybackMode\x12\x1f\n" +
+	"\vis_thinking\x18\x05 \x01(\bR\n" +
+	"isThinking\"9\n" +
+	"\x16StopBackgroundAudioCmd\x12\x1f\n" +
+	"\vis_thinking\x18\x01 \x01(\bR\n" +
+	"isThinking\"F\n" +
 	"\x11PushAudioFrameCmd\x12\x10\n" +
 	"\x03pcm\x18\x01 \x01(\fR\x03pcm\x12\x1f\n" +
 	"\vsample_rate\x18\x02 \x01(\rR\n" +
@@ -13413,7 +15222,67 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x0fCallTransferCmd\x12\x1f\n" +
 	"\vtransfer_to\x18\x01 \x01(\tR\n" +
 	"transferTo\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\"\xd1\x01\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"6\n" +
+	"\x15SipGetCallInfoRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"]\n" +
+	"\x16SipGetCallInfoResponse\x12\x17\n" +
+	"\acall_id\x18\x01 \x01(\tR\x06callId\x12\x14\n" +
+	"\x05found\x18\x02 \x01(\bR\x05found\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"5\n" +
+	"\x14SipCreateRoomRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"F\n" +
+	"\x15SipCreateRoomResponse\x12\x17\n" +
+	"\aroom_id\x18\x01 \x01(\tR\x06roomId\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"\xb0\x02\n" +
+	"\x1aSipMakeOutboundCallRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12&\n" +
+	"\x0frouting_rule_id\x18\x02 \x01(\tR\rroutingRuleId\x12\x1e\n" +
+	"\vsip_call_to\x18\x03 \x01(\tR\tsipCallTo\x12\"\n" +
+	"\rsip_call_from\x18\x04 \x01(\tR\vsipCallFrom\x12.\n" +
+	"\x13destination_room_id\x18\x05 \x01(\tR\x11destinationRoomId\x12)\n" +
+	"\x10participant_name\x18\x06 \x01(\tR\x0fparticipantName\x12,\n" +
+	"\x12extra_options_json\x18\a \x01(\tR\x10extraOptionsJson\"q\n" +
+	"\x1bSipMakeOutboundCallResponse\x12\x17\n" +
+	"\acall_id\x18\x01 \x01(\tR\x06callId\x12#\n" +
+	"\rresponse_json\x18\x02 \x01(\tR\fresponseJson\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"\x8f\x01\n" +
+	"\x18SipSwitchCallRoomRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
+	"\aroom_id\x18\x02 \x01(\tR\x06roomId\x12\x14\n" +
+	"\x05token\x18\x03 \x01(\tR\x05token\x12%\n" +
+	"\x0eparticipant_id\x18\x04 \x01(\tR\rparticipantId\"V\n" +
+	"\x19SipSwitchCallRoomResponse\x12#\n" +
+	"\rresponse_json\x18\x01 \x01(\tR\fresponseJson\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"Q\n" +
+	"\x17SipListRoomCallsRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
+	"\aroom_id\x18\x02 \x01(\tR\x06roomId\"O\n" +
+	"\x18SipListRoomCallsResponse\x12\x1d\n" +
+	"\n" +
+	"calls_json\x18\x01 \x01(\tR\tcallsJson\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"2\n" +
+	"\x11SipEndCallRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"D\n" +
+	"\x12SipEndCallResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"y\n" +
+	"\x12LlmCompleteRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12#\n" +
+	"\rsystem_prompt\x18\x02 \x01(\tR\fsystemPrompt\x12\x1f\n" +
+	"\vuser_prompt\x18\x03 \x01(\tR\n" +
+	"userPrompt\"?\n" +
+	"\x13LlmCompleteResponse\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"2\n" +
+	"\x16SetUserInputEnabledCmd\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\"\xd1\x01\n" +
 	"\x11UpdateProviderCmd\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\x12G\n" +
@@ -13477,7 +15346,7 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x0fA2AMessageEvent\x12&\n" +
 	"\x0fsource_agent_id\x18\x01 \x01(\tR\rsourceAgentId\x12!\n" +
 	"\fmessage_json\x18\x02 \x01(\tR\vmessageJson\x12%\n" +
-	"\x0ecorrelation_id\x18\x03 \x01(\tR\rcorrelationId\"\x83\x12\n" +
+	"\x0ecorrelation_id\x18\x03 \x01(\tR\rcorrelationId\"\xe4\x12\n" +
 	"\rAgentStreamIn\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
@@ -13515,8 +15384,9 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x18send_message_with_frames\x18) \x01(\v2*.agent_runtime.v1.SendMessageWithFramesCmdH\x00R\x15sendMessageWithFrames\x12O\n" +
 	"\x11custom_stt_result\x18* \x01(\v2!.agent_runtime.v1.CustomSttResultH\x00R\x0fcustomSttResult\x12Q\n" +
 	"\x10custom_tts_audio\x18+ \x01(\v2%.agent_runtime.v1.CustomTtsAudioChunkH\x00R\x0ecustomTtsAudio\x12g\n" +
-	"\x18preload_background_audio\x18, \x01(\v2+.agent_runtime.v1.PreloadBackgroundAudioCmdH\x00R\x16preloadBackgroundAudioB\t\n" +
-	"\apayload\"\xbb\x1e\n" +
+	"\x18preload_background_audio\x18, \x01(\v2+.agent_runtime.v1.PreloadBackgroundAudioCmdH\x00R\x16preloadBackgroundAudio\x12_\n" +
+	"\x16set_user_input_enabled\x18- \x01(\v2(.agent_runtime.v1.SetUserInputEnabledCmdH\x00R\x13setUserInputEnabledB\t\n" +
+	"\apayload\"\xdc\x1f\n" +
 	"\x0eAgentStreamOut\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
@@ -13579,7 +15449,9 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x10custom_stt_audio\x18F \x01(\v2%.agent_runtime.v1.CustomSttAudioChunkH\x00R\x0ecustomSttAudio\x12[\n" +
 	"\x15custom_tts_synthesize\x18G \x01(\v2%.agent_runtime.v1.CustomTtsSynthesizeH\x00R\x13customTtsSynthesize\x12o\n" +
 	"\x1asignaling_session_assigned\x18H \x01(\v2/.agent_runtime.v1.SignalingSessionAssignedEventH\x00R\x18signalingSessionAssigned\x12J\n" +
-	"\rllm_completed\x18I \x01(\v2#.agent_runtime.v1.LLMCompletedEventH\x00R\fllmCompletedB\t\n" +
+	"\rllm_completed\x18I \x01(\v2#.agent_runtime.v1.LLMCompletedEventH\x00R\fllmCompleted\x12V\n" +
+	"\x11component_metrics\x18J \x01(\v2'.agent_runtime.v1.ComponentMetricsEventH\x00R\x10componentMetrics\x12G\n" +
+	"\fturn_metrics\x18K \x01(\v2\".agent_runtime.v1.TurnMetricsEventH\x00R\vturnMetricsB\t\n" +
 	"\apayload\"\xdd\x04\n" +
 	"\x11AgentRegistration\x12\x1d\n" +
 	"\n" +
@@ -13706,7 +15578,7 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"\x1aRECORDING_STATE_FINALIZING\x10\x02\x12\x1d\n" +
 	"\x19RECORDING_STATE_UPLOADING\x10\x03\x12\x1d\n" +
 	"\x19RECORDING_STATE_COMPLETED\x10\x04\x12\x1a\n" +
-	"\x16RECORDING_STATE_FAILED\x10\x052\xea\t\n" +
+	"\x16RECORDING_STATE_FAILED\x10\x052\xb3\x0f\n" +
 	"\fAgentRuntime\x12Y\n" +
 	"\rCreateSession\x12\x1f.agent_runtime.v1.SessionConfig\x1a'.agent_runtime.v1.CreateSessionResponse\x12U\n" +
 	"\x0eDestroySession\x12 .agent_runtime.v1.DestroyRequest\x1a!.agent_runtime.v1.DestroyResponse\x12U\n" +
@@ -13718,7 +15590,15 @@ const file_zrt_runtime_proto_rawDesc = "" +
 	"GetContext\x12#.agent_runtime.v1.GetContextRequest\x1a$.agent_runtime.v1.GetContextResponse\x12X\n" +
 	"\fClearContext\x12%.agent_runtime.v1.ClearContextRequest\x1a!.agent_runtime.v1.ContextOpResult\x12P\n" +
 	"\vEventStream\x12\x1d.agent_runtime.v1.ClientEvent\x1a\x1e.agent_runtime.v1.RuntimeEvent(\x010\x01\x12[\n" +
-	"\x0eSendA2AMessage\x12#.agent_runtime.v1.A2AMessageRequest\x1a$.agent_runtime.v1.A2AMessageResponse\x12V\n" +
+	"\x0eSendA2AMessage\x12#.agent_runtime.v1.A2AMessageRequest\x1a$.agent_runtime.v1.A2AMessageResponse\x12c\n" +
+	"\x0eSipGetCallInfo\x12'.agent_runtime.v1.SipGetCallInfoRequest\x1a(.agent_runtime.v1.SipGetCallInfoResponse\x12`\n" +
+	"\rSipCreateRoom\x12&.agent_runtime.v1.SipCreateRoomRequest\x1a'.agent_runtime.v1.SipCreateRoomResponse\x12r\n" +
+	"\x13SipMakeOutboundCall\x12,.agent_runtime.v1.SipMakeOutboundCallRequest\x1a-.agent_runtime.v1.SipMakeOutboundCallResponse\x12l\n" +
+	"\x11SipSwitchCallRoom\x12*.agent_runtime.v1.SipSwitchCallRoomRequest\x1a+.agent_runtime.v1.SipSwitchCallRoomResponse\x12i\n" +
+	"\x10SipListRoomCalls\x12).agent_runtime.v1.SipListRoomCallsRequest\x1a*.agent_runtime.v1.SipListRoomCallsResponse\x12W\n" +
+	"\n" +
+	"SipEndCall\x12#.agent_runtime.v1.SipEndCallRequest\x1a$.agent_runtime.v1.SipEndCallResponse\x12Z\n" +
+	"\vLlmComplete\x12$.agent_runtime.v1.LlmCompleteRequest\x1a%.agent_runtime.v1.LlmCompleteResponse\x12V\n" +
 	"\rRegisterAgent\x12\x1f.agent_runtime.v1.AgentStreamIn\x1a .agent_runtime.v1.AgentStreamOut(\x010\x01\x12Q\n" +
 	"\bDispatch\x12!.agent_runtime.v1.DispatchRequest\x1a\".agent_runtime.v1.DispatchResponse\x12T\n" +
 	"\tTerminate\x12\".agent_runtime.v1.TerminateRequest\x1a#.agent_runtime.v1.TerminateResponse\x12i\n" +
@@ -13737,7 +15617,7 @@ func file_zrt_runtime_proto_rawDescGZIP() []byte {
 }
 
 var file_zrt_runtime_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_zrt_runtime_proto_msgTypes = make([]protoimpl.MessageInfo, 168)
+var file_zrt_runtime_proto_msgTypes = make([]protoimpl.MessageInfo, 194)
 var file_zrt_runtime_proto_goTypes = []any{
 	(RecordingFormat)(0),                  // 0: agent_runtime.v1.RecordingFormat
 	(RecordingChannelMode)(0),             // 1: agent_runtime.v1.RecordingChannelMode
@@ -13756,437 +15636,494 @@ var file_zrt_runtime_proto_goTypes = []any{
 	(*GeminiLiveExtras)(nil),              // 14: agent_runtime.v1.GeminiLiveExtras
 	(*GeminiVadConfig)(nil),               // 15: agent_runtime.v1.GeminiVadConfig
 	(*CascadeConfig)(nil),                 // 16: agent_runtime.v1.CascadeConfig
-	(*OrchestratorTimingConfig)(nil),      // 17: agent_runtime.v1.OrchestratorTimingConfig
-	(*STTProviderConfig)(nil),             // 18: agent_runtime.v1.STTProviderConfig
-	(*LLMProviderConfig)(nil),             // 19: agent_runtime.v1.LLMProviderConfig
-	(*TTSProviderConfig)(nil),             // 20: agent_runtime.v1.TTSProviderConfig
-	(*GeminiLLMExtras)(nil),               // 21: agent_runtime.v1.GeminiLLMExtras
-	(*SafetySetting)(nil),                 // 22: agent_runtime.v1.SafetySetting
-	(*VertexAIConfig)(nil),                // 23: agent_runtime.v1.VertexAIConfig
-	(*CartesiaExtras)(nil),                // 24: agent_runtime.v1.CartesiaExtras
-	(*VADProviderConfig)(nil),             // 25: agent_runtime.v1.VADProviderConfig
-	(*InterruptConfig)(nil),               // 26: agent_runtime.v1.InterruptConfig
-	(*EOUConfig)(nil),                     // 27: agent_runtime.v1.EOUConfig
-	(*FillerConfig)(nil),                  // 28: agent_runtime.v1.FillerConfig
-	(*AudioConfig)(nil),                   // 29: agent_runtime.v1.AudioConfig
-	(*SentenceBufferConfig)(nil),          // 30: agent_runtime.v1.SentenceBufferConfig
-	(*AgentConfig)(nil),                   // 31: agent_runtime.v1.AgentConfig
-	(*NamedAgentConfig)(nil),              // 32: agent_runtime.v1.NamedAgentConfig
-	(*ToolSchemaProto)(nil),               // 33: agent_runtime.v1.ToolSchemaProto
-	(*ContextWindowConfig)(nil),           // 34: agent_runtime.v1.ContextWindowConfig
-	(*RoomConfig)(nil),                    // 35: agent_runtime.v1.RoomConfig
-	(*CredentialsConfig)(nil),             // 36: agent_runtime.v1.CredentialsConfig
-	(*VersionInfo)(nil),                   // 37: agent_runtime.v1.VersionInfo
-	(*InjectMessageRequest)(nil),          // 38: agent_runtime.v1.InjectMessageRequest
-	(*RemoveMessageRequest)(nil),          // 39: agent_runtime.v1.RemoveMessageRequest
-	(*GetContextRequest)(nil),             // 40: agent_runtime.v1.GetContextRequest
-	(*GetContextResponse)(nil),            // 41: agent_runtime.v1.GetContextResponse
-	(*ClearContextRequest)(nil),           // 42: agent_runtime.v1.ClearContextRequest
-	(*ContextOpResult)(nil),               // 43: agent_runtime.v1.ContextOpResult
-	(*ContextMessageProto)(nil),           // 44: agent_runtime.v1.ContextMessageProto
-	(*ImageContentProto)(nil),             // 45: agent_runtime.v1.ImageContentProto
-	(*HealthRequest)(nil),                 // 46: agent_runtime.v1.HealthRequest
-	(*HealthResponse)(nil),                // 47: agent_runtime.v1.HealthResponse
-	(*ClientEvent)(nil),                   // 48: agent_runtime.v1.ClientEvent
-	(*RuntimeEvent)(nil),                  // 49: agent_runtime.v1.RuntimeEvent
-	(*ToolCallRequest)(nil),               // 50: agent_runtime.v1.ToolCallRequest
-	(*ToolCallResponse)(nil),              // 51: agent_runtime.v1.ToolCallResponse
-	(*BeforeLLMHook)(nil),                 // 52: agent_runtime.v1.BeforeLLMHook
-	(*BeforeLLMResponse)(nil),             // 53: agent_runtime.v1.BeforeLLMResponse
-	(*TranscriptEvent)(nil),               // 54: agent_runtime.v1.TranscriptEvent
-	(*TurnComplete)(nil),                  // 55: agent_runtime.v1.TurnComplete
-	(*SessionStateChange)(nil),            // 56: agent_runtime.v1.SessionStateChange
-	(*ParticipantEventProto)(nil),         // 57: agent_runtime.v1.ParticipantEventProto
-	(*AgentSpeechEvent)(nil),              // 58: agent_runtime.v1.AgentSpeechEvent
-	(*InterruptEvent)(nil),                // 59: agent_runtime.v1.InterruptEvent
-	(*MetricsSnapshot)(nil),               // 60: agent_runtime.v1.MetricsSnapshot
-	(*SayCommand)(nil),                    // 61: agent_runtime.v1.SayCommand
-	(*SayComplete)(nil),                   // 62: agent_runtime.v1.SayComplete
-	(*UpdateInstructionsCmd)(nil),         // 63: agent_runtime.v1.UpdateInstructionsCmd
-	(*UpdateToolsCmd)(nil),                // 64: agent_runtime.v1.UpdateToolsCmd
-	(*UpdateConfigCmd)(nil),               // 65: agent_runtime.v1.UpdateConfigCmd
-	(*ShutdownCommand)(nil),               // 66: agent_runtime.v1.ShutdownCommand
-	(*Keepalive)(nil),                     // 67: agent_runtime.v1.Keepalive
-	(*CancelGenerationCmd)(nil),           // 68: agent_runtime.v1.CancelGenerationCmd
-	(*KnowledgeBaseUpsertCmd)(nil),        // 69: agent_runtime.v1.KnowledgeBaseUpsertCmd
-	(*KnowledgeBaseDeleteCmd)(nil),        // 70: agent_runtime.v1.KnowledgeBaseDeleteCmd
-	(*GenerateCmd)(nil),                   // 71: agent_runtime.v1.GenerateCmd
-	(*ErrorEvent)(nil),                    // 72: agent_runtime.v1.ErrorEvent
-	(*SignalingSessionAssignedEvent)(nil), // 73: agent_runtime.v1.SignalingSessionAssignedEvent
-	(*WarningEvent)(nil),                  // 74: agent_runtime.v1.WarningEvent
-	(*EouDetectedEvent)(nil),              // 75: agent_runtime.v1.EouDetectedEvent
-	(*GenerationChunkEvent)(nil),          // 76: agent_runtime.v1.GenerationChunkEvent
-	(*AgentSwitchedEvent)(nil),            // 77: agent_runtime.v1.AgentSwitchedEvent
-	(*TranscriptPreflightEvent)(nil),      // 78: agent_runtime.v1.TranscriptPreflightEvent
-	(*VadEventProto)(nil),                 // 79: agent_runtime.v1.VadEventProto
-	(*GenerationStartedEvent)(nil),        // 80: agent_runtime.v1.GenerationStartedEvent
-	(*GenerationCompleteEvent)(nil),       // 81: agent_runtime.v1.GenerationCompleteEvent
-	(*SynthesisStartedEvent)(nil),         // 82: agent_runtime.v1.SynthesisStartedEvent
-	(*FirstAudioByteEvent)(nil),           // 83: agent_runtime.v1.FirstAudioByteEvent
-	(*LastAudioByteEvent)(nil),            // 84: agent_runtime.v1.LastAudioByteEvent
-	(*SynthesisInterruptedEvent)(nil),     // 85: agent_runtime.v1.SynthesisInterruptedEvent
-	(*WordTimingEvent)(nil),               // 86: agent_runtime.v1.WordTimingEvent
-	(*TtsCapabilitiesEvent)(nil),          // 87: agent_runtime.v1.TtsCapabilitiesEvent
-	(*KbDocument)(nil),                    // 88: agent_runtime.v1.KbDocument
-	(*KbHitsEvent)(nil),                   // 89: agent_runtime.v1.KbHitsEvent
-	(*SttStreamStartedEvent)(nil),         // 90: agent_runtime.v1.SttStreamStartedEvent
-	(*SttStreamEndedEvent)(nil),           // 91: agent_runtime.v1.SttStreamEndedEvent
-	(*AgentStateChangedEvent)(nil),        // 92: agent_runtime.v1.AgentStateChangedEvent
-	(*UserStateChangedEvent)(nil),         // 93: agent_runtime.v1.UserStateChangedEvent
-	(*UserTurnStartEvent)(nil),            // 94: agent_runtime.v1.UserTurnStartEvent
-	(*UserTurnEndEvent)(nil),              // 95: agent_runtime.v1.UserTurnEndEvent
-	(*LLMCompletedEvent)(nil),             // 96: agent_runtime.v1.LLMCompletedEvent
-	(*LLMTokenForReviewEvent)(nil),        // 97: agent_runtime.v1.LLMTokenForReviewEvent
-	(*AgentTurnStartEvent)(nil),           // 98: agent_runtime.v1.AgentTurnStartEvent
-	(*AgentTurnEndEvent)(nil),             // 99: agent_runtime.v1.AgentTurnEndEvent
-	(*CustomSttAudioChunk)(nil),           // 100: agent_runtime.v1.CustomSttAudioChunk
-	(*CustomSttResult)(nil),               // 101: agent_runtime.v1.CustomSttResult
-	(*CustomTtsSynthesize)(nil),           // 102: agent_runtime.v1.CustomTtsSynthesize
-	(*CustomTtsAudioChunk)(nil),           // 103: agent_runtime.v1.CustomTtsAudioChunk
-	(*RecordingConfig)(nil),               // 104: agent_runtime.v1.RecordingConfig
-	(*RecordingStorageConfig)(nil),        // 105: agent_runtime.v1.RecordingStorageConfig
-	(*S3StorageConfig)(nil),               // 106: agent_runtime.v1.S3StorageConfig
-	(*RecordingTranscriptConfig)(nil),     // 107: agent_runtime.v1.RecordingTranscriptConfig
-	(*RecordingStatusEvent)(nil),          // 108: agent_runtime.v1.RecordingStatusEvent
-	(*PreloadBackgroundAudioCmd)(nil),     // 109: agent_runtime.v1.PreloadBackgroundAudioCmd
-	(*PlayBackgroundAudioCmd)(nil),        // 110: agent_runtime.v1.PlayBackgroundAudioCmd
-	(*StopBackgroundAudioCmd)(nil),        // 111: agent_runtime.v1.StopBackgroundAudioCmd
-	(*PushAudioFrameCmd)(nil),             // 112: agent_runtime.v1.PushAudioFrameCmd
-	(*RecordingStartCmd)(nil),             // 113: agent_runtime.v1.RecordingStartCmd
-	(*RecordingStopCmd)(nil),              // 114: agent_runtime.v1.RecordingStopCmd
-	(*SendImageCmd)(nil),                  // 115: agent_runtime.v1.SendImageCmd
-	(*MessageFrame)(nil),                  // 116: agent_runtime.v1.MessageFrame
-	(*SendMessageWithFramesCmd)(nil),      // 117: agent_runtime.v1.SendMessageWithFramesCmd
-	(*SendDTMFCmd)(nil),                   // 118: agent_runtime.v1.SendDTMFCmd
-	(*DTMFEvent)(nil),                     // 119: agent_runtime.v1.DTMFEvent
-	(*StreamEventProto)(nil),              // 120: agent_runtime.v1.StreamEventProto
-	(*AudioFrameEvent)(nil),               // 121: agent_runtime.v1.AudioFrameEvent
-	(*VisionFrameEvent)(nil),              // 122: agent_runtime.v1.VisionFrameEvent
-	(*CallTransferCmd)(nil),               // 123: agent_runtime.v1.CallTransferCmd
-	(*UpdateProviderCmd)(nil),             // 124: agent_runtime.v1.UpdateProviderCmd
-	(*ModifyLLMTokenCmd)(nil),             // 125: agent_runtime.v1.ModifyLLMTokenCmd
-	(*VoicemailConfig)(nil),               // 126: agent_runtime.v1.VoicemailConfig
-	(*VoicemailDetectedEvent)(nil),        // 127: agent_runtime.v1.VoicemailDetectedEvent
-	(*DenoiseConfig)(nil),                 // 128: agent_runtime.v1.DenoiseConfig
-	(*MCPServerConfig)(nil),               // 129: agent_runtime.v1.MCPServerConfig
-	(*KnowledgeBaseConfig)(nil),           // 130: agent_runtime.v1.KnowledgeBaseConfig
-	(*A2AMessageRequest)(nil),             // 131: agent_runtime.v1.A2AMessageRequest
-	(*A2AMessageResponse)(nil),            // 132: agent_runtime.v1.A2AMessageResponse
-	(*A2AMessageEvent)(nil),               // 133: agent_runtime.v1.A2AMessageEvent
-	(*AgentStreamIn)(nil),                 // 134: agent_runtime.v1.AgentStreamIn
-	(*AgentStreamOut)(nil),                // 135: agent_runtime.v1.AgentStreamOut
-	(*AgentRegistration)(nil),             // 136: agent_runtime.v1.AgentRegistration
-	(*AgentRegistered)(nil),               // 137: agent_runtime.v1.AgentRegistered
-	(*AgentConfigOverride)(nil),           // 138: agent_runtime.v1.AgentConfigOverride
-	(*SessionStarted)(nil),                // 139: agent_runtime.v1.SessionStarted
-	(*SessionEnded)(nil),                  // 140: agent_runtime.v1.SessionEnded
-	(*SessionAck)(nil),                    // 141: agent_runtime.v1.SessionAck
-	(*AgentDraining)(nil),                 // 142: agent_runtime.v1.AgentDraining
-	(*DispatchRequest)(nil),               // 143: agent_runtime.v1.DispatchRequest
-	(*DispatchResponse)(nil),              // 144: agent_runtime.v1.DispatchResponse
-	(*DispatchAccepted)(nil),              // 145: agent_runtime.v1.DispatchAccepted
-	(*DispatchRejected)(nil),              // 146: agent_runtime.v1.DispatchRejected
-	(*TerminateRequest)(nil),              // 147: agent_runtime.v1.TerminateRequest
-	(*TerminateResponse)(nil),             // 148: agent_runtime.v1.TerminateResponse
-	(*TerminateAccepted)(nil),             // 149: agent_runtime.v1.TerminateAccepted
-	(*TerminateRejected)(nil),             // 150: agent_runtime.v1.TerminateRejected
-	(*TestEmitToolCallRequest)(nil),       // 151: agent_runtime.v1.TestEmitToolCallRequest
-	(*TestEmitToolCallResponse)(nil),      // 152: agent_runtime.v1.TestEmitToolCallResponse
-	nil,                                   // 153: agent_runtime.v1.RealtimeProviderConfig.ParamsEntry
-	nil,                                   // 154: agent_runtime.v1.CascadeConfig.SttWordSubstitutionsEntry
-	nil,                                   // 155: agent_runtime.v1.STTProviderConfig.ParamsEntry
-	nil,                                   // 156: agent_runtime.v1.LLMProviderConfig.ParamsEntry
-	nil,                                   // 157: agent_runtime.v1.TTSProviderConfig.ParamsEntry
-	nil,                                   // 158: agent_runtime.v1.CredentialsConfig.ProviderKeysEntry
-	nil,                                   // 159: agent_runtime.v1.GenerationChunkEvent.MetadataEntry
-	nil,                                   // 160: agent_runtime.v1.KbDocument.MetadataEntry
-	nil,                                   // 161: agent_runtime.v1.RecordingConfig.CustomMetadataEntry
-	nil,                                   // 162: agent_runtime.v1.S3StorageConfig.TagsEntry
-	nil,                                   // 163: agent_runtime.v1.S3StorageConfig.UserMetadataEntry
-	nil,                                   // 164: agent_runtime.v1.RecordingStatusEvent.MetadataEntry
-	nil,                                   // 165: agent_runtime.v1.UpdateProviderCmd.ParamsEntry
-	nil,                                   // 166: agent_runtime.v1.MCPServerConfig.EnvEntry
-	nil,                                   // 167: agent_runtime.v1.KnowledgeBaseConfig.ParamsEntry
-	nil,                                   // 168: agent_runtime.v1.AgentRegistration.LabelsEntry
-	nil,                                   // 169: agent_runtime.v1.SessionStarted.DispatchMetadataEntry
-	nil,                                   // 170: agent_runtime.v1.DispatchRequest.DispatchMetadataEntry
-	nil,                                   // 171: agent_runtime.v1.DispatchRequest.LabelSelectorEntry
+	(*AvatarProviderConfig)(nil),          // 17: agent_runtime.v1.AvatarProviderConfig
+	(*TextProcessingConfig)(nil),          // 18: agent_runtime.v1.TextProcessingConfig
+	(*OrchestratorTimingConfig)(nil),      // 19: agent_runtime.v1.OrchestratorTimingConfig
+	(*InferenceConfig)(nil),               // 20: agent_runtime.v1.InferenceConfig
+	(*STTProviderConfig)(nil),             // 21: agent_runtime.v1.STTProviderConfig
+	(*LLMProviderConfig)(nil),             // 22: agent_runtime.v1.LLMProviderConfig
+	(*TTSProviderConfig)(nil),             // 23: agent_runtime.v1.TTSProviderConfig
+	(*GeminiLLMExtras)(nil),               // 24: agent_runtime.v1.GeminiLLMExtras
+	(*SafetySetting)(nil),                 // 25: agent_runtime.v1.SafetySetting
+	(*VertexAIConfig)(nil),                // 26: agent_runtime.v1.VertexAIConfig
+	(*CartesiaExtras)(nil),                // 27: agent_runtime.v1.CartesiaExtras
+	(*VADProviderConfig)(nil),             // 28: agent_runtime.v1.VADProviderConfig
+	(*InterruptConfig)(nil),               // 29: agent_runtime.v1.InterruptConfig
+	(*EOUConfig)(nil),                     // 30: agent_runtime.v1.EOUConfig
+	(*FillerConfig)(nil),                  // 31: agent_runtime.v1.FillerConfig
+	(*AudioConfig)(nil),                   // 32: agent_runtime.v1.AudioConfig
+	(*SentenceBufferConfig)(nil),          // 33: agent_runtime.v1.SentenceBufferConfig
+	(*AgentConfig)(nil),                   // 34: agent_runtime.v1.AgentConfig
+	(*NamedAgentConfig)(nil),              // 35: agent_runtime.v1.NamedAgentConfig
+	(*ToolSchemaProto)(nil),               // 36: agent_runtime.v1.ToolSchemaProto
+	(*ContextWindowConfig)(nil),           // 37: agent_runtime.v1.ContextWindowConfig
+	(*RoomConfig)(nil),                    // 38: agent_runtime.v1.RoomConfig
+	(*CredentialsConfig)(nil),             // 39: agent_runtime.v1.CredentialsConfig
+	(*VersionInfo)(nil),                   // 40: agent_runtime.v1.VersionInfo
+	(*InjectMessageRequest)(nil),          // 41: agent_runtime.v1.InjectMessageRequest
+	(*RemoveMessageRequest)(nil),          // 42: agent_runtime.v1.RemoveMessageRequest
+	(*GetContextRequest)(nil),             // 43: agent_runtime.v1.GetContextRequest
+	(*GetContextResponse)(nil),            // 44: agent_runtime.v1.GetContextResponse
+	(*ClearContextRequest)(nil),           // 45: agent_runtime.v1.ClearContextRequest
+	(*ContextOpResult)(nil),               // 46: agent_runtime.v1.ContextOpResult
+	(*ContextMessageProto)(nil),           // 47: agent_runtime.v1.ContextMessageProto
+	(*ImageContentProto)(nil),             // 48: agent_runtime.v1.ImageContentProto
+	(*HealthRequest)(nil),                 // 49: agent_runtime.v1.HealthRequest
+	(*HealthResponse)(nil),                // 50: agent_runtime.v1.HealthResponse
+	(*ClientEvent)(nil),                   // 51: agent_runtime.v1.ClientEvent
+	(*RuntimeEvent)(nil),                  // 52: agent_runtime.v1.RuntimeEvent
+	(*ToolCallRequest)(nil),               // 53: agent_runtime.v1.ToolCallRequest
+	(*ToolCallResponse)(nil),              // 54: agent_runtime.v1.ToolCallResponse
+	(*BeforeLLMHook)(nil),                 // 55: agent_runtime.v1.BeforeLLMHook
+	(*BeforeLLMResponse)(nil),             // 56: agent_runtime.v1.BeforeLLMResponse
+	(*SttHookEvent)(nil),                  // 57: agent_runtime.v1.SttHookEvent
+	(*SttHookResponse)(nil),               // 58: agent_runtime.v1.SttHookResponse
+	(*TtsHookEvent)(nil),                  // 59: agent_runtime.v1.TtsHookEvent
+	(*TtsHookResponse)(nil),               // 60: agent_runtime.v1.TtsHookResponse
+	(*TranscriptEvent)(nil),               // 61: agent_runtime.v1.TranscriptEvent
+	(*TurnComplete)(nil),                  // 62: agent_runtime.v1.TurnComplete
+	(*SessionStateChange)(nil),            // 63: agent_runtime.v1.SessionStateChange
+	(*ParticipantEventProto)(nil),         // 64: agent_runtime.v1.ParticipantEventProto
+	(*AgentSpeechEvent)(nil),              // 65: agent_runtime.v1.AgentSpeechEvent
+	(*InterruptEvent)(nil),                // 66: agent_runtime.v1.InterruptEvent
+	(*MetricsSnapshot)(nil),               // 67: agent_runtime.v1.MetricsSnapshot
+	(*SayCommand)(nil),                    // 68: agent_runtime.v1.SayCommand
+	(*SayComplete)(nil),                   // 69: agent_runtime.v1.SayComplete
+	(*UpdateInstructionsCmd)(nil),         // 70: agent_runtime.v1.UpdateInstructionsCmd
+	(*UpdateToolsCmd)(nil),                // 71: agent_runtime.v1.UpdateToolsCmd
+	(*UpdateConfigCmd)(nil),               // 72: agent_runtime.v1.UpdateConfigCmd
+	(*ShutdownCommand)(nil),               // 73: agent_runtime.v1.ShutdownCommand
+	(*Keepalive)(nil),                     // 74: agent_runtime.v1.Keepalive
+	(*CancelGenerationCmd)(nil),           // 75: agent_runtime.v1.CancelGenerationCmd
+	(*KnowledgeBaseUpsertCmd)(nil),        // 76: agent_runtime.v1.KnowledgeBaseUpsertCmd
+	(*KnowledgeBaseDeleteCmd)(nil),        // 77: agent_runtime.v1.KnowledgeBaseDeleteCmd
+	(*GenerateCmd)(nil),                   // 78: agent_runtime.v1.GenerateCmd
+	(*ErrorEvent)(nil),                    // 79: agent_runtime.v1.ErrorEvent
+	(*SignalingSessionAssignedEvent)(nil), // 80: agent_runtime.v1.SignalingSessionAssignedEvent
+	(*WarningEvent)(nil),                  // 81: agent_runtime.v1.WarningEvent
+	(*EouDetectedEvent)(nil),              // 82: agent_runtime.v1.EouDetectedEvent
+	(*GenerationChunkEvent)(nil),          // 83: agent_runtime.v1.GenerationChunkEvent
+	(*AgentSwitchedEvent)(nil),            // 84: agent_runtime.v1.AgentSwitchedEvent
+	(*TranscriptPreflightEvent)(nil),      // 85: agent_runtime.v1.TranscriptPreflightEvent
+	(*VadEventProto)(nil),                 // 86: agent_runtime.v1.VadEventProto
+	(*GenerationStartedEvent)(nil),        // 87: agent_runtime.v1.GenerationStartedEvent
+	(*GenerationCompleteEvent)(nil),       // 88: agent_runtime.v1.GenerationCompleteEvent
+	(*SynthesisStartedEvent)(nil),         // 89: agent_runtime.v1.SynthesisStartedEvent
+	(*FirstAudioByteEvent)(nil),           // 90: agent_runtime.v1.FirstAudioByteEvent
+	(*LastAudioByteEvent)(nil),            // 91: agent_runtime.v1.LastAudioByteEvent
+	(*SynthesisInterruptedEvent)(nil),     // 92: agent_runtime.v1.SynthesisInterruptedEvent
+	(*WordTimingEvent)(nil),               // 93: agent_runtime.v1.WordTimingEvent
+	(*TtsCapabilitiesEvent)(nil),          // 94: agent_runtime.v1.TtsCapabilitiesEvent
+	(*KbDocument)(nil),                    // 95: agent_runtime.v1.KbDocument
+	(*KbHitsEvent)(nil),                   // 96: agent_runtime.v1.KbHitsEvent
+	(*ComponentMetricsEvent)(nil),         // 97: agent_runtime.v1.ComponentMetricsEvent
+	(*TurnMetricsEvent)(nil),              // 98: agent_runtime.v1.TurnMetricsEvent
+	(*SttStreamStartedEvent)(nil),         // 99: agent_runtime.v1.SttStreamStartedEvent
+	(*SttStreamEndedEvent)(nil),           // 100: agent_runtime.v1.SttStreamEndedEvent
+	(*AgentStateChangedEvent)(nil),        // 101: agent_runtime.v1.AgentStateChangedEvent
+	(*UserStateChangedEvent)(nil),         // 102: agent_runtime.v1.UserStateChangedEvent
+	(*UserTurnStartEvent)(nil),            // 103: agent_runtime.v1.UserTurnStartEvent
+	(*UserTurnEndEvent)(nil),              // 104: agent_runtime.v1.UserTurnEndEvent
+	(*LLMCompletedEvent)(nil),             // 105: agent_runtime.v1.LLMCompletedEvent
+	(*LLMTokenForReviewEvent)(nil),        // 106: agent_runtime.v1.LLMTokenForReviewEvent
+	(*AgentTurnStartEvent)(nil),           // 107: agent_runtime.v1.AgentTurnStartEvent
+	(*AgentTurnEndEvent)(nil),             // 108: agent_runtime.v1.AgentTurnEndEvent
+	(*CustomSttAudioChunk)(nil),           // 109: agent_runtime.v1.CustomSttAudioChunk
+	(*CustomSttResult)(nil),               // 110: agent_runtime.v1.CustomSttResult
+	(*CustomTtsSynthesize)(nil),           // 111: agent_runtime.v1.CustomTtsSynthesize
+	(*CustomTtsAudioChunk)(nil),           // 112: agent_runtime.v1.CustomTtsAudioChunk
+	(*RecordingConfig)(nil),               // 113: agent_runtime.v1.RecordingConfig
+	(*RecordingStorageConfig)(nil),        // 114: agent_runtime.v1.RecordingStorageConfig
+	(*S3StorageConfig)(nil),               // 115: agent_runtime.v1.S3StorageConfig
+	(*RecordingTranscriptConfig)(nil),     // 116: agent_runtime.v1.RecordingTranscriptConfig
+	(*RecordingStatusEvent)(nil),          // 117: agent_runtime.v1.RecordingStatusEvent
+	(*PreloadBackgroundAudioCmd)(nil),     // 118: agent_runtime.v1.PreloadBackgroundAudioCmd
+	(*PlayBackgroundAudioCmd)(nil),        // 119: agent_runtime.v1.PlayBackgroundAudioCmd
+	(*StopBackgroundAudioCmd)(nil),        // 120: agent_runtime.v1.StopBackgroundAudioCmd
+	(*PushAudioFrameCmd)(nil),             // 121: agent_runtime.v1.PushAudioFrameCmd
+	(*RecordingStartCmd)(nil),             // 122: agent_runtime.v1.RecordingStartCmd
+	(*RecordingStopCmd)(nil),              // 123: agent_runtime.v1.RecordingStopCmd
+	(*SendImageCmd)(nil),                  // 124: agent_runtime.v1.SendImageCmd
+	(*MessageFrame)(nil),                  // 125: agent_runtime.v1.MessageFrame
+	(*SendMessageWithFramesCmd)(nil),      // 126: agent_runtime.v1.SendMessageWithFramesCmd
+	(*SendDTMFCmd)(nil),                   // 127: agent_runtime.v1.SendDTMFCmd
+	(*DTMFEvent)(nil),                     // 128: agent_runtime.v1.DTMFEvent
+	(*StreamEventProto)(nil),              // 129: agent_runtime.v1.StreamEventProto
+	(*AudioFrameEvent)(nil),               // 130: agent_runtime.v1.AudioFrameEvent
+	(*VisionFrameEvent)(nil),              // 131: agent_runtime.v1.VisionFrameEvent
+	(*CallTransferCmd)(nil),               // 132: agent_runtime.v1.CallTransferCmd
+	(*SipGetCallInfoRequest)(nil),         // 133: agent_runtime.v1.SipGetCallInfoRequest
+	(*SipGetCallInfoResponse)(nil),        // 134: agent_runtime.v1.SipGetCallInfoResponse
+	(*SipCreateRoomRequest)(nil),          // 135: agent_runtime.v1.SipCreateRoomRequest
+	(*SipCreateRoomResponse)(nil),         // 136: agent_runtime.v1.SipCreateRoomResponse
+	(*SipMakeOutboundCallRequest)(nil),    // 137: agent_runtime.v1.SipMakeOutboundCallRequest
+	(*SipMakeOutboundCallResponse)(nil),   // 138: agent_runtime.v1.SipMakeOutboundCallResponse
+	(*SipSwitchCallRoomRequest)(nil),      // 139: agent_runtime.v1.SipSwitchCallRoomRequest
+	(*SipSwitchCallRoomResponse)(nil),     // 140: agent_runtime.v1.SipSwitchCallRoomResponse
+	(*SipListRoomCallsRequest)(nil),       // 141: agent_runtime.v1.SipListRoomCallsRequest
+	(*SipListRoomCallsResponse)(nil),      // 142: agent_runtime.v1.SipListRoomCallsResponse
+	(*SipEndCallRequest)(nil),             // 143: agent_runtime.v1.SipEndCallRequest
+	(*SipEndCallResponse)(nil),            // 144: agent_runtime.v1.SipEndCallResponse
+	(*LlmCompleteRequest)(nil),            // 145: agent_runtime.v1.LlmCompleteRequest
+	(*LlmCompleteResponse)(nil),           // 146: agent_runtime.v1.LlmCompleteResponse
+	(*SetUserInputEnabledCmd)(nil),        // 147: agent_runtime.v1.SetUserInputEnabledCmd
+	(*UpdateProviderCmd)(nil),             // 148: agent_runtime.v1.UpdateProviderCmd
+	(*ModifyLLMTokenCmd)(nil),             // 149: agent_runtime.v1.ModifyLLMTokenCmd
+	(*VoicemailConfig)(nil),               // 150: agent_runtime.v1.VoicemailConfig
+	(*VoicemailDetectedEvent)(nil),        // 151: agent_runtime.v1.VoicemailDetectedEvent
+	(*DenoiseConfig)(nil),                 // 152: agent_runtime.v1.DenoiseConfig
+	(*MCPServerConfig)(nil),               // 153: agent_runtime.v1.MCPServerConfig
+	(*KnowledgeBaseConfig)(nil),           // 154: agent_runtime.v1.KnowledgeBaseConfig
+	(*A2AMessageRequest)(nil),             // 155: agent_runtime.v1.A2AMessageRequest
+	(*A2AMessageResponse)(nil),            // 156: agent_runtime.v1.A2AMessageResponse
+	(*A2AMessageEvent)(nil),               // 157: agent_runtime.v1.A2AMessageEvent
+	(*AgentStreamIn)(nil),                 // 158: agent_runtime.v1.AgentStreamIn
+	(*AgentStreamOut)(nil),                // 159: agent_runtime.v1.AgentStreamOut
+	(*AgentRegistration)(nil),             // 160: agent_runtime.v1.AgentRegistration
+	(*AgentRegistered)(nil),               // 161: agent_runtime.v1.AgentRegistered
+	(*AgentConfigOverride)(nil),           // 162: agent_runtime.v1.AgentConfigOverride
+	(*SessionStarted)(nil),                // 163: agent_runtime.v1.SessionStarted
+	(*SessionEnded)(nil),                  // 164: agent_runtime.v1.SessionEnded
+	(*SessionAck)(nil),                    // 165: agent_runtime.v1.SessionAck
+	(*AgentDraining)(nil),                 // 166: agent_runtime.v1.AgentDraining
+	(*DispatchRequest)(nil),               // 167: agent_runtime.v1.DispatchRequest
+	(*DispatchResponse)(nil),              // 168: agent_runtime.v1.DispatchResponse
+	(*DispatchAccepted)(nil),              // 169: agent_runtime.v1.DispatchAccepted
+	(*DispatchRejected)(nil),              // 170: agent_runtime.v1.DispatchRejected
+	(*TerminateRequest)(nil),              // 171: agent_runtime.v1.TerminateRequest
+	(*TerminateResponse)(nil),             // 172: agent_runtime.v1.TerminateResponse
+	(*TerminateAccepted)(nil),             // 173: agent_runtime.v1.TerminateAccepted
+	(*TerminateRejected)(nil),             // 174: agent_runtime.v1.TerminateRejected
+	(*TestEmitToolCallRequest)(nil),       // 175: agent_runtime.v1.TestEmitToolCallRequest
+	(*TestEmitToolCallResponse)(nil),      // 176: agent_runtime.v1.TestEmitToolCallResponse
+	nil,                                   // 177: agent_runtime.v1.RealtimeProviderConfig.ParamsEntry
+	nil,                                   // 178: agent_runtime.v1.CascadeConfig.SttWordSubstitutionsEntry
+	nil,                                   // 179: agent_runtime.v1.AvatarProviderConfig.ParamsEntry
+	nil,                                   // 180: agent_runtime.v1.STTProviderConfig.ParamsEntry
+	nil,                                   // 181: agent_runtime.v1.LLMProviderConfig.ParamsEntry
+	nil,                                   // 182: agent_runtime.v1.TTSProviderConfig.ParamsEntry
+	nil,                                   // 183: agent_runtime.v1.RoomConfig.MetricsExportHeadersEntry
+	nil,                                   // 184: agent_runtime.v1.CredentialsConfig.ProviderKeysEntry
+	nil,                                   // 185: agent_runtime.v1.GenerationChunkEvent.MetadataEntry
+	nil,                                   // 186: agent_runtime.v1.KbDocument.MetadataEntry
+	nil,                                   // 187: agent_runtime.v1.RecordingConfig.CustomMetadataEntry
+	nil,                                   // 188: agent_runtime.v1.S3StorageConfig.TagsEntry
+	nil,                                   // 189: agent_runtime.v1.S3StorageConfig.UserMetadataEntry
+	nil,                                   // 190: agent_runtime.v1.RecordingStatusEvent.MetadataEntry
+	nil,                                   // 191: agent_runtime.v1.UpdateProviderCmd.ParamsEntry
+	nil,                                   // 192: agent_runtime.v1.MCPServerConfig.EnvEntry
+	nil,                                   // 193: agent_runtime.v1.KnowledgeBaseConfig.ParamsEntry
+	nil,                                   // 194: agent_runtime.v1.AgentRegistration.LabelsEntry
+	nil,                                   // 195: agent_runtime.v1.SessionStarted.DispatchMetadataEntry
+	nil,                                   // 196: agent_runtime.v1.DispatchRequest.DispatchMetadataEntry
+	nil,                                   // 197: agent_runtime.v1.DispatchRequest.LabelSelectorEntry
 }
 var file_zrt_runtime_proto_depIdxs = []int32{
 	12,  // 0: agent_runtime.v1.SessionConfig.pipeline:type_name -> agent_runtime.v1.PipelineConfig
-	31,  // 1: agent_runtime.v1.SessionConfig.agent:type_name -> agent_runtime.v1.AgentConfig
-	35,  // 2: agent_runtime.v1.SessionConfig.room:type_name -> agent_runtime.v1.RoomConfig
-	36,  // 3: agent_runtime.v1.SessionConfig.credentials:type_name -> agent_runtime.v1.CredentialsConfig
+	34,  // 1: agent_runtime.v1.SessionConfig.agent:type_name -> agent_runtime.v1.AgentConfig
+	38,  // 2: agent_runtime.v1.SessionConfig.room:type_name -> agent_runtime.v1.RoomConfig
+	39,  // 3: agent_runtime.v1.SessionConfig.credentials:type_name -> agent_runtime.v1.CredentialsConfig
 	11,  // 4: agent_runtime.v1.SessionConfig.limits:type_name -> agent_runtime.v1.SessionLimits
-	37,  // 5: agent_runtime.v1.SessionConfig.client_version:type_name -> agent_runtime.v1.VersionInfo
-	104, // 6: agent_runtime.v1.SessionConfig.recording:type_name -> agent_runtime.v1.RecordingConfig
+	40,  // 5: agent_runtime.v1.SessionConfig.client_version:type_name -> agent_runtime.v1.VersionInfo
+	113, // 6: agent_runtime.v1.SessionConfig.recording:type_name -> agent_runtime.v1.RecordingConfig
 	6,   // 7: agent_runtime.v1.CreateSessionResponse.session:type_name -> agent_runtime.v1.SessionInfo
 	7,   // 8: agent_runtime.v1.CreateSessionResponse.rejected:type_name -> agent_runtime.v1.SessionRejected
 	16,  // 9: agent_runtime.v1.PipelineConfig.cascade:type_name -> agent_runtime.v1.CascadeConfig
 	13,  // 10: agent_runtime.v1.PipelineConfig.realtime:type_name -> agent_runtime.v1.RealtimeProviderConfig
-	153, // 11: agent_runtime.v1.RealtimeProviderConfig.params:type_name -> agent_runtime.v1.RealtimeProviderConfig.ParamsEntry
+	177, // 11: agent_runtime.v1.RealtimeProviderConfig.params:type_name -> agent_runtime.v1.RealtimeProviderConfig.ParamsEntry
 	14,  // 12: agent_runtime.v1.RealtimeProviderConfig.gemini_live_extras:type_name -> agent_runtime.v1.GeminiLiveExtras
 	15,  // 13: agent_runtime.v1.GeminiLiveExtras.vad:type_name -> agent_runtime.v1.GeminiVadConfig
-	23,  // 14: agent_runtime.v1.GeminiLiveExtras.vertex:type_name -> agent_runtime.v1.VertexAIConfig
-	18,  // 15: agent_runtime.v1.CascadeConfig.stt:type_name -> agent_runtime.v1.STTProviderConfig
-	19,  // 16: agent_runtime.v1.CascadeConfig.llm:type_name -> agent_runtime.v1.LLMProviderConfig
-	20,  // 17: agent_runtime.v1.CascadeConfig.tts:type_name -> agent_runtime.v1.TTSProviderConfig
-	25,  // 18: agent_runtime.v1.CascadeConfig.vad:type_name -> agent_runtime.v1.VADProviderConfig
-	26,  // 19: agent_runtime.v1.CascadeConfig.interrupt:type_name -> agent_runtime.v1.InterruptConfig
-	27,  // 20: agent_runtime.v1.CascadeConfig.eou:type_name -> agent_runtime.v1.EOUConfig
-	28,  // 21: agent_runtime.v1.CascadeConfig.filler:type_name -> agent_runtime.v1.FillerConfig
-	29,  // 22: agent_runtime.v1.CascadeConfig.audio:type_name -> agent_runtime.v1.AudioConfig
-	30,  // 23: agent_runtime.v1.CascadeConfig.sentence_buffer:type_name -> agent_runtime.v1.SentenceBufferConfig
-	17,  // 24: agent_runtime.v1.CascadeConfig.orchestrator_timing:type_name -> agent_runtime.v1.OrchestratorTimingConfig
-	126, // 25: agent_runtime.v1.CascadeConfig.voicemail:type_name -> agent_runtime.v1.VoicemailConfig
-	128, // 26: agent_runtime.v1.CascadeConfig.denoise:type_name -> agent_runtime.v1.DenoiseConfig
-	154, // 27: agent_runtime.v1.CascadeConfig.stt_word_substitutions:type_name -> agent_runtime.v1.CascadeConfig.SttWordSubstitutionsEntry
-	155, // 28: agent_runtime.v1.STTProviderConfig.params:type_name -> agent_runtime.v1.STTProviderConfig.ParamsEntry
-	18,  // 29: agent_runtime.v1.STTProviderConfig.fallbacks:type_name -> agent_runtime.v1.STTProviderConfig
-	156, // 30: agent_runtime.v1.LLMProviderConfig.params:type_name -> agent_runtime.v1.LLMProviderConfig.ParamsEntry
-	19,  // 31: agent_runtime.v1.LLMProviderConfig.fallbacks:type_name -> agent_runtime.v1.LLMProviderConfig
-	21,  // 32: agent_runtime.v1.LLMProviderConfig.gemini_extras:type_name -> agent_runtime.v1.GeminiLLMExtras
-	157, // 33: agent_runtime.v1.TTSProviderConfig.params:type_name -> agent_runtime.v1.TTSProviderConfig.ParamsEntry
-	20,  // 34: agent_runtime.v1.TTSProviderConfig.fallbacks:type_name -> agent_runtime.v1.TTSProviderConfig
-	24,  // 35: agent_runtime.v1.TTSProviderConfig.cartesia_extras:type_name -> agent_runtime.v1.CartesiaExtras
-	22,  // 36: agent_runtime.v1.GeminiLLMExtras.safety_settings:type_name -> agent_runtime.v1.SafetySetting
-	23,  // 37: agent_runtime.v1.GeminiLLMExtras.vertex:type_name -> agent_runtime.v1.VertexAIConfig
-	33,  // 38: agent_runtime.v1.AgentConfig.tools:type_name -> agent_runtime.v1.ToolSchemaProto
-	34,  // 39: agent_runtime.v1.AgentConfig.context_window:type_name -> agent_runtime.v1.ContextWindowConfig
-	129, // 40: agent_runtime.v1.AgentConfig.mcp_servers:type_name -> agent_runtime.v1.MCPServerConfig
-	130, // 41: agent_runtime.v1.AgentConfig.knowledge_base:type_name -> agent_runtime.v1.KnowledgeBaseConfig
-	32,  // 42: agent_runtime.v1.AgentConfig.alternates:type_name -> agent_runtime.v1.NamedAgentConfig
-	33,  // 43: agent_runtime.v1.NamedAgentConfig.tools:type_name -> agent_runtime.v1.ToolSchemaProto
-	158, // 44: agent_runtime.v1.CredentialsConfig.provider_keys:type_name -> agent_runtime.v1.CredentialsConfig.ProviderKeysEntry
-	44,  // 45: agent_runtime.v1.InjectMessageRequest.message:type_name -> agent_runtime.v1.ContextMessageProto
-	44,  // 46: agent_runtime.v1.GetContextResponse.messages:type_name -> agent_runtime.v1.ContextMessageProto
-	45,  // 47: agent_runtime.v1.ContextMessageProto.images:type_name -> agent_runtime.v1.ImageContentProto
-	51,  // 48: agent_runtime.v1.ClientEvent.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
-	53,  // 49: agent_runtime.v1.ClientEvent.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
-	61,  // 50: agent_runtime.v1.ClientEvent.say:type_name -> agent_runtime.v1.SayCommand
-	63,  // 51: agent_runtime.v1.ClientEvent.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
-	65,  // 52: agent_runtime.v1.ClientEvent.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
-	66,  // 53: agent_runtime.v1.ClientEvent.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
-	67,  // 54: agent_runtime.v1.ClientEvent.keepalive:type_name -> agent_runtime.v1.Keepalive
-	64,  // 55: agent_runtime.v1.ClientEvent.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
-	110, // 56: agent_runtime.v1.ClientEvent.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
-	111, // 57: agent_runtime.v1.ClientEvent.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
-	118, // 58: agent_runtime.v1.ClientEvent.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
-	123, // 59: agent_runtime.v1.ClientEvent.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
-	124, // 60: agent_runtime.v1.ClientEvent.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
-	125, // 61: agent_runtime.v1.ClientEvent.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
-	112, // 62: agent_runtime.v1.ClientEvent.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
-	113, // 63: agent_runtime.v1.ClientEvent.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
-	114, // 64: agent_runtime.v1.ClientEvent.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
-	115, // 65: agent_runtime.v1.ClientEvent.send_image:type_name -> agent_runtime.v1.SendImageCmd
-	68,  // 66: agent_runtime.v1.ClientEvent.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
-	69,  // 67: agent_runtime.v1.ClientEvent.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
-	70,  // 68: agent_runtime.v1.ClientEvent.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
-	71,  // 69: agent_runtime.v1.ClientEvent.generate:type_name -> agent_runtime.v1.GenerateCmd
-	117, // 70: agent_runtime.v1.ClientEvent.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
-	101, // 71: agent_runtime.v1.ClientEvent.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
-	103, // 72: agent_runtime.v1.ClientEvent.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
-	109, // 73: agent_runtime.v1.ClientEvent.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
-	50,  // 74: agent_runtime.v1.RuntimeEvent.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
-	52,  // 75: agent_runtime.v1.RuntimeEvent.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
-	55,  // 76: agent_runtime.v1.RuntimeEvent.turn_complete:type_name -> agent_runtime.v1.TurnComplete
-	62,  // 77: agent_runtime.v1.RuntimeEvent.say_complete:type_name -> agent_runtime.v1.SayComplete
-	56,  // 78: agent_runtime.v1.RuntimeEvent.state_change:type_name -> agent_runtime.v1.SessionStateChange
-	57,  // 79: agent_runtime.v1.RuntimeEvent.participant:type_name -> agent_runtime.v1.ParticipantEventProto
-	54,  // 80: agent_runtime.v1.RuntimeEvent.transcript:type_name -> agent_runtime.v1.TranscriptEvent
-	58,  // 81: agent_runtime.v1.RuntimeEvent.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
-	60,  // 82: agent_runtime.v1.RuntimeEvent.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
-	59,  // 83: agent_runtime.v1.RuntimeEvent.interrupt:type_name -> agent_runtime.v1.InterruptEvent
-	72,  // 84: agent_runtime.v1.RuntimeEvent.error:type_name -> agent_runtime.v1.ErrorEvent
-	74,  // 85: agent_runtime.v1.RuntimeEvent.warning:type_name -> agent_runtime.v1.WarningEvent
-	119, // 86: agent_runtime.v1.RuntimeEvent.dtmf:type_name -> agent_runtime.v1.DTMFEvent
-	127, // 87: agent_runtime.v1.RuntimeEvent.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
-	133, // 88: agent_runtime.v1.RuntimeEvent.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
-	108, // 89: agent_runtime.v1.RuntimeEvent.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
-	75,  // 90: agent_runtime.v1.RuntimeEvent.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
-	76,  // 91: agent_runtime.v1.RuntimeEvent.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
-	77,  // 92: agent_runtime.v1.RuntimeEvent.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
-	78,  // 93: agent_runtime.v1.RuntimeEvent.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
-	92,  // 94: agent_runtime.v1.RuntimeEvent.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
-	93,  // 95: agent_runtime.v1.RuntimeEvent.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
-	94,  // 96: agent_runtime.v1.RuntimeEvent.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
-	95,  // 97: agent_runtime.v1.RuntimeEvent.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
-	97,  // 98: agent_runtime.v1.RuntimeEvent.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
-	122, // 99: agent_runtime.v1.RuntimeEvent.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
-	121, // 100: agent_runtime.v1.RuntimeEvent.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
-	120, // 101: agent_runtime.v1.RuntimeEvent.stream_event:type_name -> agent_runtime.v1.StreamEventProto
-	79,  // 102: agent_runtime.v1.RuntimeEvent.vad_event:type_name -> agent_runtime.v1.VadEventProto
-	80,  // 103: agent_runtime.v1.RuntimeEvent.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
-	81,  // 104: agent_runtime.v1.RuntimeEvent.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
-	82,  // 105: agent_runtime.v1.RuntimeEvent.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
-	83,  // 106: agent_runtime.v1.RuntimeEvent.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
-	84,  // 107: agent_runtime.v1.RuntimeEvent.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
-	85,  // 108: agent_runtime.v1.RuntimeEvent.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
-	86,  // 109: agent_runtime.v1.RuntimeEvent.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
-	87,  // 110: agent_runtime.v1.RuntimeEvent.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
-	89,  // 111: agent_runtime.v1.RuntimeEvent.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
-	90,  // 112: agent_runtime.v1.RuntimeEvent.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
-	91,  // 113: agent_runtime.v1.RuntimeEvent.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
-	98,  // 114: agent_runtime.v1.RuntimeEvent.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
-	99,  // 115: agent_runtime.v1.RuntimeEvent.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
-	100, // 116: agent_runtime.v1.RuntimeEvent.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
-	102, // 117: agent_runtime.v1.RuntimeEvent.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
-	73,  // 118: agent_runtime.v1.RuntimeEvent.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
-	96,  // 119: agent_runtime.v1.RuntimeEvent.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
-	33,  // 120: agent_runtime.v1.UpdateToolsCmd.tools:type_name -> agent_runtime.v1.ToolSchemaProto
-	88,  // 121: agent_runtime.v1.KnowledgeBaseUpsertCmd.documents:type_name -> agent_runtime.v1.KbDocument
-	159, // 122: agent_runtime.v1.GenerationChunkEvent.metadata:type_name -> agent_runtime.v1.GenerationChunkEvent.MetadataEntry
-	160, // 123: agent_runtime.v1.KbDocument.metadata:type_name -> agent_runtime.v1.KbDocument.MetadataEntry
-	88,  // 124: agent_runtime.v1.KbHitsEvent.documents:type_name -> agent_runtime.v1.KbDocument
-	0,   // 125: agent_runtime.v1.RecordingConfig.format:type_name -> agent_runtime.v1.RecordingFormat
-	1,   // 126: agent_runtime.v1.RecordingConfig.channel_mode:type_name -> agent_runtime.v1.RecordingChannelMode
-	105, // 127: agent_runtime.v1.RecordingConfig.storage:type_name -> agent_runtime.v1.RecordingStorageConfig
-	107, // 128: agent_runtime.v1.RecordingConfig.transcript:type_name -> agent_runtime.v1.RecordingTranscriptConfig
-	161, // 129: agent_runtime.v1.RecordingConfig.custom_metadata:type_name -> agent_runtime.v1.RecordingConfig.CustomMetadataEntry
-	106, // 130: agent_runtime.v1.RecordingStorageConfig.s3:type_name -> agent_runtime.v1.S3StorageConfig
-	162, // 131: agent_runtime.v1.S3StorageConfig.tags:type_name -> agent_runtime.v1.S3StorageConfig.TagsEntry
-	163, // 132: agent_runtime.v1.S3StorageConfig.user_metadata:type_name -> agent_runtime.v1.S3StorageConfig.UserMetadataEntry
-	2,   // 133: agent_runtime.v1.RecordingTranscriptConfig.format:type_name -> agent_runtime.v1.RecordingTranscriptFormat
-	3,   // 134: agent_runtime.v1.RecordingStatusEvent.state:type_name -> agent_runtime.v1.RecordingState
-	164, // 135: agent_runtime.v1.RecordingStatusEvent.metadata:type_name -> agent_runtime.v1.RecordingStatusEvent.MetadataEntry
-	104, // 136: agent_runtime.v1.RecordingStartCmd.config:type_name -> agent_runtime.v1.RecordingConfig
-	116, // 137: agent_runtime.v1.SendMessageWithFramesCmd.frames:type_name -> agent_runtime.v1.MessageFrame
-	165, // 138: agent_runtime.v1.UpdateProviderCmd.params:type_name -> agent_runtime.v1.UpdateProviderCmd.ParamsEntry
-	166, // 139: agent_runtime.v1.MCPServerConfig.env:type_name -> agent_runtime.v1.MCPServerConfig.EnvEntry
-	167, // 140: agent_runtime.v1.KnowledgeBaseConfig.params:type_name -> agent_runtime.v1.KnowledgeBaseConfig.ParamsEntry
-	136, // 141: agent_runtime.v1.AgentStreamIn.register:type_name -> agent_runtime.v1.AgentRegistration
-	141, // 142: agent_runtime.v1.AgentStreamIn.session_ack:type_name -> agent_runtime.v1.SessionAck
-	142, // 143: agent_runtime.v1.AgentStreamIn.draining:type_name -> agent_runtime.v1.AgentDraining
-	67,  // 144: agent_runtime.v1.AgentStreamIn.keepalive:type_name -> agent_runtime.v1.Keepalive
-	51,  // 145: agent_runtime.v1.AgentStreamIn.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
-	53,  // 146: agent_runtime.v1.AgentStreamIn.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
-	61,  // 147: agent_runtime.v1.AgentStreamIn.say:type_name -> agent_runtime.v1.SayCommand
-	63,  // 148: agent_runtime.v1.AgentStreamIn.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
-	65,  // 149: agent_runtime.v1.AgentStreamIn.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
-	64,  // 150: agent_runtime.v1.AgentStreamIn.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
-	110, // 151: agent_runtime.v1.AgentStreamIn.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
-	111, // 152: agent_runtime.v1.AgentStreamIn.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
-	118, // 153: agent_runtime.v1.AgentStreamIn.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
-	123, // 154: agent_runtime.v1.AgentStreamIn.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
-	66,  // 155: agent_runtime.v1.AgentStreamIn.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
-	124, // 156: agent_runtime.v1.AgentStreamIn.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
-	125, // 157: agent_runtime.v1.AgentStreamIn.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
-	112, // 158: agent_runtime.v1.AgentStreamIn.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
-	113, // 159: agent_runtime.v1.AgentStreamIn.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
-	114, // 160: agent_runtime.v1.AgentStreamIn.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
-	115, // 161: agent_runtime.v1.AgentStreamIn.send_image:type_name -> agent_runtime.v1.SendImageCmd
-	68,  // 162: agent_runtime.v1.AgentStreamIn.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
-	69,  // 163: agent_runtime.v1.AgentStreamIn.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
-	70,  // 164: agent_runtime.v1.AgentStreamIn.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
-	71,  // 165: agent_runtime.v1.AgentStreamIn.generate:type_name -> agent_runtime.v1.GenerateCmd
-	117, // 166: agent_runtime.v1.AgentStreamIn.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
-	101, // 167: agent_runtime.v1.AgentStreamIn.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
-	103, // 168: agent_runtime.v1.AgentStreamIn.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
-	109, // 169: agent_runtime.v1.AgentStreamIn.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
-	137, // 170: agent_runtime.v1.AgentStreamOut.registered:type_name -> agent_runtime.v1.AgentRegistered
-	139, // 171: agent_runtime.v1.AgentStreamOut.session_started:type_name -> agent_runtime.v1.SessionStarted
-	140, // 172: agent_runtime.v1.AgentStreamOut.session_ended:type_name -> agent_runtime.v1.SessionEnded
-	50,  // 173: agent_runtime.v1.AgentStreamOut.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
-	52,  // 174: agent_runtime.v1.AgentStreamOut.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
-	55,  // 175: agent_runtime.v1.AgentStreamOut.turn_complete:type_name -> agent_runtime.v1.TurnComplete
-	62,  // 176: agent_runtime.v1.AgentStreamOut.say_complete:type_name -> agent_runtime.v1.SayComplete
-	56,  // 177: agent_runtime.v1.AgentStreamOut.state_change:type_name -> agent_runtime.v1.SessionStateChange
-	57,  // 178: agent_runtime.v1.AgentStreamOut.participant:type_name -> agent_runtime.v1.ParticipantEventProto
-	54,  // 179: agent_runtime.v1.AgentStreamOut.transcript:type_name -> agent_runtime.v1.TranscriptEvent
-	58,  // 180: agent_runtime.v1.AgentStreamOut.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
-	60,  // 181: agent_runtime.v1.AgentStreamOut.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
-	59,  // 182: agent_runtime.v1.AgentStreamOut.interrupt:type_name -> agent_runtime.v1.InterruptEvent
-	72,  // 183: agent_runtime.v1.AgentStreamOut.error:type_name -> agent_runtime.v1.ErrorEvent
-	74,  // 184: agent_runtime.v1.AgentStreamOut.warning:type_name -> agent_runtime.v1.WarningEvent
-	119, // 185: agent_runtime.v1.AgentStreamOut.dtmf:type_name -> agent_runtime.v1.DTMFEvent
-	127, // 186: agent_runtime.v1.AgentStreamOut.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
-	133, // 187: agent_runtime.v1.AgentStreamOut.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
-	108, // 188: agent_runtime.v1.AgentStreamOut.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
-	75,  // 189: agent_runtime.v1.AgentStreamOut.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
-	76,  // 190: agent_runtime.v1.AgentStreamOut.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
-	77,  // 191: agent_runtime.v1.AgentStreamOut.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
-	78,  // 192: agent_runtime.v1.AgentStreamOut.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
-	92,  // 193: agent_runtime.v1.AgentStreamOut.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
-	93,  // 194: agent_runtime.v1.AgentStreamOut.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
-	94,  // 195: agent_runtime.v1.AgentStreamOut.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
-	95,  // 196: agent_runtime.v1.AgentStreamOut.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
-	97,  // 197: agent_runtime.v1.AgentStreamOut.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
-	122, // 198: agent_runtime.v1.AgentStreamOut.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
-	121, // 199: agent_runtime.v1.AgentStreamOut.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
-	120, // 200: agent_runtime.v1.AgentStreamOut.stream_event:type_name -> agent_runtime.v1.StreamEventProto
-	79,  // 201: agent_runtime.v1.AgentStreamOut.vad_event:type_name -> agent_runtime.v1.VadEventProto
-	80,  // 202: agent_runtime.v1.AgentStreamOut.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
-	81,  // 203: agent_runtime.v1.AgentStreamOut.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
-	82,  // 204: agent_runtime.v1.AgentStreamOut.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
-	83,  // 205: agent_runtime.v1.AgentStreamOut.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
-	84,  // 206: agent_runtime.v1.AgentStreamOut.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
-	85,  // 207: agent_runtime.v1.AgentStreamOut.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
-	86,  // 208: agent_runtime.v1.AgentStreamOut.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
-	87,  // 209: agent_runtime.v1.AgentStreamOut.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
-	89,  // 210: agent_runtime.v1.AgentStreamOut.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
-	90,  // 211: agent_runtime.v1.AgentStreamOut.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
-	91,  // 212: agent_runtime.v1.AgentStreamOut.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
-	98,  // 213: agent_runtime.v1.AgentStreamOut.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
-	99,  // 214: agent_runtime.v1.AgentStreamOut.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
-	100, // 215: agent_runtime.v1.AgentStreamOut.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
-	102, // 216: agent_runtime.v1.AgentStreamOut.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
-	73,  // 217: agent_runtime.v1.AgentStreamOut.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
-	96,  // 218: agent_runtime.v1.AgentStreamOut.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
-	31,  // 219: agent_runtime.v1.AgentRegistration.agent:type_name -> agent_runtime.v1.AgentConfig
-	12,  // 220: agent_runtime.v1.AgentRegistration.pipeline:type_name -> agent_runtime.v1.PipelineConfig
-	36,  // 221: agent_runtime.v1.AgentRegistration.credentials:type_name -> agent_runtime.v1.CredentialsConfig
-	104, // 222: agent_runtime.v1.AgentRegistration.default_recording:type_name -> agent_runtime.v1.RecordingConfig
-	168, // 223: agent_runtime.v1.AgentRegistration.labels:type_name -> agent_runtime.v1.AgentRegistration.LabelsEntry
-	37,  // 224: agent_runtime.v1.AgentRegistration.client_version:type_name -> agent_runtime.v1.VersionInfo
-	35,  // 225: agent_runtime.v1.SessionStarted.room:type_name -> agent_runtime.v1.RoomConfig
-	169, // 226: agent_runtime.v1.SessionStarted.dispatch_metadata:type_name -> agent_runtime.v1.SessionStarted.DispatchMetadataEntry
-	138, // 227: agent_runtime.v1.SessionStarted.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
-	104, // 228: agent_runtime.v1.SessionStarted.recording_override:type_name -> agent_runtime.v1.RecordingConfig
-	11,  // 229: agent_runtime.v1.SessionStarted.limits:type_name -> agent_runtime.v1.SessionLimits
-	55,  // 230: agent_runtime.v1.SessionEnded.final_turn:type_name -> agent_runtime.v1.TurnComplete
-	35,  // 231: agent_runtime.v1.DispatchRequest.room:type_name -> agent_runtime.v1.RoomConfig
-	170, // 232: agent_runtime.v1.DispatchRequest.dispatch_metadata:type_name -> agent_runtime.v1.DispatchRequest.DispatchMetadataEntry
-	138, // 233: agent_runtime.v1.DispatchRequest.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
-	104, // 234: agent_runtime.v1.DispatchRequest.recording_override:type_name -> agent_runtime.v1.RecordingConfig
-	11,  // 235: agent_runtime.v1.DispatchRequest.limits:type_name -> agent_runtime.v1.SessionLimits
-	171, // 236: agent_runtime.v1.DispatchRequest.label_selector:type_name -> agent_runtime.v1.DispatchRequest.LabelSelectorEntry
-	145, // 237: agent_runtime.v1.DispatchResponse.accepted:type_name -> agent_runtime.v1.DispatchAccepted
-	146, // 238: agent_runtime.v1.DispatchResponse.rejected:type_name -> agent_runtime.v1.DispatchRejected
-	149, // 239: agent_runtime.v1.TerminateResponse.accepted:type_name -> agent_runtime.v1.TerminateAccepted
-	150, // 240: agent_runtime.v1.TerminateResponse.rejected:type_name -> agent_runtime.v1.TerminateRejected
-	4,   // 241: agent_runtime.v1.AgentRuntime.CreateSession:input_type -> agent_runtime.v1.SessionConfig
-	8,   // 242: agent_runtime.v1.AgentRuntime.DestroySession:input_type -> agent_runtime.v1.DestroyRequest
-	10,  // 243: agent_runtime.v1.AgentRuntime.GetSessionInfo:input_type -> agent_runtime.v1.SessionInfoRequest
-	46,  // 244: agent_runtime.v1.AgentRuntime.Health:input_type -> agent_runtime.v1.HealthRequest
-	38,  // 245: agent_runtime.v1.AgentRuntime.InjectMessage:input_type -> agent_runtime.v1.InjectMessageRequest
-	39,  // 246: agent_runtime.v1.AgentRuntime.RemoveMessage:input_type -> agent_runtime.v1.RemoveMessageRequest
-	40,  // 247: agent_runtime.v1.AgentRuntime.GetContext:input_type -> agent_runtime.v1.GetContextRequest
-	42,  // 248: agent_runtime.v1.AgentRuntime.ClearContext:input_type -> agent_runtime.v1.ClearContextRequest
-	48,  // 249: agent_runtime.v1.AgentRuntime.EventStream:input_type -> agent_runtime.v1.ClientEvent
-	131, // 250: agent_runtime.v1.AgentRuntime.SendA2AMessage:input_type -> agent_runtime.v1.A2AMessageRequest
-	134, // 251: agent_runtime.v1.AgentRuntime.RegisterAgent:input_type -> agent_runtime.v1.AgentStreamIn
-	143, // 252: agent_runtime.v1.AgentRuntime.Dispatch:input_type -> agent_runtime.v1.DispatchRequest
-	147, // 253: agent_runtime.v1.AgentRuntime.Terminate:input_type -> agent_runtime.v1.TerminateRequest
-	151, // 254: agent_runtime.v1.AgentRuntime.TestEmitToolCall:input_type -> agent_runtime.v1.TestEmitToolCallRequest
-	5,   // 255: agent_runtime.v1.AgentRuntime.CreateSession:output_type -> agent_runtime.v1.CreateSessionResponse
-	9,   // 256: agent_runtime.v1.AgentRuntime.DestroySession:output_type -> agent_runtime.v1.DestroyResponse
-	6,   // 257: agent_runtime.v1.AgentRuntime.GetSessionInfo:output_type -> agent_runtime.v1.SessionInfo
-	47,  // 258: agent_runtime.v1.AgentRuntime.Health:output_type -> agent_runtime.v1.HealthResponse
-	43,  // 259: agent_runtime.v1.AgentRuntime.InjectMessage:output_type -> agent_runtime.v1.ContextOpResult
-	43,  // 260: agent_runtime.v1.AgentRuntime.RemoveMessage:output_type -> agent_runtime.v1.ContextOpResult
-	41,  // 261: agent_runtime.v1.AgentRuntime.GetContext:output_type -> agent_runtime.v1.GetContextResponse
-	43,  // 262: agent_runtime.v1.AgentRuntime.ClearContext:output_type -> agent_runtime.v1.ContextOpResult
-	49,  // 263: agent_runtime.v1.AgentRuntime.EventStream:output_type -> agent_runtime.v1.RuntimeEvent
-	132, // 264: agent_runtime.v1.AgentRuntime.SendA2AMessage:output_type -> agent_runtime.v1.A2AMessageResponse
-	135, // 265: agent_runtime.v1.AgentRuntime.RegisterAgent:output_type -> agent_runtime.v1.AgentStreamOut
-	144, // 266: agent_runtime.v1.AgentRuntime.Dispatch:output_type -> agent_runtime.v1.DispatchResponse
-	148, // 267: agent_runtime.v1.AgentRuntime.Terminate:output_type -> agent_runtime.v1.TerminateResponse
-	152, // 268: agent_runtime.v1.AgentRuntime.TestEmitToolCall:output_type -> agent_runtime.v1.TestEmitToolCallResponse
-	255, // [255:269] is the sub-list for method output_type
-	241, // [241:255] is the sub-list for method input_type
-	241, // [241:241] is the sub-list for extension type_name
-	241, // [241:241] is the sub-list for extension extendee
-	0,   // [0:241] is the sub-list for field type_name
+	26,  // 14: agent_runtime.v1.GeminiLiveExtras.vertex:type_name -> agent_runtime.v1.VertexAIConfig
+	21,  // 15: agent_runtime.v1.CascadeConfig.stt:type_name -> agent_runtime.v1.STTProviderConfig
+	22,  // 16: agent_runtime.v1.CascadeConfig.llm:type_name -> agent_runtime.v1.LLMProviderConfig
+	23,  // 17: agent_runtime.v1.CascadeConfig.tts:type_name -> agent_runtime.v1.TTSProviderConfig
+	28,  // 18: agent_runtime.v1.CascadeConfig.vad:type_name -> agent_runtime.v1.VADProviderConfig
+	29,  // 19: agent_runtime.v1.CascadeConfig.interrupt:type_name -> agent_runtime.v1.InterruptConfig
+	30,  // 20: agent_runtime.v1.CascadeConfig.eou:type_name -> agent_runtime.v1.EOUConfig
+	31,  // 21: agent_runtime.v1.CascadeConfig.filler:type_name -> agent_runtime.v1.FillerConfig
+	32,  // 22: agent_runtime.v1.CascadeConfig.audio:type_name -> agent_runtime.v1.AudioConfig
+	33,  // 23: agent_runtime.v1.CascadeConfig.sentence_buffer:type_name -> agent_runtime.v1.SentenceBufferConfig
+	19,  // 24: agent_runtime.v1.CascadeConfig.orchestrator_timing:type_name -> agent_runtime.v1.OrchestratorTimingConfig
+	150, // 25: agent_runtime.v1.CascadeConfig.voicemail:type_name -> agent_runtime.v1.VoicemailConfig
+	152, // 26: agent_runtime.v1.CascadeConfig.denoise:type_name -> agent_runtime.v1.DenoiseConfig
+	178, // 27: agent_runtime.v1.CascadeConfig.stt_word_substitutions:type_name -> agent_runtime.v1.CascadeConfig.SttWordSubstitutionsEntry
+	18,  // 28: agent_runtime.v1.CascadeConfig.text_processing:type_name -> agent_runtime.v1.TextProcessingConfig
+	17,  // 29: agent_runtime.v1.CascadeConfig.avatar:type_name -> agent_runtime.v1.AvatarProviderConfig
+	179, // 30: agent_runtime.v1.AvatarProviderConfig.params:type_name -> agent_runtime.v1.AvatarProviderConfig.ParamsEntry
+	180, // 31: agent_runtime.v1.STTProviderConfig.params:type_name -> agent_runtime.v1.STTProviderConfig.ParamsEntry
+	21,  // 32: agent_runtime.v1.STTProviderConfig.fallbacks:type_name -> agent_runtime.v1.STTProviderConfig
+	20,  // 33: agent_runtime.v1.STTProviderConfig.inference:type_name -> agent_runtime.v1.InferenceConfig
+	181, // 34: agent_runtime.v1.LLMProviderConfig.params:type_name -> agent_runtime.v1.LLMProviderConfig.ParamsEntry
+	22,  // 35: agent_runtime.v1.LLMProviderConfig.fallbacks:type_name -> agent_runtime.v1.LLMProviderConfig
+	24,  // 36: agent_runtime.v1.LLMProviderConfig.gemini_extras:type_name -> agent_runtime.v1.GeminiLLMExtras
+	20,  // 37: agent_runtime.v1.LLMProviderConfig.inference:type_name -> agent_runtime.v1.InferenceConfig
+	182, // 38: agent_runtime.v1.TTSProviderConfig.params:type_name -> agent_runtime.v1.TTSProviderConfig.ParamsEntry
+	23,  // 39: agent_runtime.v1.TTSProviderConfig.fallbacks:type_name -> agent_runtime.v1.TTSProviderConfig
+	27,  // 40: agent_runtime.v1.TTSProviderConfig.cartesia_extras:type_name -> agent_runtime.v1.CartesiaExtras
+	20,  // 41: agent_runtime.v1.TTSProviderConfig.inference:type_name -> agent_runtime.v1.InferenceConfig
+	25,  // 42: agent_runtime.v1.GeminiLLMExtras.safety_settings:type_name -> agent_runtime.v1.SafetySetting
+	26,  // 43: agent_runtime.v1.GeminiLLMExtras.vertex:type_name -> agent_runtime.v1.VertexAIConfig
+	36,  // 44: agent_runtime.v1.AgentConfig.tools:type_name -> agent_runtime.v1.ToolSchemaProto
+	37,  // 45: agent_runtime.v1.AgentConfig.context_window:type_name -> agent_runtime.v1.ContextWindowConfig
+	153, // 46: agent_runtime.v1.AgentConfig.mcp_servers:type_name -> agent_runtime.v1.MCPServerConfig
+	154, // 47: agent_runtime.v1.AgentConfig.knowledge_base:type_name -> agent_runtime.v1.KnowledgeBaseConfig
+	35,  // 48: agent_runtime.v1.AgentConfig.alternates:type_name -> agent_runtime.v1.NamedAgentConfig
+	36,  // 49: agent_runtime.v1.NamedAgentConfig.tools:type_name -> agent_runtime.v1.ToolSchemaProto
+	183, // 50: agent_runtime.v1.RoomConfig.metrics_export_headers:type_name -> agent_runtime.v1.RoomConfig.MetricsExportHeadersEntry
+	184, // 51: agent_runtime.v1.CredentialsConfig.provider_keys:type_name -> agent_runtime.v1.CredentialsConfig.ProviderKeysEntry
+	47,  // 52: agent_runtime.v1.InjectMessageRequest.message:type_name -> agent_runtime.v1.ContextMessageProto
+	47,  // 53: agent_runtime.v1.GetContextResponse.messages:type_name -> agent_runtime.v1.ContextMessageProto
+	48,  // 54: agent_runtime.v1.ContextMessageProto.images:type_name -> agent_runtime.v1.ImageContentProto
+	54,  // 55: agent_runtime.v1.ClientEvent.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
+	56,  // 56: agent_runtime.v1.ClientEvent.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
+	68,  // 57: agent_runtime.v1.ClientEvent.say:type_name -> agent_runtime.v1.SayCommand
+	70,  // 58: agent_runtime.v1.ClientEvent.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
+	72,  // 59: agent_runtime.v1.ClientEvent.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
+	73,  // 60: agent_runtime.v1.ClientEvent.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
+	74,  // 61: agent_runtime.v1.ClientEvent.keepalive:type_name -> agent_runtime.v1.Keepalive
+	71,  // 62: agent_runtime.v1.ClientEvent.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
+	119, // 63: agent_runtime.v1.ClientEvent.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
+	120, // 64: agent_runtime.v1.ClientEvent.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
+	127, // 65: agent_runtime.v1.ClientEvent.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
+	132, // 66: agent_runtime.v1.ClientEvent.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
+	148, // 67: agent_runtime.v1.ClientEvent.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
+	149, // 68: agent_runtime.v1.ClientEvent.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
+	121, // 69: agent_runtime.v1.ClientEvent.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
+	122, // 70: agent_runtime.v1.ClientEvent.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
+	123, // 71: agent_runtime.v1.ClientEvent.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
+	124, // 72: agent_runtime.v1.ClientEvent.send_image:type_name -> agent_runtime.v1.SendImageCmd
+	75,  // 73: agent_runtime.v1.ClientEvent.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
+	76,  // 74: agent_runtime.v1.ClientEvent.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
+	77,  // 75: agent_runtime.v1.ClientEvent.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
+	78,  // 76: agent_runtime.v1.ClientEvent.generate:type_name -> agent_runtime.v1.GenerateCmd
+	126, // 77: agent_runtime.v1.ClientEvent.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
+	110, // 78: agent_runtime.v1.ClientEvent.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
+	112, // 79: agent_runtime.v1.ClientEvent.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
+	118, // 80: agent_runtime.v1.ClientEvent.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
+	147, // 81: agent_runtime.v1.ClientEvent.set_user_input_enabled:type_name -> agent_runtime.v1.SetUserInputEnabledCmd
+	58,  // 82: agent_runtime.v1.ClientEvent.stt_hook_result:type_name -> agent_runtime.v1.SttHookResponse
+	60,  // 83: agent_runtime.v1.ClientEvent.tts_hook_result:type_name -> agent_runtime.v1.TtsHookResponse
+	53,  // 84: agent_runtime.v1.RuntimeEvent.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
+	55,  // 85: agent_runtime.v1.RuntimeEvent.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
+	62,  // 86: agent_runtime.v1.RuntimeEvent.turn_complete:type_name -> agent_runtime.v1.TurnComplete
+	69,  // 87: agent_runtime.v1.RuntimeEvent.say_complete:type_name -> agent_runtime.v1.SayComplete
+	63,  // 88: agent_runtime.v1.RuntimeEvent.state_change:type_name -> agent_runtime.v1.SessionStateChange
+	64,  // 89: agent_runtime.v1.RuntimeEvent.participant:type_name -> agent_runtime.v1.ParticipantEventProto
+	61,  // 90: agent_runtime.v1.RuntimeEvent.transcript:type_name -> agent_runtime.v1.TranscriptEvent
+	65,  // 91: agent_runtime.v1.RuntimeEvent.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
+	67,  // 92: agent_runtime.v1.RuntimeEvent.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
+	66,  // 93: agent_runtime.v1.RuntimeEvent.interrupt:type_name -> agent_runtime.v1.InterruptEvent
+	79,  // 94: agent_runtime.v1.RuntimeEvent.error:type_name -> agent_runtime.v1.ErrorEvent
+	81,  // 95: agent_runtime.v1.RuntimeEvent.warning:type_name -> agent_runtime.v1.WarningEvent
+	128, // 96: agent_runtime.v1.RuntimeEvent.dtmf:type_name -> agent_runtime.v1.DTMFEvent
+	151, // 97: agent_runtime.v1.RuntimeEvent.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
+	157, // 98: agent_runtime.v1.RuntimeEvent.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
+	117, // 99: agent_runtime.v1.RuntimeEvent.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
+	82,  // 100: agent_runtime.v1.RuntimeEvent.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
+	83,  // 101: agent_runtime.v1.RuntimeEvent.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
+	84,  // 102: agent_runtime.v1.RuntimeEvent.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
+	85,  // 103: agent_runtime.v1.RuntimeEvent.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
+	101, // 104: agent_runtime.v1.RuntimeEvent.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
+	102, // 105: agent_runtime.v1.RuntimeEvent.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
+	103, // 106: agent_runtime.v1.RuntimeEvent.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
+	104, // 107: agent_runtime.v1.RuntimeEvent.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
+	106, // 108: agent_runtime.v1.RuntimeEvent.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
+	131, // 109: agent_runtime.v1.RuntimeEvent.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
+	130, // 110: agent_runtime.v1.RuntimeEvent.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
+	129, // 111: agent_runtime.v1.RuntimeEvent.stream_event:type_name -> agent_runtime.v1.StreamEventProto
+	86,  // 112: agent_runtime.v1.RuntimeEvent.vad_event:type_name -> agent_runtime.v1.VadEventProto
+	87,  // 113: agent_runtime.v1.RuntimeEvent.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
+	88,  // 114: agent_runtime.v1.RuntimeEvent.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
+	89,  // 115: agent_runtime.v1.RuntimeEvent.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
+	90,  // 116: agent_runtime.v1.RuntimeEvent.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
+	91,  // 117: agent_runtime.v1.RuntimeEvent.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
+	92,  // 118: agent_runtime.v1.RuntimeEvent.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
+	93,  // 119: agent_runtime.v1.RuntimeEvent.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
+	94,  // 120: agent_runtime.v1.RuntimeEvent.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
+	96,  // 121: agent_runtime.v1.RuntimeEvent.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
+	99,  // 122: agent_runtime.v1.RuntimeEvent.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
+	100, // 123: agent_runtime.v1.RuntimeEvent.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
+	107, // 124: agent_runtime.v1.RuntimeEvent.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
+	108, // 125: agent_runtime.v1.RuntimeEvent.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
+	109, // 126: agent_runtime.v1.RuntimeEvent.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
+	111, // 127: agent_runtime.v1.RuntimeEvent.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
+	80,  // 128: agent_runtime.v1.RuntimeEvent.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
+	105, // 129: agent_runtime.v1.RuntimeEvent.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
+	97,  // 130: agent_runtime.v1.RuntimeEvent.component_metrics:type_name -> agent_runtime.v1.ComponentMetricsEvent
+	98,  // 131: agent_runtime.v1.RuntimeEvent.turn_metrics:type_name -> agent_runtime.v1.TurnMetricsEvent
+	57,  // 132: agent_runtime.v1.RuntimeEvent.stt_hook:type_name -> agent_runtime.v1.SttHookEvent
+	59,  // 133: agent_runtime.v1.RuntimeEvent.tts_hook:type_name -> agent_runtime.v1.TtsHookEvent
+	36,  // 134: agent_runtime.v1.UpdateToolsCmd.tools:type_name -> agent_runtime.v1.ToolSchemaProto
+	95,  // 135: agent_runtime.v1.KnowledgeBaseUpsertCmd.documents:type_name -> agent_runtime.v1.KbDocument
+	185, // 136: agent_runtime.v1.GenerationChunkEvent.metadata:type_name -> agent_runtime.v1.GenerationChunkEvent.MetadataEntry
+	186, // 137: agent_runtime.v1.KbDocument.metadata:type_name -> agent_runtime.v1.KbDocument.MetadataEntry
+	95,  // 138: agent_runtime.v1.KbHitsEvent.documents:type_name -> agent_runtime.v1.KbDocument
+	0,   // 139: agent_runtime.v1.RecordingConfig.format:type_name -> agent_runtime.v1.RecordingFormat
+	1,   // 140: agent_runtime.v1.RecordingConfig.channel_mode:type_name -> agent_runtime.v1.RecordingChannelMode
+	114, // 141: agent_runtime.v1.RecordingConfig.storage:type_name -> agent_runtime.v1.RecordingStorageConfig
+	116, // 142: agent_runtime.v1.RecordingConfig.transcript:type_name -> agent_runtime.v1.RecordingTranscriptConfig
+	187, // 143: agent_runtime.v1.RecordingConfig.custom_metadata:type_name -> agent_runtime.v1.RecordingConfig.CustomMetadataEntry
+	115, // 144: agent_runtime.v1.RecordingStorageConfig.s3:type_name -> agent_runtime.v1.S3StorageConfig
+	188, // 145: agent_runtime.v1.S3StorageConfig.tags:type_name -> agent_runtime.v1.S3StorageConfig.TagsEntry
+	189, // 146: agent_runtime.v1.S3StorageConfig.user_metadata:type_name -> agent_runtime.v1.S3StorageConfig.UserMetadataEntry
+	2,   // 147: agent_runtime.v1.RecordingTranscriptConfig.format:type_name -> agent_runtime.v1.RecordingTranscriptFormat
+	3,   // 148: agent_runtime.v1.RecordingStatusEvent.state:type_name -> agent_runtime.v1.RecordingState
+	190, // 149: agent_runtime.v1.RecordingStatusEvent.metadata:type_name -> agent_runtime.v1.RecordingStatusEvent.MetadataEntry
+	113, // 150: agent_runtime.v1.RecordingStartCmd.config:type_name -> agent_runtime.v1.RecordingConfig
+	125, // 151: agent_runtime.v1.SendMessageWithFramesCmd.frames:type_name -> agent_runtime.v1.MessageFrame
+	191, // 152: agent_runtime.v1.UpdateProviderCmd.params:type_name -> agent_runtime.v1.UpdateProviderCmd.ParamsEntry
+	192, // 153: agent_runtime.v1.MCPServerConfig.env:type_name -> agent_runtime.v1.MCPServerConfig.EnvEntry
+	193, // 154: agent_runtime.v1.KnowledgeBaseConfig.params:type_name -> agent_runtime.v1.KnowledgeBaseConfig.ParamsEntry
+	160, // 155: agent_runtime.v1.AgentStreamIn.register:type_name -> agent_runtime.v1.AgentRegistration
+	165, // 156: agent_runtime.v1.AgentStreamIn.session_ack:type_name -> agent_runtime.v1.SessionAck
+	166, // 157: agent_runtime.v1.AgentStreamIn.draining:type_name -> agent_runtime.v1.AgentDraining
+	74,  // 158: agent_runtime.v1.AgentStreamIn.keepalive:type_name -> agent_runtime.v1.Keepalive
+	54,  // 159: agent_runtime.v1.AgentStreamIn.tool_result:type_name -> agent_runtime.v1.ToolCallResponse
+	56,  // 160: agent_runtime.v1.AgentStreamIn.before_llm_result:type_name -> agent_runtime.v1.BeforeLLMResponse
+	68,  // 161: agent_runtime.v1.AgentStreamIn.say:type_name -> agent_runtime.v1.SayCommand
+	70,  // 162: agent_runtime.v1.AgentStreamIn.update_instructions:type_name -> agent_runtime.v1.UpdateInstructionsCmd
+	72,  // 163: agent_runtime.v1.AgentStreamIn.update_config:type_name -> agent_runtime.v1.UpdateConfigCmd
+	71,  // 164: agent_runtime.v1.AgentStreamIn.update_tools:type_name -> agent_runtime.v1.UpdateToolsCmd
+	119, // 165: agent_runtime.v1.AgentStreamIn.play_background_audio:type_name -> agent_runtime.v1.PlayBackgroundAudioCmd
+	120, // 166: agent_runtime.v1.AgentStreamIn.stop_background_audio:type_name -> agent_runtime.v1.StopBackgroundAudioCmd
+	127, // 167: agent_runtime.v1.AgentStreamIn.send_dtmf:type_name -> agent_runtime.v1.SendDTMFCmd
+	132, // 168: agent_runtime.v1.AgentStreamIn.call_transfer:type_name -> agent_runtime.v1.CallTransferCmd
+	73,  // 169: agent_runtime.v1.AgentStreamIn.shutdown:type_name -> agent_runtime.v1.ShutdownCommand
+	148, // 170: agent_runtime.v1.AgentStreamIn.update_provider:type_name -> agent_runtime.v1.UpdateProviderCmd
+	149, // 171: agent_runtime.v1.AgentStreamIn.modify_llm_token:type_name -> agent_runtime.v1.ModifyLLMTokenCmd
+	121, // 172: agent_runtime.v1.AgentStreamIn.push_audio_frame:type_name -> agent_runtime.v1.PushAudioFrameCmd
+	122, // 173: agent_runtime.v1.AgentStreamIn.recording_start:type_name -> agent_runtime.v1.RecordingStartCmd
+	123, // 174: agent_runtime.v1.AgentStreamIn.recording_stop:type_name -> agent_runtime.v1.RecordingStopCmd
+	124, // 175: agent_runtime.v1.AgentStreamIn.send_image:type_name -> agent_runtime.v1.SendImageCmd
+	75,  // 176: agent_runtime.v1.AgentStreamIn.cancel_generation:type_name -> agent_runtime.v1.CancelGenerationCmd
+	76,  // 177: agent_runtime.v1.AgentStreamIn.kb_upsert:type_name -> agent_runtime.v1.KnowledgeBaseUpsertCmd
+	77,  // 178: agent_runtime.v1.AgentStreamIn.kb_delete:type_name -> agent_runtime.v1.KnowledgeBaseDeleteCmd
+	78,  // 179: agent_runtime.v1.AgentStreamIn.generate:type_name -> agent_runtime.v1.GenerateCmd
+	126, // 180: agent_runtime.v1.AgentStreamIn.send_message_with_frames:type_name -> agent_runtime.v1.SendMessageWithFramesCmd
+	110, // 181: agent_runtime.v1.AgentStreamIn.custom_stt_result:type_name -> agent_runtime.v1.CustomSttResult
+	112, // 182: agent_runtime.v1.AgentStreamIn.custom_tts_audio:type_name -> agent_runtime.v1.CustomTtsAudioChunk
+	118, // 183: agent_runtime.v1.AgentStreamIn.preload_background_audio:type_name -> agent_runtime.v1.PreloadBackgroundAudioCmd
+	147, // 184: agent_runtime.v1.AgentStreamIn.set_user_input_enabled:type_name -> agent_runtime.v1.SetUserInputEnabledCmd
+	161, // 185: agent_runtime.v1.AgentStreamOut.registered:type_name -> agent_runtime.v1.AgentRegistered
+	163, // 186: agent_runtime.v1.AgentStreamOut.session_started:type_name -> agent_runtime.v1.SessionStarted
+	164, // 187: agent_runtime.v1.AgentStreamOut.session_ended:type_name -> agent_runtime.v1.SessionEnded
+	53,  // 188: agent_runtime.v1.AgentStreamOut.tool_call:type_name -> agent_runtime.v1.ToolCallRequest
+	55,  // 189: agent_runtime.v1.AgentStreamOut.before_llm:type_name -> agent_runtime.v1.BeforeLLMHook
+	62,  // 190: agent_runtime.v1.AgentStreamOut.turn_complete:type_name -> agent_runtime.v1.TurnComplete
+	69,  // 191: agent_runtime.v1.AgentStreamOut.say_complete:type_name -> agent_runtime.v1.SayComplete
+	63,  // 192: agent_runtime.v1.AgentStreamOut.state_change:type_name -> agent_runtime.v1.SessionStateChange
+	64,  // 193: agent_runtime.v1.AgentStreamOut.participant:type_name -> agent_runtime.v1.ParticipantEventProto
+	61,  // 194: agent_runtime.v1.AgentStreamOut.transcript:type_name -> agent_runtime.v1.TranscriptEvent
+	65,  // 195: agent_runtime.v1.AgentStreamOut.agent_speech:type_name -> agent_runtime.v1.AgentSpeechEvent
+	67,  // 196: agent_runtime.v1.AgentStreamOut.metrics:type_name -> agent_runtime.v1.MetricsSnapshot
+	66,  // 197: agent_runtime.v1.AgentStreamOut.interrupt:type_name -> agent_runtime.v1.InterruptEvent
+	79,  // 198: agent_runtime.v1.AgentStreamOut.error:type_name -> agent_runtime.v1.ErrorEvent
+	81,  // 199: agent_runtime.v1.AgentStreamOut.warning:type_name -> agent_runtime.v1.WarningEvent
+	128, // 200: agent_runtime.v1.AgentStreamOut.dtmf:type_name -> agent_runtime.v1.DTMFEvent
+	151, // 201: agent_runtime.v1.AgentStreamOut.voicemail_detected:type_name -> agent_runtime.v1.VoicemailDetectedEvent
+	157, // 202: agent_runtime.v1.AgentStreamOut.a2a_message:type_name -> agent_runtime.v1.A2AMessageEvent
+	117, // 203: agent_runtime.v1.AgentStreamOut.recording_status:type_name -> agent_runtime.v1.RecordingStatusEvent
+	82,  // 204: agent_runtime.v1.AgentStreamOut.eou_detected:type_name -> agent_runtime.v1.EouDetectedEvent
+	83,  // 205: agent_runtime.v1.AgentStreamOut.generation_chunk:type_name -> agent_runtime.v1.GenerationChunkEvent
+	84,  // 206: agent_runtime.v1.AgentStreamOut.agent_switched:type_name -> agent_runtime.v1.AgentSwitchedEvent
+	85,  // 207: agent_runtime.v1.AgentStreamOut.transcript_preflight:type_name -> agent_runtime.v1.TranscriptPreflightEvent
+	101, // 208: agent_runtime.v1.AgentStreamOut.agent_state_changed:type_name -> agent_runtime.v1.AgentStateChangedEvent
+	102, // 209: agent_runtime.v1.AgentStreamOut.user_state_changed:type_name -> agent_runtime.v1.UserStateChangedEvent
+	103, // 210: agent_runtime.v1.AgentStreamOut.user_turn_start:type_name -> agent_runtime.v1.UserTurnStartEvent
+	104, // 211: agent_runtime.v1.AgentStreamOut.user_turn_end:type_name -> agent_runtime.v1.UserTurnEndEvent
+	106, // 212: agent_runtime.v1.AgentStreamOut.llm_token_for_review:type_name -> agent_runtime.v1.LLMTokenForReviewEvent
+	131, // 213: agent_runtime.v1.AgentStreamOut.vision_frame:type_name -> agent_runtime.v1.VisionFrameEvent
+	130, // 214: agent_runtime.v1.AgentStreamOut.audio_frame:type_name -> agent_runtime.v1.AudioFrameEvent
+	129, // 215: agent_runtime.v1.AgentStreamOut.stream_event:type_name -> agent_runtime.v1.StreamEventProto
+	86,  // 216: agent_runtime.v1.AgentStreamOut.vad_event:type_name -> agent_runtime.v1.VadEventProto
+	87,  // 217: agent_runtime.v1.AgentStreamOut.generation_started:type_name -> agent_runtime.v1.GenerationStartedEvent
+	88,  // 218: agent_runtime.v1.AgentStreamOut.generation_complete:type_name -> agent_runtime.v1.GenerationCompleteEvent
+	89,  // 219: agent_runtime.v1.AgentStreamOut.synthesis_started:type_name -> agent_runtime.v1.SynthesisStartedEvent
+	90,  // 220: agent_runtime.v1.AgentStreamOut.first_audio_byte:type_name -> agent_runtime.v1.FirstAudioByteEvent
+	91,  // 221: agent_runtime.v1.AgentStreamOut.last_audio_byte:type_name -> agent_runtime.v1.LastAudioByteEvent
+	92,  // 222: agent_runtime.v1.AgentStreamOut.synthesis_interrupted:type_name -> agent_runtime.v1.SynthesisInterruptedEvent
+	93,  // 223: agent_runtime.v1.AgentStreamOut.word_timing:type_name -> agent_runtime.v1.WordTimingEvent
+	94,  // 224: agent_runtime.v1.AgentStreamOut.tts_capabilities:type_name -> agent_runtime.v1.TtsCapabilitiesEvent
+	96,  // 225: agent_runtime.v1.AgentStreamOut.kb_hits:type_name -> agent_runtime.v1.KbHitsEvent
+	99,  // 226: agent_runtime.v1.AgentStreamOut.stt_stream_started:type_name -> agent_runtime.v1.SttStreamStartedEvent
+	100, // 227: agent_runtime.v1.AgentStreamOut.stt_stream_ended:type_name -> agent_runtime.v1.SttStreamEndedEvent
+	107, // 228: agent_runtime.v1.AgentStreamOut.agent_turn_start:type_name -> agent_runtime.v1.AgentTurnStartEvent
+	108, // 229: agent_runtime.v1.AgentStreamOut.agent_turn_end:type_name -> agent_runtime.v1.AgentTurnEndEvent
+	109, // 230: agent_runtime.v1.AgentStreamOut.custom_stt_audio:type_name -> agent_runtime.v1.CustomSttAudioChunk
+	111, // 231: agent_runtime.v1.AgentStreamOut.custom_tts_synthesize:type_name -> agent_runtime.v1.CustomTtsSynthesize
+	80,  // 232: agent_runtime.v1.AgentStreamOut.signaling_session_assigned:type_name -> agent_runtime.v1.SignalingSessionAssignedEvent
+	105, // 233: agent_runtime.v1.AgentStreamOut.llm_completed:type_name -> agent_runtime.v1.LLMCompletedEvent
+	97,  // 234: agent_runtime.v1.AgentStreamOut.component_metrics:type_name -> agent_runtime.v1.ComponentMetricsEvent
+	98,  // 235: agent_runtime.v1.AgentStreamOut.turn_metrics:type_name -> agent_runtime.v1.TurnMetricsEvent
+	34,  // 236: agent_runtime.v1.AgentRegistration.agent:type_name -> agent_runtime.v1.AgentConfig
+	12,  // 237: agent_runtime.v1.AgentRegistration.pipeline:type_name -> agent_runtime.v1.PipelineConfig
+	39,  // 238: agent_runtime.v1.AgentRegistration.credentials:type_name -> agent_runtime.v1.CredentialsConfig
+	113, // 239: agent_runtime.v1.AgentRegistration.default_recording:type_name -> agent_runtime.v1.RecordingConfig
+	194, // 240: agent_runtime.v1.AgentRegistration.labels:type_name -> agent_runtime.v1.AgentRegistration.LabelsEntry
+	40,  // 241: agent_runtime.v1.AgentRegistration.client_version:type_name -> agent_runtime.v1.VersionInfo
+	38,  // 242: agent_runtime.v1.SessionStarted.room:type_name -> agent_runtime.v1.RoomConfig
+	195, // 243: agent_runtime.v1.SessionStarted.dispatch_metadata:type_name -> agent_runtime.v1.SessionStarted.DispatchMetadataEntry
+	162, // 244: agent_runtime.v1.SessionStarted.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
+	113, // 245: agent_runtime.v1.SessionStarted.recording_override:type_name -> agent_runtime.v1.RecordingConfig
+	11,  // 246: agent_runtime.v1.SessionStarted.limits:type_name -> agent_runtime.v1.SessionLimits
+	62,  // 247: agent_runtime.v1.SessionEnded.final_turn:type_name -> agent_runtime.v1.TurnComplete
+	38,  // 248: agent_runtime.v1.DispatchRequest.room:type_name -> agent_runtime.v1.RoomConfig
+	196, // 249: agent_runtime.v1.DispatchRequest.dispatch_metadata:type_name -> agent_runtime.v1.DispatchRequest.DispatchMetadataEntry
+	162, // 250: agent_runtime.v1.DispatchRequest.agent_override:type_name -> agent_runtime.v1.AgentConfigOverride
+	113, // 251: agent_runtime.v1.DispatchRequest.recording_override:type_name -> agent_runtime.v1.RecordingConfig
+	11,  // 252: agent_runtime.v1.DispatchRequest.limits:type_name -> agent_runtime.v1.SessionLimits
+	197, // 253: agent_runtime.v1.DispatchRequest.label_selector:type_name -> agent_runtime.v1.DispatchRequest.LabelSelectorEntry
+	169, // 254: agent_runtime.v1.DispatchResponse.accepted:type_name -> agent_runtime.v1.DispatchAccepted
+	170, // 255: agent_runtime.v1.DispatchResponse.rejected:type_name -> agent_runtime.v1.DispatchRejected
+	173, // 256: agent_runtime.v1.TerminateResponse.accepted:type_name -> agent_runtime.v1.TerminateAccepted
+	174, // 257: agent_runtime.v1.TerminateResponse.rejected:type_name -> agent_runtime.v1.TerminateRejected
+	4,   // 258: agent_runtime.v1.AgentRuntime.CreateSession:input_type -> agent_runtime.v1.SessionConfig
+	8,   // 259: agent_runtime.v1.AgentRuntime.DestroySession:input_type -> agent_runtime.v1.DestroyRequest
+	10,  // 260: agent_runtime.v1.AgentRuntime.GetSessionInfo:input_type -> agent_runtime.v1.SessionInfoRequest
+	49,  // 261: agent_runtime.v1.AgentRuntime.Health:input_type -> agent_runtime.v1.HealthRequest
+	41,  // 262: agent_runtime.v1.AgentRuntime.InjectMessage:input_type -> agent_runtime.v1.InjectMessageRequest
+	42,  // 263: agent_runtime.v1.AgentRuntime.RemoveMessage:input_type -> agent_runtime.v1.RemoveMessageRequest
+	43,  // 264: agent_runtime.v1.AgentRuntime.GetContext:input_type -> agent_runtime.v1.GetContextRequest
+	45,  // 265: agent_runtime.v1.AgentRuntime.ClearContext:input_type -> agent_runtime.v1.ClearContextRequest
+	51,  // 266: agent_runtime.v1.AgentRuntime.EventStream:input_type -> agent_runtime.v1.ClientEvent
+	155, // 267: agent_runtime.v1.AgentRuntime.SendA2AMessage:input_type -> agent_runtime.v1.A2AMessageRequest
+	133, // 268: agent_runtime.v1.AgentRuntime.SipGetCallInfo:input_type -> agent_runtime.v1.SipGetCallInfoRequest
+	135, // 269: agent_runtime.v1.AgentRuntime.SipCreateRoom:input_type -> agent_runtime.v1.SipCreateRoomRequest
+	137, // 270: agent_runtime.v1.AgentRuntime.SipMakeOutboundCall:input_type -> agent_runtime.v1.SipMakeOutboundCallRequest
+	139, // 271: agent_runtime.v1.AgentRuntime.SipSwitchCallRoom:input_type -> agent_runtime.v1.SipSwitchCallRoomRequest
+	141, // 272: agent_runtime.v1.AgentRuntime.SipListRoomCalls:input_type -> agent_runtime.v1.SipListRoomCallsRequest
+	143, // 273: agent_runtime.v1.AgentRuntime.SipEndCall:input_type -> agent_runtime.v1.SipEndCallRequest
+	145, // 274: agent_runtime.v1.AgentRuntime.LlmComplete:input_type -> agent_runtime.v1.LlmCompleteRequest
+	158, // 275: agent_runtime.v1.AgentRuntime.RegisterAgent:input_type -> agent_runtime.v1.AgentStreamIn
+	167, // 276: agent_runtime.v1.AgentRuntime.Dispatch:input_type -> agent_runtime.v1.DispatchRequest
+	171, // 277: agent_runtime.v1.AgentRuntime.Terminate:input_type -> agent_runtime.v1.TerminateRequest
+	175, // 278: agent_runtime.v1.AgentRuntime.TestEmitToolCall:input_type -> agent_runtime.v1.TestEmitToolCallRequest
+	5,   // 279: agent_runtime.v1.AgentRuntime.CreateSession:output_type -> agent_runtime.v1.CreateSessionResponse
+	9,   // 280: agent_runtime.v1.AgentRuntime.DestroySession:output_type -> agent_runtime.v1.DestroyResponse
+	6,   // 281: agent_runtime.v1.AgentRuntime.GetSessionInfo:output_type -> agent_runtime.v1.SessionInfo
+	50,  // 282: agent_runtime.v1.AgentRuntime.Health:output_type -> agent_runtime.v1.HealthResponse
+	46,  // 283: agent_runtime.v1.AgentRuntime.InjectMessage:output_type -> agent_runtime.v1.ContextOpResult
+	46,  // 284: agent_runtime.v1.AgentRuntime.RemoveMessage:output_type -> agent_runtime.v1.ContextOpResult
+	44,  // 285: agent_runtime.v1.AgentRuntime.GetContext:output_type -> agent_runtime.v1.GetContextResponse
+	46,  // 286: agent_runtime.v1.AgentRuntime.ClearContext:output_type -> agent_runtime.v1.ContextOpResult
+	52,  // 287: agent_runtime.v1.AgentRuntime.EventStream:output_type -> agent_runtime.v1.RuntimeEvent
+	156, // 288: agent_runtime.v1.AgentRuntime.SendA2AMessage:output_type -> agent_runtime.v1.A2AMessageResponse
+	134, // 289: agent_runtime.v1.AgentRuntime.SipGetCallInfo:output_type -> agent_runtime.v1.SipGetCallInfoResponse
+	136, // 290: agent_runtime.v1.AgentRuntime.SipCreateRoom:output_type -> agent_runtime.v1.SipCreateRoomResponse
+	138, // 291: agent_runtime.v1.AgentRuntime.SipMakeOutboundCall:output_type -> agent_runtime.v1.SipMakeOutboundCallResponse
+	140, // 292: agent_runtime.v1.AgentRuntime.SipSwitchCallRoom:output_type -> agent_runtime.v1.SipSwitchCallRoomResponse
+	142, // 293: agent_runtime.v1.AgentRuntime.SipListRoomCalls:output_type -> agent_runtime.v1.SipListRoomCallsResponse
+	144, // 294: agent_runtime.v1.AgentRuntime.SipEndCall:output_type -> agent_runtime.v1.SipEndCallResponse
+	146, // 295: agent_runtime.v1.AgentRuntime.LlmComplete:output_type -> agent_runtime.v1.LlmCompleteResponse
+	159, // 296: agent_runtime.v1.AgentRuntime.RegisterAgent:output_type -> agent_runtime.v1.AgentStreamOut
+	168, // 297: agent_runtime.v1.AgentRuntime.Dispatch:output_type -> agent_runtime.v1.DispatchResponse
+	172, // 298: agent_runtime.v1.AgentRuntime.Terminate:output_type -> agent_runtime.v1.TerminateResponse
+	176, // 299: agent_runtime.v1.AgentRuntime.TestEmitToolCall:output_type -> agent_runtime.v1.TestEmitToolCallResponse
+	279, // [279:300] is the sub-list for method output_type
+	258, // [258:279] is the sub-list for method input_type
+	258, // [258:258] is the sub-list for extension type_name
+	258, // [258:258] is the sub-list for extension extendee
+	0,   // [0:258] is the sub-list for field type_name
 }
 
 func init() { file_zrt_runtime_proto_init() }
@@ -14201,7 +16138,10 @@ func file_zrt_runtime_proto_init() {
 	file_zrt_runtime_proto_msgTypes[10].OneofWrappers = []any{}
 	file_zrt_runtime_proto_msgTypes[11].OneofWrappers = []any{}
 	file_zrt_runtime_proto_msgTypes[17].OneofWrappers = []any{}
-	file_zrt_runtime_proto_msgTypes[44].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[18].OneofWrappers = []any{}
+	file_zrt_runtime_proto_msgTypes[19].OneofWrappers = []any{}
+	file_zrt_runtime_proto_msgTypes[20].OneofWrappers = []any{}
+	file_zrt_runtime_proto_msgTypes[47].OneofWrappers = []any{
 		(*ClientEvent_ToolResult)(nil),
 		(*ClientEvent_BeforeLlmResult)(nil),
 		(*ClientEvent_Say)(nil),
@@ -14228,8 +16168,11 @@ func file_zrt_runtime_proto_init() {
 		(*ClientEvent_CustomSttResult)(nil),
 		(*ClientEvent_CustomTtsAudio)(nil),
 		(*ClientEvent_PreloadBackgroundAudio)(nil),
+		(*ClientEvent_SetUserInputEnabled)(nil),
+		(*ClientEvent_SttHookResult)(nil),
+		(*ClientEvent_TtsHookResult)(nil),
 	}
-	file_zrt_runtime_proto_msgTypes[45].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[48].OneofWrappers = []any{
 		(*RuntimeEvent_ToolCall)(nil),
 		(*RuntimeEvent_BeforeLlm)(nil),
 		(*RuntimeEvent_TurnComplete)(nil),
@@ -14276,12 +16219,16 @@ func file_zrt_runtime_proto_init() {
 		(*RuntimeEvent_CustomTtsSynthesize)(nil),
 		(*RuntimeEvent_SignalingSessionAssigned)(nil),
 		(*RuntimeEvent_LlmCompleted)(nil),
+		(*RuntimeEvent_ComponentMetrics)(nil),
+		(*RuntimeEvent_TurnMetrics)(nil),
+		(*RuntimeEvent_SttHook)(nil),
+		(*RuntimeEvent_TtsHook)(nil),
 	}
-	file_zrt_runtime_proto_msgTypes[56].OneofWrappers = []any{}
-	file_zrt_runtime_proto_msgTypes[101].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[63].OneofWrappers = []any{}
+	file_zrt_runtime_proto_msgTypes[110].OneofWrappers = []any{
 		(*RecordingStorageConfig_S3)(nil),
 	}
-	file_zrt_runtime_proto_msgTypes[130].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[154].OneofWrappers = []any{
 		(*AgentStreamIn_Register)(nil),
 		(*AgentStreamIn_SessionAck)(nil),
 		(*AgentStreamIn_Draining)(nil),
@@ -14311,8 +16258,9 @@ func file_zrt_runtime_proto_init() {
 		(*AgentStreamIn_CustomSttResult)(nil),
 		(*AgentStreamIn_CustomTtsAudio)(nil),
 		(*AgentStreamIn_PreloadBackgroundAudio)(nil),
+		(*AgentStreamIn_SetUserInputEnabled)(nil),
 	}
-	file_zrt_runtime_proto_msgTypes[131].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[155].OneofWrappers = []any{
 		(*AgentStreamOut_Registered)(nil),
 		(*AgentStreamOut_SessionStarted)(nil),
 		(*AgentStreamOut_SessionEnded)(nil),
@@ -14362,12 +16310,14 @@ func file_zrt_runtime_proto_init() {
 		(*AgentStreamOut_CustomTtsSynthesize)(nil),
 		(*AgentStreamOut_SignalingSessionAssigned)(nil),
 		(*AgentStreamOut_LlmCompleted)(nil),
+		(*AgentStreamOut_ComponentMetrics)(nil),
+		(*AgentStreamOut_TurnMetrics)(nil),
 	}
-	file_zrt_runtime_proto_msgTypes[140].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[164].OneofWrappers = []any{
 		(*DispatchResponse_Accepted)(nil),
 		(*DispatchResponse_Rejected)(nil),
 	}
-	file_zrt_runtime_proto_msgTypes[144].OneofWrappers = []any{
+	file_zrt_runtime_proto_msgTypes[168].OneofWrappers = []any{
 		(*TerminateResponse_Accepted)(nil),
 		(*TerminateResponse_Rejected)(nil),
 	}
@@ -14377,7 +16327,7 @@ func file_zrt_runtime_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_zrt_runtime_proto_rawDesc), len(file_zrt_runtime_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   168,
+			NumMessages:   194,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
