@@ -10,6 +10,7 @@ type FunctionToolInfo struct {
 	Name             string
 	Description      string
 	ParametersSchema map[string]any
+	Filler           string
 }
 
 // ToolHandler executes a tool call. args is the decoded arguments object. The
@@ -26,13 +27,25 @@ type FunctionTool struct {
 	Handler ToolHandler
 }
 
+// ToolOption configures optional FunctionTool metadata (see WithFiller).
+type ToolOption func(*FunctionToolInfo)
+
+// WithFiller makes the tool speak filler when it is called — a short line that
+// covers the tool's latency. Pass it to NewFunctionTool.
+func WithFiller(filler string) ToolOption {
+	return func(i *FunctionToolInfo) { i.Filler = filler }
+}
+
 // NewFunctionTool builds a FunctionTool. schema may be nil (treated as an empty
-// object schema).
-func NewFunctionTool(name, description string, schema map[string]any, handler ToolHandler) *FunctionTool {
-	return &FunctionTool{
-		Info:    FunctionToolInfo{Name: name, Description: description, ParametersSchema: schema},
-		Handler: handler,
+// object schema). Optional behavior is set via ToolOptions, e.g.:
+//
+//	zrt.NewFunctionTool(name, desc, schema, handler, zrt.WithFiller("One moment..."))
+func NewFunctionTool(name, description string, schema map[string]any, handler ToolHandler, opts ...ToolOption) *FunctionTool {
+	info := FunctionToolInfo{Name: name, Description: description, ParametersSchema: schema}
+	for _, opt := range opts {
+		opt(&info)
 	}
+	return &FunctionTool{Info: info, Handler: handler}
 }
 
 // ToolInfo returns the tool metadata.

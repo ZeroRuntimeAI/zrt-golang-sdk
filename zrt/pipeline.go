@@ -156,6 +156,8 @@ type Pipeline struct {
 	LLMStreamHookTimeoutMS int
 	PlaybackGraceMS        int
 
+	InactivityTimeoutSeconds *int
+
 	STTFilterPatterns    []string
 	STTWordSubstitutions map[string]string
 
@@ -190,6 +192,9 @@ type PipelineOptions struct {
 	LLMStreamHookEnabled   bool
 	LLMStreamHookTimeoutMS int
 	PlaybackGraceMS        int
+	// InactivityTimeoutSeconds is how long the session may go without user
+	// activity before the runtime ends it. nil means "use the runtime default".
+	InactivityTimeoutSeconds *int
 	// STTFilterPatterns overrides the default filter regexes. A nil slice uses
 	// DefaultSTTFilterPatterns; pass an empty (non-nil) slice to disable.
 	STTFilterPatterns    []string
@@ -204,23 +209,24 @@ func NewPipeline(opts PipelineOptions) *Pipeline {
 	}
 	timeout := cmp.Or(opts.LLMStreamHookTimeoutMS, 100)
 	p := &Pipeline{
-		STT:                    opts.STT,
-		LLM:                    opts.LLM,
-		TTS:                    opts.TTS,
-		VAD:                    opts.VAD,
-		TurnDetector:           opts.TurnDetector,
-		Denoise:                opts.Denoise,
-		EOUConfig:              opts.EOUConfig,
-		InterruptConfig:        opts.InterruptConfig,
-		ContextWindow:          opts.ContextWindow,
-		VoiceMailDetector:      opts.VoiceMailDetector,
-		RealtimeConfig:         opts.RealtimeConfig,
-		LLMStreamHookEnabled:   opts.LLMStreamHookEnabled,
-		LLMStreamHookTimeoutMS: timeout,
-		PlaybackGraceMS:        opts.PlaybackGraceMS,
-		STTFilterPatterns:      patterns,
-		STTWordSubstitutions:   opts.STTWordSubstitutions,
-		Hooks:                  &PipelineHooks{},
+		STT:                      opts.STT,
+		LLM:                      opts.LLM,
+		TTS:                      opts.TTS,
+		VAD:                      opts.VAD,
+		TurnDetector:             opts.TurnDetector,
+		Denoise:                  opts.Denoise,
+		EOUConfig:                opts.EOUConfig,
+		InterruptConfig:          opts.InterruptConfig,
+		ContextWindow:            opts.ContextWindow,
+		VoiceMailDetector:        opts.VoiceMailDetector,
+		RealtimeConfig:           opts.RealtimeConfig,
+		LLMStreamHookEnabled:     opts.LLMStreamHookEnabled,
+		LLMStreamHookTimeoutMS:   timeout,
+		PlaybackGraceMS:          opts.PlaybackGraceMS,
+		InactivityTimeoutSeconds: opts.InactivityTimeoutSeconds,
+		STTFilterPatterns:        patterns,
+		STTWordSubstitutions:     opts.STTWordSubstitutions,
+		Hooks:                    &PipelineHooks{},
 	}
 	return p
 }

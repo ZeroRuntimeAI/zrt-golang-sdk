@@ -31,14 +31,17 @@ type NamedAgent struct {
 
 // AgentOptions configures a BaseAgent.
 type AgentOptions struct {
-	Instructions             string
-	Tools                    []*FunctionTool
-	AgentID                  string
-	MCPServers               []MCPServer
-	InheritContext           bool
-	KnowledgeBase            *KnowledgeBase
-	Greeting                 string
-	GreetingNonInterruptible bool
+	Instructions 			  string
+	Name 					  string
+	Pipeline 				  *Pipeline
+	MaxSessionDurationSeconds *int
+	Tools                     []*FunctionTool
+	AgentID                   string
+	MCPServers                []MCPServer
+	InheritContext            bool
+	KnowledgeBase             *KnowledgeBase
+	Greeting                  string
+	GreetingNonInterruptible  bool
 	// VoiceSuffix overrides the spoken-style suffix. nil means "not set", which
 	// (with AppendVoiceSuffix) appends the default voice suffix.
 	VoiceSuffix *string
@@ -46,26 +49,29 @@ type AgentOptions struct {
 	AppendVoiceSuffix *bool
 	// Alternates are additional named agents for in-call handoff.
 	Alternates []*NamedAgent
-	Agents []Agent
+	Agents     []Agent
 	// ContextWindow configures context management for this agent.
 	ContextWindow *ContextWindow
 }
 
 // BaseAgent holds an agent's configuration and SDK wiring. Embed it.
 type BaseAgent struct {
-	instructions             string
-	tools                    []*FunctionTool
-	id                       string
-	mcpServers               []MCPServer
-	inheritContext           bool
-	knowledgeBase            *KnowledgeBase
-	greeting                 string
-	greetingNonInterruptible bool
-	voiceSuffix              *string
-	appendVoiceSuffix        bool
-	alternates               []*NamedAgent
-	handoffAgents            []Agent
-	cw                       *ContextWindow
+	instructions              string
+	name                      string
+	pipeline                  *Pipeline
+	maxSessionDurationSeconds *int
+	tools                     []*FunctionTool
+	id                        string
+	mcpServers                []MCPServer
+	inheritContext            bool
+	knowledgeBase             *KnowledgeBase
+	greeting                  string
+	greetingNonInterruptible  bool
+	voiceSuffix               *string
+	appendVoiceSuffix         bool
+	alternates                []*NamedAgent
+	handoffAgents             []Agent
+	cw                        *ContextWindow
 
 	session                  *AgentSession
 	thinkingBackgroundConfig map[string]any
@@ -79,22 +85,35 @@ type BaseAgent struct {
 // NewBaseAgent builds a BaseAgent from opts. Embed the result in your agent type.
 func NewBaseAgent(opts AgentOptions) BaseAgent {
 	return BaseAgent{
-		instructions:             opts.Instructions,
-		tools:                    slices.Clone(opts.Tools),
-		id:                       cmp.Or(opts.AgentID, "Agent"),
-		mcpServers:               opts.MCPServers,
-		inheritContext:           opts.InheritContext,
-		knowledgeBase:            opts.KnowledgeBase,
-		greeting:                 opts.Greeting,
-		greetingNonInterruptible: opts.GreetingNonInterruptible,
-		voiceSuffix:              opts.VoiceSuffix,
-		appendVoiceSuffix:        BoolOr(opts.AppendVoiceSuffix, true),
-		alternates:               opts.Alternates,
-		handoffAgents:            slices.Clone(opts.Agents),
-		cw:                       opts.ContextWindow,
-		llmStreamHookTimeoutMS:   100,
+		instructions:              opts.Instructions,
+		name:                      opts.Name,
+		pipeline:                  opts.Pipeline,
+		maxSessionDurationSeconds: opts.MaxSessionDurationSeconds,
+		tools:                     slices.Clone(opts.Tools),
+		id:                        cmp.Or(opts.AgentID, opts.Name, "Agent"),
+		mcpServers:                opts.MCPServers,
+		inheritContext:            opts.InheritContext,
+		knowledgeBase:             opts.KnowledgeBase,
+		greeting:                  opts.Greeting,
+		greetingNonInterruptible:  opts.GreetingNonInterruptible,
+		voiceSuffix:               opts.VoiceSuffix,
+		appendVoiceSuffix:         BoolOr(opts.AppendVoiceSuffix, true),
+		alternates:                opts.Alternates,
+		handoffAgents:             slices.Clone(opts.Agents),
+		cw:                        opts.ContextWindow,
+		llmStreamHookTimeoutMS:    100,
 	}
 }
+
+// *BaseAgent is itself a usable Agent (default no-op OnEnter/OnExit).
+var _ Agent = (*BaseAgent)(nil)
+func NewAgent(opts AgentOptions) *BaseAgent {
+	a := NewBaseAgent(opts)
+	return &a
+}
+func (a *BaseAgent) OnEnter(ctx context.Context) error { return nil }
+
+func (a *BaseAgent) OnExit(ctx context.Context) error { return nil }
 
 //lint:ignore U1000 base is called on Agent values throughout the SDK and is satisfied by external types that embed BaseAgent, which staticcheck cannot see in-package.
 func (a *BaseAgent) base() *BaseAgent { return a }
@@ -111,6 +130,15 @@ func (a *BaseAgent) SetInstructions(v string) { a.instructions = v }
 
 // ID returns the agent id.
 func (a *BaseAgent) ID() string { return a.id }
+
+// Name returns the agent's display name (falls back to the id when unset).
+func (a *BaseAgent) Name() string { return cmp.Or(a.name, a.id) }
+
+// Pipeline returns the voice stack this agent carries (nil if it has none).
+func (a *BaseAgent) Pipeline() *Pipeline { return a.pipeline }
+
+// MaxSessionDurationSeconds returns the per-agent session-duration cap (nil if unset).
+func (a *BaseAgent) MaxSessionDurationSeconds() *int { return a.maxSessionDurationSeconds }
 
 // Greeting returns the agent's opening line, if any.
 func (a *BaseAgent) Greeting() string { return a.greeting }

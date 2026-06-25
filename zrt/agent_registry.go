@@ -107,6 +107,17 @@ func (r *agentRegistry) enqueue(ev *pb.AgentStreamIn) {
 	}
 }
 
+
+func (r *agentRegistry) enqueueResult(ev *pb.AgentStreamIn) {
+	t := time.NewTimer(28 * time.Second)
+	defer t.Stop()
+	select {
+	case r.outbound <- ev:
+	case <-t.C:
+		logger.Warnf("registry outbound full for 28s — tool result dropped (turn will time out)")
+	}
+}
+
 func (r *agentRegistry) run(ctx context.Context) error {
 	conn, err := openGRPCChannel(r.addr, r.authToken)
 	if err != nil {
@@ -321,9 +332,13 @@ func (r *agentRegistry) routeSessionEvent(ctx context.Context, state *registered
 		if agent == nil {
 			agent = r.agentTemplate
 		}
-		go executeTool(ctx, agent.base().tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(), func(callID, resultJSON string, isErr bool) {
-			r.sendToolResult(state.sessionID, callID, resultJSON, isErr)
-		}, onResult)
+		tools := agent.base().tools
+		sid := state.sessionID
+		go executeToolWithFiller(ctx, tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
+			toolFiller(tools, tc.GetToolName()),
+			func(text string) { r.sendSay(sid, text, false, "", true) },
+			func(callID, resultJSON string, isErr bool) { r.sendToolResult(sid, callID, resultJSON, isErr) },
+			onResult)
 		return
 	case *pb.AgentStreamOut_BeforeLlm:
 		if sess == nil {
@@ -555,7 +570,7 @@ func (r *agentRegistry) sendSay(sid, text string, interruptCurrent bool, voice s
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_Say{Say: &pb.SayCommand{Text: text, InterruptCurrent: interruptCurrent, Voice: voice, NonInterruptible: !interruptible}}})
 }
 func (r *agentRegistry) sendToolResult(sid, callID, resultJSON string, isErr bool) {
-	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_ToolResult{ToolResult: &pb.ToolCallResponse{CallId: callID, ResultJson: resultJSON, IsError: isErr}}})
+	r.enqueueResult(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_ToolResult{ToolResult: &pb.ToolCallResponse{CallId: callID, ResultJson: resultJSON, IsError: isErr}}})
 }
 func (r *agentRegistry) sendUpdateInstructions(sid, s string) {
 	r.enqueue(&pb.AgentStreamIn{SessionId: sid, Payload: &pb.AgentStreamIn_UpdateInstructions{UpdateInstructions: &pb.UpdateInstructionsCmd{Instructions: s}}})

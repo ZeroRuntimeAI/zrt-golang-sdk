@@ -179,6 +179,16 @@ func (b *grpcBridge) enqueue(ev *pb.ClientEvent) error {
 	}
 }
 
+func (b *grpcBridge) enqueueResult(ev *pb.ClientEvent) {
+	t := time.NewTimer(28 * time.Second)
+	defer t.Stop()
+	select {
+	case b.outbound <- ev:
+	case <-t.C:
+		logger.Warnf("outbound full for 28s — tool result dropped (turn will time out)")
+	}
+}
+
 // ---- sessionTransport implementation ----
 
 func (b *grpcBridge) sendSay(text string, interruptCurrent bool, voice string, interruptible bool) error {
@@ -238,7 +248,7 @@ func (b *grpcBridge) sendSendMessageWithFrames(text string, frames []frameData, 
 }
 
 func (b *grpcBridge) sendToolResult(callID, resultJSON string, isErr bool) {
-	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_ToolResult{ToolResult: &pb.ToolCallResponse{CallId: callID, ResultJson: resultJSON, IsError: isErr}}})
+	b.enqueueResult(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_ToolResult{ToolResult: &pb.ToolCallResponse{CallId: callID, ResultJson: resultJSON, IsError: isErr}}})
 }
 func (b *grpcBridge) sendModifyLLMToken(tokenID uint64, replacement string, drop bool) {
 	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_ModifyLlmToken{ModifyLlmToken: &pb.ModifyLLMTokenCmd{TokenId: tokenID, Replacement: replacement, Drop: drop}}})
@@ -330,7 +340,11 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 	case *pb.RuntimeEvent_ToolCall:
 		tc := ev.ToolCall
 		active := s.ActiveAgent()
-		go executeTool(ctx, active.base().tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(), b.sendToolResult, s.interceptToolResult)
+		tools := active.base().tools
+		go executeToolWithFiller(ctx, tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
+			toolFiller(tools, tc.GetToolName()),
+			func(text string) { _ = b.sendSay(text, false, "", true) },
+			b.sendToolResult, s.interceptToolResult)
 	case *pb.RuntimeEvent_BeforeLlm:
 		go b.handleBeforeLLM(event.GetRequestId(), ev.BeforeLlm)
 	case *pb.RuntimeEvent_LlmTokenForReview:
