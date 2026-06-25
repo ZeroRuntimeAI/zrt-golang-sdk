@@ -336,7 +336,8 @@ func (r *agentRegistry) routeSessionEvent(ctx context.Context, state *registered
 		sid := state.sessionID
 		go executeToolWithFiller(ctx, tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
 			toolFiller(tools, tc.GetToolName()),
-			func(text string) { r.sendSay(sid, text, false, "", true) },
+			toolFillerGracePeriod(tools, tc.GetToolName()),
+			func(text string) { r.sendSay(sid, text, false, "", false) },
 			func(callID, resultJSON string, isErr bool) { r.sendToolResult(sid, callID, resultJSON, isErr) },
 			onResult)
 		return

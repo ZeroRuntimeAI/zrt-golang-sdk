@@ -343,7 +343,10 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		tools := active.base().tools
 		go executeToolWithFiller(ctx, tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
 			toolFiller(tools, tc.GetToolName()),
-			func(text string) { _ = b.sendSay(text, false, "", true) },
+			toolFillerGracePeriod(tools, tc.GetToolName()),
+			// Non-interruptible so the filler plays fully before the model's tool-result
+			// response. Safe because the runtime keeps an in-tool say in the call's turn.
+			func(text string) { _ = b.sendSay(text, false, "", false) },
 			b.sendToolResult, s.interceptToolResult)
 	case *pb.RuntimeEvent_BeforeLlm:
 		go b.handleBeforeLLM(event.GetRequestId(), ev.BeforeLlm)

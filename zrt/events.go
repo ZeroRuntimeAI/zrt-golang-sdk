@@ -528,13 +528,28 @@ func toolFiller(tools []*FunctionTool, toolName string) string {
 	return ""
 }
 
-const toolFillerGrace = 300 * time.Millisecond
+const toolFillerGraceMs = 300
 
-func executeToolWithFiller(ctx context.Context, tools []*FunctionTool, callID, toolName, argsJSON, filler string, say func(text string), sendResult func(callID, resultJSON string, isErr bool), onResult func(any) any) {
+// toolFillerGracePeriod returns the per-tool grace period (ms) before the filler is
+// spoken, or 0 when the tool has no override (callers fall back to toolFillerGraceMs).
+func toolFillerGracePeriod(tools []*FunctionTool, toolName string) int {
+	for _, t := range tools {
+		if t != nil && t.Info.Name == toolName {
+			return t.Info.FillerGracePeriod
+		}
+	}
+	return 0
+}
+
+func executeToolWithFiller(ctx context.Context, tools []*FunctionTool, callID, toolName, argsJSON, filler string, graceMs int, say func(text string), sendResult func(callID, resultJSON string, isErr bool), onResult func(any) any) {
 	done := make(chan struct{})
 	if filler != "" && say != nil {
+		grace := graceMs
+		if grace <= 0 {
+			grace = toolFillerGraceMs
+		}
 		go func() {
-			timer := time.NewTimer(toolFillerGrace)
+			timer := time.NewTimer(time.Duration(grace) * time.Millisecond)
 			defer timer.Stop()
 			select {
 			case <-timer.C:

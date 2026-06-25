@@ -11,6 +11,10 @@ type FunctionToolInfo struct {
 	Description      string
 	ParametersSchema map[string]any
 	Filler           string
+	// FillerGracePeriod is the grace period in milliseconds to wait for the tool to
+	// return before the filler is spoken. If the tool finishes within it, the filler
+	// is skipped. Zero uses the default grace (toolFillerGraceMs, 300ms).
+	FillerGracePeriod int
 }
 
 // ToolHandler executes a tool call. args is the decoded arguments object. The
@@ -32,8 +36,20 @@ type ToolOption func(*FunctionToolInfo)
 
 // WithFiller makes the tool speak filler when it is called — a short line that
 // covers the tool's latency. Pass it to NewFunctionTool.
-func WithFiller(filler string) ToolOption {
-	return func(i *FunctionToolInfo) { i.Filler = filler }
+//
+// An optional grace period (in milliseconds) sets how long to wait for the tool to
+// return before the filler is spoken; if the tool finishes within it, the filler is
+// skipped. Omit it (or pass 0) to keep the default grace (300ms):
+//
+//	zrt.WithFiller("One moment...")      // default 300ms grace
+//	zrt.WithFiller("One moment...", 500) // custom 500ms grace
+func WithFiller(filler string, graceMs ...int) ToolOption {
+	return func(i *FunctionToolInfo) {
+		i.Filler = filler
+		if len(graceMs) > 0 {
+			i.FillerGracePeriod = graceMs[0]
+		}
+	}
 }
 
 // NewFunctionTool builds a FunctionTool. schema may be nil (treated as an empty
