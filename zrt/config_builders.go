@@ -117,12 +117,21 @@ func buildSTTConfig(stt STT) *pb.STTProviderConfig {
 		return &pb.STTProviderConfig{}
 	}
 	c := stt.STTConfig()
-	return &pb.STTProviderConfig{
+	cfg := &pb.STTProviderConfig{
 		Provider:      c.Provider,
 		Model:         c.Model,
 		Language:      c.Language,
 		EndpointingMs: cmp.Or(c.EndpointingMs, 50),
 	}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.STTProviderConfig{
+			Provider:      fb.Provider,
+			Model:         fb.Model,
+			Language:      fb.Language,
+			EndpointingMs: cmp.Or(fb.EndpointingMs, 50),
+		})
+	}
+	return cfg
 }
 
 func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
@@ -135,6 +144,14 @@ func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
 		Model:           c.Model,
 		Temperature:     c.Temperature,
 		MaxOutputTokens: c.MaxOutputTokens,
+	}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.LLMProviderConfig{
+			Provider:        fb.Provider,
+			Model:           fb.Model,
+			Temperature:     fb.Temperature,
+			MaxOutputTokens: fb.MaxOutputTokens,
+		})
 	}
 	if llm.ProviderName() == "gemini" {
 		if ge, ok := llm.(GeminiExtrasProvider); ok {
@@ -190,6 +207,9 @@ func buildTTSConfig(tts TTS) *pb.TTSProviderConfig {
 	}
 	c := tts.TTSConfig()
 	cfg := &pb.TTSProviderConfig{Provider: c.Provider, Voice: c.Voice}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.TTSProviderConfig{Provider: fb.Provider, Voice: fb.Voice})
+	}
 	if tts.ProviderName() == "cartesia" {
 		if emb := tts.VoiceEmbedding(); len(emb) > 0 {
 			ve := make([]float32, len(emb))
