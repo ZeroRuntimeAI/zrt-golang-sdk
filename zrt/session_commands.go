@@ -341,8 +341,12 @@ func (s *AgentSession) PlayBackgroundAudio(ctx context.Context, config any) erro
 		logger.Warnf("PlayBackgroundAudio: empty file_url — ignored")
 		return nil
 	}
+	fileURL, audioData, err := resolveBGAudioPayload(url)
+	if err != nil {
+		return err
+	}
 	if t := s.transportRef(); t != nil {
-		return t.sendPlayBackgroundAudio(url, volume, looping, playbackMode)
+		return t.sendPlayBackgroundAudio(fileURL, volume, looping, playbackMode, audioData)
 	}
 	return nil
 }
@@ -354,8 +358,12 @@ func (s *AgentSession) PreloadBackgroundAudio(ctx context.Context, config any) e
 		logger.Warnf("PreloadBackgroundAudio: empty file_url — ignored")
 		return nil
 	}
+	fileURL, audioData, err := resolveBGAudioPayload(url)
+	if err != nil {
+		return err
+	}
 	if t := s.transportRef(); t != nil {
-		return t.sendPreloadBackgroundAudio(url, volume)
+		return t.sendPreloadBackgroundAudio(fileURL, volume, audioData)
 	}
 	return nil
 }
@@ -826,6 +834,35 @@ func extractBGAudioArgs(config any) (url string, volume float64, looping, playba
 		return c.File, c.Volume, c.Looping, pm
 	}
 	return "", 1.0, false, false
+}
+
+// maxBGAudioBytes caps inline background-audio payloads at 16 MiB.
+const maxBGAudioBytes = 16 * 1024 * 1024
+
+// resolveBGAudioPayload turns a background-audio source into a (fileURL, audioData) pair.
+//   - http(s):// URLs are forwarded as-is with no bytes.
+//   - A local file path is read into bytes (≤16 MiB), returned with an empty URL.
+//   - Anything else is treated as an opaque/remote URL with no bytes.
+func resolveBGAudioPayload(url string) (fileURL string, audioData []byte, err error) {
+	if url == "" {
+		return "", nil, nil
+	}
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		return url, nil, nil
+	}
+	info, statErr := os.Stat(url)
+	if statErr != nil || info.IsDir() {
+		// not a local file — treat as an opaque URL
+		return url, nil, nil
+	}
+	if info.Size() > maxBGAudioBytes {
+		return "", nil, fmt.Errorf("background audio file %q is %d bytes, exceeds the %d-byte (16 MiB) limit", url, info.Size(), maxBGAudioBytes)
+	}
+	data, readErr := os.ReadFile(url)
+	if readErr != nil {
+		return "", nil, readErr
+	}
+	return "", data, nil
 }
 
 func firstString(m map[string]any, keys ...string) string {

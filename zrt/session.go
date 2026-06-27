@@ -40,8 +40,8 @@ type sessionTransport interface {
 	sendUpdateTools(tools []*FunctionTool) error
 	sendUpdateProvider(component, provider string, params map[string]string) error
 	sendCallTransfer(transferTo, token string) error
-	sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool) error
-	sendPreloadBackgroundAudio(url string, volume float64) error
+	sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool, audioData []byte) error
+	sendPreloadBackgroundAudio(url string, volume float64, audioData []byte) error
 	sendStopBackgroundAudio() error
 	sendRecordingStart(cfg *RecordingConfig) error
 	sendRecordingStop() error

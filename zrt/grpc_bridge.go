@@ -218,11 +218,11 @@ func (b *grpcBridge) sendPublishMessage(topic, message, optionsJSON, payloadJSON
 func (b *grpcBridge) sendSubscribePubSub(topic string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SubscribePubsub{SubscribePubsub: &pb.SubscribePubSubCmd{Topic: topic}}})
 }
-func (b *grpcBridge) sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PlayBackgroundAudio{PlayBackgroundAudio: &pb.PlayBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), Looping: looping, PlaybackMode: playbackMode}}})
+func (b *grpcBridge) sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool, audioData []byte) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PlayBackgroundAudio{PlayBackgroundAudio: &pb.PlayBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), Looping: looping, PlaybackMode: playbackMode, AudioData: audioData}}})
 }
-func (b *grpcBridge) sendPreloadBackgroundAudio(url string, volume float64) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PreloadBackgroundAudio{PreloadBackgroundAudio: &pb.PreloadBackgroundAudioCmd{FileUrl: url, Volume: float32(volume)}}})
+func (b *grpcBridge) sendPreloadBackgroundAudio(url string, volume float64, audioData []byte) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PreloadBackgroundAudio{PreloadBackgroundAudio: &pb.PreloadBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), AudioData: audioData}}})
 }
 func (b *grpcBridge) sendStopBackgroundAudio() error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_StopBackgroundAudio{StopBackgroundAudio: &pb.StopBackgroundAudioCmd{}}})
