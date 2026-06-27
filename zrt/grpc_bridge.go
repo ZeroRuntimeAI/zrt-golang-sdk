@@ -341,7 +341,9 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		tc := ev.ToolCall
 		active := s.ActiveAgent()
 		tools := active.base().tools
-		go executeToolWithFiller(ctx, tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
+		// Bind the session into ctx so a shared agent's tool resolves THIS call's session
+		// via zrt.SessionFromContext / agent.Session(ctx).
+		go executeToolWithFiller(s.bindBus(ctx), tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
 			toolFiller(tools, tc.GetToolName()),
 			toolFillerGracePeriod(tools, tc.GetToolName()),
 			// Non-interruptible so the filler plays fully before the model's tool-result

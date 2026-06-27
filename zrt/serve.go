@@ -53,6 +53,12 @@ func maxConcurrentSessions(capacity int) int {
 // Serve registers an agent with the ZRT registry over a WebSocket connection and
 // listens for incoming sessions. It does not start a session on its own — call
 // Invoke to start one. Serve blocks until the worker shuts down (Ctrl+C / SIGTERM).
+//
+// One agent instance is shared across all concurrent sessions. That is safe because the
+// session is resolved per-call through the SessionBus (see session_bus.go): agent code
+// reads its own session via a.Session(ctx) / zrt.SessionFromContext(ctx), not a shared
+// field. Capacity (concurrent sessions) defaults to a CPU-based value; tune it with
+// opts.Capacity or ZRT_MAX_CONCURRENT_SESSIONS.
 func Serve(agent Agent, opts ServeOptions) error {
 	if agent == nil {
 		return fmt.Errorf("zrt.Serve: agent is required")
@@ -74,6 +80,8 @@ func Serve(agent Agent, opts ServeOptions) error {
 	displayName := cmp.Or(agent.base().name, registeredID)
 
 	entrypoint := func(ctx context.Context, jobCtx *JobContext) error {
+		// One shared agent/pipeline; each session registers in the SessionBus so concurrent
+		// callers resolve their own session from context rather than a shared field.
 		session := NewAgentSession(agent, pipeline, AgentSessionOptions{})
 		return session.Start(ctx, jobCtx, StartOptions{
 			WaitForParticipant: true,

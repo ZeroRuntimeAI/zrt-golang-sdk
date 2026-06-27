@@ -134,6 +134,14 @@ type AgentSession struct {
 	agentsByID           map[string]Agent
 	alternateIDs         map[string]bool
 	handoffs             []AgentHandoff
+	// busID identifies this session in the SessionBus, so a shared agent can resolve it
+	// per-call from context (see session_bus.go).
+	busID string
+	// A2A subscription is keyed on the active agent's id; track it so a handoff (which
+	// reassigns s.agent) can re-point the subscription to the new id.
+	a2aSubscribed bool
+	a2aUnsub      func()
+	a2aTopic      string
 }
 
 // NewAgentSession creates a session that runs agent with pipeline. Call Start to
@@ -159,6 +167,10 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 		wakeUpReset:       make(chan struct{}, 1),
 	}
 	close(s.synthesisDone) // starts "done"
+	// Register in the SessionBus so a shared agent can resolve this session per-call from
+	// context. agent.base().session is still set below as the no-binding fallback.
+	s.busID = sessionBusNewID()
+	sessionBusRegister(s.busID, s)
 	agent.base().session = s
 	s.seedHandoffRegistry(agent)
 	pipeline.setAgent(agent)

@@ -140,6 +140,17 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 	newAgent.base().session = s
 	s.pipeline.setAgent(newAgent)
 
+	// A2A topics are keyed on the active agent's id; re-point the subscription so the
+	// post-handoff agent keeps receiving messages addressed to its own id.
+	s.mu.Lock()
+	resubA2A := s.a2aSubscribed
+	s.mu.Unlock()
+	if resubA2A {
+		if err := s.SubscribeA2A(context.Background()); err != nil {
+			logger.Errorf("[handoff] failed to re-subscribe A2A for %q: %v", to, err)
+		}
+	}
+
 	// For agents the runtime did not pre-load as alternates it warned and left the
 	// old persona in place, so apply the new instructions/tools ourselves. For
 	// pre-registered alternates the runtime already applied them — skip to avoid a
@@ -156,9 +167,10 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 		}
 	}
 
-	// Run the incoming agent's OnEnter off the event loop (mirrors session start).
+	// Run the incoming agent's OnEnter off the event loop (mirrors session start). Bind the
+	// session into the context so a shared agent resolves this session via the SessionBus.
 	go func() {
-		if err := newAgent.OnEnter(context.Background()); err != nil {
+		if err := newAgent.OnEnter(s.bindBus(context.Background())); err != nil {
 			logger.Errorf("[handoff] on_enter error: %v", err)
 		}
 	}()

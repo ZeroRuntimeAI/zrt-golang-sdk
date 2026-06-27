@@ -109,7 +109,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 	}()
 
 	s.awaitParticipantIfNeeded(ctx)
-	if err := s.agent.OnEnter(ctx); err != nil {
+	if err := s.agent.OnEnter(s.bindBus(ctx)); err != nil {
 		logger.Errorf("on_enter error: %v", err)
 	}
 	if s.wakeUp > 0 && s.onWakeUp != nil {
@@ -521,9 +521,12 @@ func (s *AgentSession) Close(ctx context.Context, reason string) error {
 	}
 
 	_, _ = s.FetchContextHistory(ctx, 0, false, false)
-	if err := s.agent.OnExit(ctx); err != nil {
+	if err := s.agent.OnExit(s.bindBus(ctx)); err != nil {
 		logger.Errorf("on_exit error: %v", err)
 	}
+	// Remove from the SessionBus only after OnExit/shutdown callbacks have run, so the
+	// session still resolves from context during teardown.
+	sessionBusUnregister(s.busID)
 	if bridge != nil {
 		bridge.destroySession()
 	}

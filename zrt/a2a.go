@@ -41,22 +41,48 @@ func (s *AgentSession) SendA2A(ctx context.Context, targetAgentID, messageJSON, 
 // SubscribeA2A starts receiving A2A messages addressed to this agent (topic
 // "a2a/<agent id>"). Each inbound envelope is re-emitted as an "a2a_message" event
 // carrying {source_agent_id, message_json, correlation_id}.
+//
+// Safe to call more than once: a prior subscription's handler is removed first, so
+// re-subscribing (e.g. after a handoff re-points to the new agent's id) does not stack
+// duplicate listeners or leave the session bound to a stale topic.
 func (s *AgentSession) SubscribeA2A(ctx context.Context) error {
 	own := ""
-	if s.agent != nil {
-		own = s.agent.base().id
+	if a := s.ActiveAgent(); a != nil {
+		own = a.base().id
 	}
 	if own == "" {
 		logger.Warnf("AgentSession.SubscribeA2A: agent has no id — ignored")
 		return nil
 	}
-	return s.SubscribePubSub(ctx, a2aTopicPrefix+own, func(m PubSubMessage) {
+	newTopic := a2aTopicPrefix + own
+
+	s.mu.Lock()
+	// Idempotent for an unchanged topic: re-sending the subscribe would register a second
+	// subscription on the runtime (which does not dedupe by topic), causing duplicate delivery.
+	if s.a2aSubscribed && s.a2aTopic == newTopic && s.a2aUnsub != nil {
+		s.mu.Unlock()
+		return nil
+	}
+	oldUnsub := s.a2aUnsub
+	s.a2aUnsub = nil
+	s.mu.Unlock()
+
+	// Drop any prior A2A handler before re-subscribing to a new topic (e.g. handoff).
+	if oldUnsub != nil {
+		oldUnsub()
+	}
+
+	unsub, err := s.subscribePubSubH(ctx, newTopic, func(m PubSubMessage) {
 		if m.Message == "" {
 			return
 		}
 		var env map[string]any
 		if err := json.Unmarshal([]byte(m.Message), &env); err != nil {
 			logger.Errorf("AgentSession.SubscribeA2A: failed to decode message: %v", err)
+			return
+		}
+		if env == nil {
+			// Valid JSON but not an object (e.g. "null") — not a real envelope.
 			return
 		}
 		str := func(k string) string { v, _ := env[k].(string); return v }
@@ -66,6 +92,13 @@ func (s *AgentSession) SubscribeA2A(ctx context.Context) error {
 			"correlation_id":  str("correlation_id"),
 		})
 	})
+
+	s.mu.Lock()
+	s.a2aSubscribed = true
+	s.a2aTopic = newTopic
+	s.a2aUnsub = unsub
+	s.mu.Unlock()
+	return err
 }
 
 // AgentCard describes an agent for agent-to-agent (A2A) discovery.

@@ -105,7 +105,14 @@ That's it — speech in → your agent → speech out, in real time.
 
 ## Examples
 
-Full, runnable examples live in a dedicated repo:
+Runnable examples live in [`examples/`](examples) — quickstart, a tool with a
+filler line (`booking`), provider fallback chains (`fallback`), multi-agent
+handoff (`handoff`), the ChatContext API + runtime context management
+(`chat_context`, `summary_llm`), and two background-audio walkthroughs
+(`background_audio`, `background_audio_hold_music`). Run any of them with
+`go run ./examples/<name>`. See [`examples/README.md`](examples/README.md).
+
+More live in a dedicated repo:
 **[ZeroRuntimeAI/zrt-golang-sdk-examples](https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples)**
 
 ## How it works
