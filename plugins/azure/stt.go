@@ -3,7 +3,7 @@ package azure
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// STT is the Azure speech-to-text descriptor.
+// STT is an Azure speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
 	Model        string
@@ -11,14 +11,18 @@ type STT struct {
 	SpeechRegion string
 }
 
-// STTOptions configures STT.
+// STTOptions configures an Azure STT.
 type STTOptions struct {
-	SpeechKey    string
-	SpeechRegion string // default from AZURE_REGION, else "eastus"
-	Language     string // default "en-US"
+	// SpeechKey overrides the AZURE_SPEECH_KEY environment variable.
+	SpeechKey string
+	// SpeechRegion selects the service region. Defaults to the AZURE_REGION
+	// environment variable, or "eastus".
+	SpeechRegion string
+	// Language is the recognition language. Defaults to "en-US".
+	Language string
 }
 
-// NewSTT builds an STT.
+// NewSTT returns an Azure STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	s := &STT{
 		Model:        "",
@@ -29,7 +33,7 @@ func NewSTT(opts STTOptions) *STT {
 	return s
 }
 
-// STTConfig implements zrt.STT.
+// STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "azure", Model: s.Model, Language: s.Language}
 }

@@ -5,18 +5,16 @@ import (
 	"slices"
 )
 
-// ActiveAgent returns the session's current active agent: the most recent handoff
-// target, or the agent the session started with. Tool dispatch and lifecycle use
-// this so a handoff retargets them to the new agent.
+// ActiveAgent returns the session's current active agent (the most recent handoff
+// target, or the agent the session started with).
 func (s *AgentSession) ActiveAgent() Agent {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.agent
 }
 
-// seedHandoffRegistry builds the agent-id -> agent map and the set of ids the
-// runtime already knows as alternates (and therefore applies persona for itself),
-// from the root agent's configured handoff agents and named alternates.
+// seedHandoffRegistry builds the agent-id -> agent map and the set of alternate ids
+// (which the runtime applies persona for) from the root agent's handoff agents and alternates.
 func (s *AgentSession) seedHandoffRegistry(root Agent) {
 	s.agentsByID = map[string]Agent{}
 	s.alternateIDs = map[string]bool{}
@@ -65,9 +63,8 @@ func (s *AgentSession) registerHandoffAgent(ag Agent) string {
 }
 
 // interceptToolResult converts a tool result that is itself an Agent into an
-// agent-switch marker (videosdk-style "return an Agent" handoff), registering the
-// agent so the switch can run its lifecycle. Any other result passes through
-// unchanged. It is invoked on the tool-execution goroutine before serialization.
+// agent-switch marker, registering the agent so the switch can run its lifecycle.
+// Any other result passes through unchanged.
 func (s *AgentSession) interceptToolResult(result any) any {
 	ag, ok := result.(Agent)
 	if !ok {
@@ -90,8 +87,7 @@ func (s *AgentSession) Handoffs() []AgentHandoff {
 }
 
 // LastHandoffReason returns the reason of the most recent handoff into the active
-// agent, or "" if there has been none. Useful inside a new agent's OnEnter to
-// personalize its greeting.
+// agent, or "" if there has been none.
 func (s *AgentSession) LastHandoffReason() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -101,12 +97,10 @@ func (s *AgentSession) LastHandoffReason() string {
 	return ""
 }
 
-// applyAgentSwitch performs the SDK side of a handoff once the runtime emits an
-// AgentSwitched event: it swaps the active agent, applies persona for SDK-managed
-// (non-alternate) agents, settles in-flight turn state so nothing leaks from the
-// outgoing agent, records an attribution marker, and runs the new agent's OnEnter.
-// The outgoing agent's OnExit is intentionally NOT called — OnExit is reserved for
-// session end, mirroring videosdk-agents.
+// applyAgentSwitch performs the SDK side of a handoff after an AgentSwitched event:
+// swaps the active agent, applies persona for non-alternate agents, settles in-flight
+// turn state, records the handoff, and runs the new agent's OnEnter. The outgoing
+// agent's OnExit is NOT called — OnExit is reserved for session end.
 func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 	s.mu.Lock()
 	newAgent := s.agentsByID[to]
@@ -122,11 +116,9 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 		return // already active
 	}
 
-	// Settle in-flight turn state from the outgoing agent so it does not leak into
-	// the incoming one: a stuck utterance handle would block waiters, and stale
-	// thinking/background audio would keep playing. Context caches
-	// (transcriptMirror / chatHistoryCache) are deliberately preserved so the
-	// runtime's inherited history stays consistent.
+	// Settle in-flight turn state so it does not leak into the incoming agent: clear
+	// the utterance handle (a stuck one blocks waiters) and stop thinking/background
+	// audio. Context caches are preserved so inherited history stays consistent.
 	if u := s.CurrentUtterance(); u != nil {
 		u.markDone()
 	}
@@ -140,8 +132,8 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 	newAgent.base().session = s
 	s.pipeline.setAgent(newAgent)
 
-	// A2A topics are keyed on the active agent's id; re-point the subscription so the
-	// post-handoff agent keeps receiving messages addressed to its own id.
+	// A2A topics are keyed on the active agent's id; re-point the subscription to the
+	// new agent's id.
 	s.mu.Lock()
 	resubA2A := s.a2aSubscribed
 	s.mu.Unlock()
@@ -151,10 +143,8 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 		}
 	}
 
-	// For agents the runtime did not pre-load as alternates it warned and left the
-	// old persona in place, so apply the new instructions/tools ourselves. For
-	// pre-registered alternates the runtime already applied them — skip to avoid a
-	// redundant round-trip.
+	// Non-alternate agents were not pre-loaded by the runtime, so apply their
+	// instructions/tools here. Alternates were already applied runtime-side; skip them.
 	if !isAlternate {
 		nb := newAgent.base()
 		if t := s.transportRef(); t != nil {
@@ -167,8 +157,8 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 		}
 	}
 
-	// Run the incoming agent's OnEnter off the event loop (mirrors session start). Bind the
-	// session into the context so a shared agent resolves this session via the SessionBus.
+	// Run OnEnter off the event loop. Bind the session into the context so a shared
+	// agent resolves this session.
 	go func() {
 		if err := newAgent.OnEnter(s.bindBus(context.Background())); err != nil {
 			logger.Errorf("[handoff] on_enter error: %v", err)

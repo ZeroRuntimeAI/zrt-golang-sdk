@@ -8,9 +8,12 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// RealtimeOptions configures Realtime.
+// RealtimeOptions configures a Gemini Live Realtime model. The zero value is
+// valid: empty fields fall back to the defaults noted below, and nil pointer
+// fields leave the corresponding setting unset.
 type RealtimeOptions struct {
-	// APIKey overrides the GOOGLE_API_KEY environment variable.
+	// APIKey authenticates with Gemini. Overrides the GOOGLE_API_KEY
+	// environment variable.
 	APIKey                          string
 	Model                           string   // default "gemini-2.0-flash-live-001"
 	Voice                           string   // default "Puck"
@@ -40,7 +43,7 @@ type RealtimeOptions struct {
 	VertexServiceAccountPath string
 }
 
-// Realtime is the Gemini Live model descriptor.
+// Realtime is a configured Gemini Live speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
 	Model      string
@@ -50,7 +53,7 @@ type Realtime struct {
 	vertex     *zrt.VertexInfo
 }
 
-// NewRealtime builds a Realtime from opts.
+// NewRealtime returns a Gemini Live Realtime model configured from opts.
 func NewRealtime(opts RealtimeOptions) *Realtime {
 	modalities := opts.ResponseModalities
 	if len(modalities) == 0 {
@@ -83,7 +86,6 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 	if opts.IncludeThoughts {
 		params["include_thoughts"] = "true"
 	} else {
-		// include_thoughts is always emitted, defaulting to false.
 		params["include_thoughts"] = "false"
 	}
 	putStr("vad_start_sensitivity", opts.VADStartSensitivity)

@@ -24,10 +24,10 @@ type StartOptions struct {
 	RuntimeAddress string
 }
 
-// Start connects the session to the runtime and runs the agent.
+// Start connects the session and runs the agent.
 //
 // jobCtx may be nil for standalone use (a minimal room config is derived). When
-// RunUntilShutdown is true, Start blocks until the session closes.
+// opts.RunUntilShutdown is true, Start blocks until the session closes.
 func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts StartOptions) error {
 	logger.Infof("Starting AgentSession...")
 	timeout := cmp.Or(opts.WaitForParticipantTimeoutMS, 60000)
@@ -295,7 +295,7 @@ func (s *AgentSession) CancelGeneration(ctx context.Context) error {
 	return nil
 }
 
-// UpdateInstructions updates the agent instructions on the runtime.
+// UpdateInstructions changes the agent's system instructions on the live session.
 func (s *AgentSession) UpdateInstructions(ctx context.Context, instructions string) error {
 	s.agent.base().instructions = instructions
 	if t := s.transportRef(); t != nil {
@@ -304,7 +304,7 @@ func (s *AgentSession) UpdateInstructions(ctx context.Context, instructions stri
 	return nil
 }
 
-// UpdateTools replaces the agent tools on the runtime.
+// UpdateTools replaces the agent's tools on the live session.
 func (s *AgentSession) UpdateTools(ctx context.Context, tools []*FunctionTool) error {
 	s.agent.base().UpdateTools(tools)
 	if t := s.transportRef(); t != nil {
@@ -400,7 +400,8 @@ func (s *AgentSession) StopRecording(ctx context.Context) error {
 	return nil
 }
 
-// PushAudioFrame pushes a raw PCM frame to the runtime.
+// PushAudioFrame sends a raw PCM frame as the agent's audio. sampleRate
+// defaults to 48000 when zero.
 func (s *AgentSession) PushAudioFrame(ctx context.Context, pcm []byte, sampleRate int) error {
 	if len(pcm) == 0 {
 		return nil
@@ -412,7 +413,8 @@ func (s *AgentSession) PushAudioFrame(ctx context.Context, pcm []byte, sampleRat
 	return nil
 }
 
-// SendImage sends an image to the runtime (data must be encoded JPEG/PNG bytes).
+// SendImage sends an image into the conversation. data must be encoded JPEG/PNG
+// bytes; mimeType defaults to image/jpeg when empty.
 func (s *AgentSession) SendImage(ctx context.Context, data []byte, mimeType string) error {
 	if len(data) == 0 {
 		return nil
@@ -552,7 +554,9 @@ func (s *AgentSession) Hangup(ctx context.Context, reason string) error {
 
 // ---- context history ----
 
-// FetchContextHistory fetches conversation history from the runtime.
+// FetchContextHistory returns the conversation history. Pass lastN > 0 to limit
+// to the most-recent messages, and the include flags to keep function-call and
+// system messages. Falls back to the local cache when the session is not started.
 func (s *AgentSession) FetchContextHistory(ctx context.Context, lastN int, includeFunctionCalls, includeSystemMessages bool) ([]map[string]any, error) {
 	if s.SessionID() == "" {
 		return filterHistory(s.chatHistoryCache, lastN, includeFunctionCalls, includeSystemMessages), nil
@@ -642,7 +646,7 @@ func (s *AgentSession) InjectContext(ctx context.Context, cc *ChatContext) bool 
 	return ok
 }
 
-// FetchChatContext fetches the latest conversation history as a typed
+// FetchChatContext returns the latest conversation history as a typed
 // *ChatContext. Pass lastN > 0 to limit the number of most-recent messages.
 // Returns an empty context if the session is not started or the fetch fails.
 func (s *AgentSession) FetchChatContext(ctx context.Context, lastN int) *ChatContext {

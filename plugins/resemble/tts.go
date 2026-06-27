@@ -3,21 +3,23 @@ package resemble
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Resemble text-to-speech descriptor.
+// TTS is a Resemble AI text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures a Resemble AI TTS engine.
 type TTSOptions struct {
-	// APIKey overrides the RESEMBLE_API_KEY environment variable.
-	APIKey     string
-	VoiceUUID  string // default "55592656"
-	SampleRate int    // default 22050
+	// APIKey is the Resemble AI API key. If empty, the RESEMBLE_API_KEY environment variable is used.
+	APIKey string
+	// VoiceUUID selects the voice. Defaults to "55592656".
+	VoiceUUID string
+	// SampleRate is the output sample rate in Hz. Defaults to 22050.
+	SampleRate int
 }
 
-// NewTTS builds a TTS.
+// NewTTS creates a Resemble AI TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
 	sr := opts.SampleRate
 	if sr == 0 {

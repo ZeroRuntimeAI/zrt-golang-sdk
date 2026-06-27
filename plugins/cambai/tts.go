@@ -3,22 +3,24 @@ package cambai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the CambAI text-to-speech descriptor.
+// TTS is the CambAI text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 	Model string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures a CambAI TTS instance.
 type TTSOptions struct {
 	// APIKey overrides the CAMBAI_API_KEY environment variable.
 	APIKey string
-	Voice  string // default "147320"
-	Model  string // default "mars-pro"
+	// Voice is the CambAI voice. Defaults to "147320".
+	Voice string
+	// Model is the CambAI model. Defaults to "mars-pro".
+	Model string
 }
 
-// NewTTS builds a TTS.
+// NewTTS returns a CambAI TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{Voice: zrt.StrOr(opts.Voice, "147320"), Model: zrt.StrOr(opts.Model, "mars-pro")}
 	t.InitTTS("cambai", zrt.APIKeyOr(opts.APIKey, "CAMBAI_API_KEY"), 24000)

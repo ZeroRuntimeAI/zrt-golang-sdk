@@ -3,21 +3,22 @@ package papla
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Papla text-to-speech descriptor.
-// Papla has no separate voice; the model id is used as the voice.
+// TTS is a Papla text-to-speech engine. Papla has no separate voice;
+// the model id is used as the voice.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures a Papla TTS engine.
 type TTSOptions struct {
-	// APIKey overrides the PAPLA_API_KEY environment variable.
-	APIKey  string
-	ModelID string // default "papla_p1"
+	// APIKey is the Papla API key. If empty, the PAPLA_API_KEY environment variable is used.
+	APIKey string
+	// ModelID selects the model, which also serves as the voice. Defaults to "papla_p1".
+	ModelID string
 }
 
-// NewTTS builds a TTS.
+// NewTTS creates a Papla TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{Voice: zrt.StrOr(opts.ModelID, "papla_p1")}
 	t.InitTTS("papla", zrt.APIKeyOr(opts.APIKey, "PAPLA_API_KEY"), 24000)

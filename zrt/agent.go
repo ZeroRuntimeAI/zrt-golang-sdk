@@ -54,7 +54,7 @@ type AgentOptions struct {
 	ContextWindow *ContextWindow
 }
 
-// BaseAgent holds an agent's configuration and SDK wiring. Embed it.
+// BaseAgent holds an agent's configuration. Embed it in your agent type.
 type BaseAgent struct {
 	instructions              string
 	name                      string
@@ -108,6 +108,9 @@ func NewBaseAgent(opts AgentOptions) BaseAgent {
 // *BaseAgent is itself a usable Agent (default no-op OnEnter/OnExit).
 var _ Agent = (*BaseAgent)(nil)
 
+// NewAgent builds a BaseAgent from opts and returns a pointer to it. The result
+// is usable directly with no-op lifecycle hooks, or embed BaseAgent to override
+// OnEnter/OnExit.
 func NewAgent(opts AgentOptions) *BaseAgent {
 	a := NewBaseAgent(opts)
 	return &a
@@ -119,7 +122,7 @@ func (a *BaseAgent) OnExit(ctx context.Context) error { return nil }
 //lint:ignore U1000 base is called on Agent values throughout the SDK and is satisfied by external types that embed BaseAgent, which staticcheck cannot see in-package.
 func (a *BaseAgent) base() *BaseAgent { return a }
 
-// contextWindow returns the agent's configured context window (nil-safe).
+// contextWindow returns the agent's configured context window (nil if unset).
 func (a *BaseAgent) contextWindow() *ContextWindow { return a.cw }
 
 // Instructions returns the system instructions.
@@ -129,17 +132,17 @@ func (a *BaseAgent) Instructions() string { return a.instructions }
 // AgentSession.UpdateInstructions to apply them to a live session.
 func (a *BaseAgent) SetInstructions(v string) { a.instructions = v }
 
-// ID returns the agent id (the registration handle Serve registers under and
-// Invoke targets). It is derived from AgentOptions.AgentID, then Name.
+// ID returns the agent's registration handle, used by Serve and Invoke. It is
+// derived from AgentOptions.AgentID, then Name.
 func (a *BaseAgent) ID() string { return a.id }
 
-// AgentID is an alias for ID — the agent's registration handle.
+// AgentID is an alias for ID.
 func (a *BaseAgent) AgentID() string { return a.id }
 
 // Name returns the agent's display name (falls back to the id when unset).
 func (a *BaseAgent) Name() string { return cmp.Or(a.name, a.id) }
 
-// Pipeline returns the voice stack this agent carries (nil if it has none).
+// Pipeline returns the agent's voice pipeline (nil if it has none).
 func (a *BaseAgent) Pipeline() *Pipeline { return a.pipeline }
 
 // MaxSessionDurationSeconds returns the per-agent session-duration cap (nil if unset).
@@ -148,12 +151,12 @@ func (a *BaseAgent) MaxSessionDurationSeconds() *int { return a.maxSessionDurati
 // Greeting returns the agent's opening line, if any.
 func (a *BaseAgent) Greeting() string { return a.greeting }
 
-// InheritContext reports whether this agent inherits the conversation context on
-// a handoff into it.
+// InheritContext reports whether this agent inherits the conversation context
+// when handed off to.
 func (a *BaseAgent) InheritContext() bool { return a.inheritContext }
 
-// HandoffAgents returns the full agent objects reachable from this agent via
-// handoff (configured through AgentOptions.Agents).
+// HandoffAgents returns the agents reachable from this agent via handoff
+// (configured through AgentOptions.Agents).
 func (a *BaseAgent) HandoffAgents() []Agent { return a.handoffAgents }
 
 // Tools returns the registered tools.
@@ -165,11 +168,11 @@ func (a *BaseAgent) UpdateTools(tools []*FunctionTool) {
 	a.tools = slices.Clone(tools)
 }
 
-// Session returns the AgentSession this agent is handling for the current call. When ctx
-// carries a session binding (the SDK sets one around OnEnter, tools, and events), it
-// resolves THAT session — so one shared agent serving concurrent sessions returns the
-// correct one per call. Falls back to the most recently attached session when ctx has no
-// binding (e.g. a single session at capacity 1). Nil before start.
+// Session returns the AgentSession this agent is handling for the current call.
+// Pass the ctx from OnEnter, a tool handler, or an event callback so that an
+// agent shared across concurrent sessions resolves the correct one per call.
+// Falls back to the most recently attached session when ctx carries no binding,
+// and is nil before the session starts.
 func (a *BaseAgent) Session(ctx context.Context) *AgentSession {
 	if s := SessionFromContext(ctx); s != nil {
 		return s
@@ -222,9 +225,10 @@ func (a *BaseAgent) PreloadBackgroundAudio(ctx context.Context, file string, vol
 	return s.PreloadBackgroundAudio(ctx, map[string]any{"file_url": file, "volume": volume})
 }
 
-// CaptureFrames returns the latest buffered vision frames (most recent last). It reads the
-// most recently attached session (no ctx to resolve a shared agent's per-call session); call
-// it from a context where this agent handles a single session, or use Session(ctx) directly.
+// CaptureFrames returns up to numFrames of the latest buffered vision frames
+// (most recent last). It reads the most recently attached session, so use it
+// only when this agent handles a single session; otherwise capture frames via
+// Session(ctx) directly.
 func (a *BaseAgent) CaptureFrames(numFrames int) []map[string]any {
 	if numFrames <= 0 {
 		numFrames = 1

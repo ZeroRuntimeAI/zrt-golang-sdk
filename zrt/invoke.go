@@ -11,12 +11,9 @@ import (
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
 
-// Room is the room/meeting config for an invoked session — the runtime joins
-// using this. It lives on the invocation (per call), not on Serve: one serving
-// worker handles many rooms over its lifetime.
-//
-// All fields are optional. Leave RoomID empty to auto-create a playground room
-// (requires ZRT auth via AuthToken / ZRT_AUTH_TOKEN / ZRT_API_KEY+ZRT_SECRET_KEY).
+// Room is the per-invocation room/meeting config. All fields are optional; leave
+// RoomID empty to auto-create a playground room (requires ZRT auth via AuthToken /
+// ZRT_AUTH_TOKEN / ZRT_API_KEY+ZRT_SECRET_KEY).
 type Room struct {
 	RoomID    string
 	AuthToken string
@@ -37,8 +34,8 @@ type Room struct {
 	DashboardLogLevel           string // defaults "INFO"
 }
 
-// Sip carries SIP connection details for a telephony session. They are mapped
-// onto the dispatch metadata (first-class keys win over Extra).
+// Sip carries SIP connection details for a telephony session, mapped onto the
+// dispatch metadata (first-class keys win over Extra).
 type Sip struct {
 	CallTo     string
 	CallFrom   string
@@ -77,17 +74,14 @@ type InvokeResult struct {
 	PlaygroundURL string
 }
 
-// Invoke starts a session for a registered agent and returns its ids.
-//
-// It targets the agent registered under agentID (the AgentID passed to Serve),
-// hands it a room (auto-created if Room.RoomID is empty and auth is available)
-// plus any SIP / per-call config, and returns {SessionID, WorkerID, RoomID} on
-// acceptance (plus PlaygroundURL when Room.Playground is set and auth is
-// available). This is a one-shot client call — run it from anywhere (a script, a
-// CLI, a web handler).
+// Invoke starts a session for the agent registered under agentID (the AgentID
+// passed to Serve) and returns {SessionID, WorkerID, RoomID} on acceptance (plus
+// PlaygroundURL when Room.Playground is set and auth is available). The room is
+// auto-created when Room.RoomID is empty and auth is available. This is a one-shot
+// client call.
 //
 // It returns an error if agentID is empty, if a room is required but cannot be
-// created, or if the runtime rejects the invocation (e.g. no agent available).
+// created, or if the runtime rejects the invocation.
 func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 	if agentID == "" {
 		return nil, fmt.Errorf("zrt.Invoke: agentID is required (the AgentID you passed to Serve())")
@@ -120,7 +114,7 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 		roomID = created
 	}
 
-	// dispatch metadata: arbitrary metadata + sip.Extra + first-class SIP (first-class wins).
+	// dispatch metadata: Metadata + Sip.Extra + first-class SIP keys (first-class wins).
 	dispatchMetadata := map[string]string{}
 	for k, v := range opts.Metadata {
 		dispatchMetadata[k] = v
@@ -173,8 +167,6 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 		SessionId:        opts.SessionID,
 	}
 
-	// openGRPCChannel honors ZRT_RUNTIME_INSECURE (insecure) vs TLS and injects
-	// auth metadata on every call.
 	conn, err := openGRPCChannel(addr, token)
 	if err != nil {
 		return nil, fmt.Errorf("zrt.Invoke: dial runtime %s: %w", addr, err)
@@ -191,7 +183,6 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 
 	if acc := resp.GetAccepted(); acc != nil {
 		result := &InvokeResult{SessionID: acc.GetSessionId(), WorkerID: acc.GetWorkerId(), RoomID: roomID}
-		// Same URL shape as the standalone session path (printPlaygroundURL).
 		if BoolOr(room.Playground, true) && roomID != "" && token != "" {
 			base := strings.TrimRight(cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai//cli"), "/")
 			result.PlaygroundURL = fmt.Sprintf("%s?token=%s&meetingId=%s", base, token, roomID)

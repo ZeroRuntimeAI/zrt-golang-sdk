@@ -3,22 +3,25 @@ package gladia
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// STT is the Gladia speech-to-text descriptor.
+// STT is a Gladia speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
 	Model    string
 	Language string
 }
 
-// STTOptions configures STT.
+// STTOptions configures a Gladia STT.
 type STTOptions struct {
 	// APIKey overrides the GLADIA_API_KEY environment variable.
-	APIKey    string
-	Model     string   // default "solaria-1"
-	Languages []string // language = first element, default "english"
+	APIKey string
+	// Model selects the recognition model. Defaults to "solaria-1".
+	Model string
+	// Languages lists the recognition languages; the first entry is used.
+	// Defaults to "english".
+	Languages []string
 }
 
-// NewSTT builds an STT.
+// NewSTT returns a Gladia STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	lang := "english"
 	if len(opts.Languages) > 0 {
@@ -29,7 +32,7 @@ func NewSTT(opts STTOptions) *STT {
 	return s
 }
 
-// STTConfig implements zrt.STT.
+// STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "gladia", Model: s.Model, Language: s.Language}
 }

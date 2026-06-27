@@ -3,19 +3,21 @@ package navana
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// NamoTurnDetector is the Navana Namo turn detector (provider "namo").
+// NamoTurnDetector is the Navana Namo end-of-utterance turn detector.
 type NamoTurnDetector struct {
 	zrt.BaseEOU
 	Language string
 }
 
-// NamoTurnDetectorOptions configures NamoTurnDetector.
+// NamoTurnDetectorOptions configures a NamoTurnDetector.
 type NamoTurnDetectorOptions struct {
-	Threshold float64 // default 0.7
-	Language  string  // default "en"
+	// Threshold is the end-of-utterance confidence cutoff. Defaults to 0.7.
+	Threshold float64
+	// Language is the spoken language code. Defaults to "en".
+	Language string
 }
 
-// NewNamoTurnDetector builds a NamoTurnDetector.
+// NewNamoTurnDetector creates a NamoTurnDetector from the given options.
 func NewNamoTurnDetector(opts NamoTurnDetectorOptions) *NamoTurnDetector {
 	threshold := opts.Threshold
 	if threshold == 0 {

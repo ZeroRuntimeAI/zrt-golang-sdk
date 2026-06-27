@@ -32,8 +32,7 @@ type Logger interface {
 	Errorf(format string, args ...any)
 }
 
-// slogLogger adapts a *slog.Logger to the SDK Logger interface. Level filtering
-// is delegated to the slog handler; the SDK's own LogLevel does not apply.
+// slogLogger adapts a *slog.Logger to the SDK Logger interface.
 type slogLogger struct{ l *slog.Logger }
 
 // NewSlogLogger adapts a standard library *slog.Logger to the SDK Logger

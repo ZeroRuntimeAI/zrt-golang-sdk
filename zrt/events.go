@@ -45,7 +45,7 @@ func isUnrecoverableAuthError(component, message string) bool {
 	return false
 }
 
-// ---- shared event handlers (identical between direct and registered modes) ----
+// ---- shared event handlers ----
 
 func evGenerationStarted(s *AgentSession, gs *pb.GenerationStartedEvent) {
 	for _, h := range s.pipeline.Hooks.generationStarted {
@@ -527,7 +527,7 @@ func toolFiller(tools []*FunctionTool, toolName string) string {
 const toolFillerGraceMs = 300
 
 // toolFillerGracePeriod returns the per-tool grace period (ms) before the filler is
-// spoken, or 0 when the tool has no override (callers fall back to toolFillerGraceMs).
+// spoken, or 0 when the tool has no override.
 func toolFillerGracePeriod(tools []*FunctionTool, toolName string) int {
 	for _, t := range tools {
 		if t != nil && t.Info.Name == toolName {
@@ -564,8 +564,7 @@ func executeToolWithFiller(ctx context.Context, tools []*FunctionTool, callID, t
 }
 
 // executeTool runs the named tool and sends its result. onResult, when non-nil,
-// is applied to the raw return value before serialization; it is how a tool that
-// returns an Agent object is converted into an agent-switch marker.
+// is applied to the return value before serialization (used for Agent-return handoffs).
 func executeTool(ctx context.Context, tools []*FunctionTool, callID, toolName, argsJSON string, sendResult func(callID, resultJSON string, isErr bool), onResult func(any) any) {
 	var args map[string]any
 	if argsJSON != "" {
@@ -665,8 +664,7 @@ func copyAnyMap(m map[string]string) map[string]string {
 	return out
 }
 
-// pushSTTObservation forwards a transcript to a registered custom STT observation
-// channel, if any.
+// pushSTTObservation forwards a transcript to the STT observation channel, if any.
 func (s *AgentSession) pushSTTObservation(resp STTResponse) {
 	s.mu.Lock()
 	ch := s.sttObservationQueue

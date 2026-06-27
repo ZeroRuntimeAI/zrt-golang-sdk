@@ -69,8 +69,7 @@ func floatStr(f float64) string {
 	return s
 }
 
-// serializeKnob applies the general knob serialization rules. ok=false means
-// the value should be skipped (nil / empty string).
+// serializeKnob stringifies a knob value. ok=false means skip it (nil / empty string).
 func serializeKnob(v any) (string, bool) {
 	switch x := v.(type) {
 	case nil:
@@ -910,9 +909,7 @@ func buildSessionLimits(agent Agent, p *Pipeline) *pb.SessionLimits {
 
 // ---- type-assertion helper ----
 
-// as returns v viewed as interface T, or the zero value of T if v is nil or
-// does not implement T. Type-asserting a nil interface yields the zero value,
-// so no explicit nil check is needed.
+// as returns v viewed as interface T, or the zero value of T if v does not implement T.
 func as[T any](v any) T {
 	t, _ := v.(T)
 	return t

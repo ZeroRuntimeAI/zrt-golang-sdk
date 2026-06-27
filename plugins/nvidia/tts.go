@@ -2,22 +2,25 @@ package nvidia
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the NVIDIA text-to-speech descriptor.
+// TTS is an NVIDIA text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures an NVIDIA TTS engine.
 type TTSOptions struct {
-	// APIKey overrides the NVIDIA_API_KEY environment variable.
-	APIKey       string
-	Voice        string // default "English-US-Female-1"
-	LanguageCode string // default "en-US" (not serialized)
-	SampleRate   int    // default 22050
+	// APIKey is the NVIDIA API key. If empty, the NVIDIA_API_KEY environment variable is used.
+	APIKey string
+	// Voice selects the voice. Defaults to "English-US-Female-1".
+	Voice string
+	// LanguageCode is the language code. Defaults to "en-US". Accepted but ignored.
+	LanguageCode string
+	// SampleRate is the output sample rate in Hz. Defaults to 22050.
+	SampleRate int
 }
 
-// NewTTS builds a TTS.
+// NewTTS creates an NVIDIA TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
 	sr := opts.SampleRate
 	if sr == 0 {

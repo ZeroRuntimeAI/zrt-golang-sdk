@@ -2,7 +2,7 @@ package sarvamai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Sarvam AI text-to-speech descriptor.
+// TTS is a Sarvam AI text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
 	Voice         string
@@ -17,23 +17,34 @@ type TTS struct {
 	Bitrate       string
 }
 
-// TTSOptions configures TTS. Nil pointers use default values.
+// TTSOptions configures a Sarvam AI TTS engine. Pointer fields left nil
+// fall back to their default values.
 type TTSOptions struct {
-	// APIKey overrides the SARVAM_API_KEY environment variable.
-	APIKey        string
-	Model         string   // default "bulbul:v3"
-	Language      string   // default "en-IN"
-	Speaker       string   // default "shubh"
-	Streaming     *bool    // default true
-	Pitch         *float64 // default 0.0
-	Pace          *float64 // default 1.0
-	Loudness      *float64 // default 1.0
-	Temperature   *float64 // default 0.6
-	Preprocessing *bool    // default false
-	Bitrate       string   // default "128k"
+	// APIKey is the Sarvam AI API key. If empty, the SARVAM_API_KEY environment variable is used.
+	APIKey string
+	// Model selects the model. Defaults to "bulbul:v3".
+	Model string
+	// Language is the language code. Defaults to "en-IN".
+	Language string
+	// Speaker selects the voice. Defaults to "shubh".
+	Speaker string
+	// Streaming enables streaming synthesis. Defaults to true.
+	Streaming *bool
+	// Pitch adjusts the voice pitch. Defaults to 0.0.
+	Pitch *float64
+	// Pace adjusts the speaking rate. Defaults to 1.0.
+	Pace *float64
+	// Loudness adjusts the output loudness. Defaults to 1.0.
+	Loudness *float64
+	// Temperature controls synthesis variability. Defaults to 0.6.
+	Temperature *float64
+	// Preprocessing enables text preprocessing. Defaults to false.
+	Preprocessing *bool
+	// Bitrate is the output bitrate. Defaults to "128k".
+	Bitrate string
 }
 
-// NewTTS builds a TTS.
+// NewTTS creates a Sarvam AI TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{
 		Voice:         zrt.StrOr(opts.Speaker, "shubh"),

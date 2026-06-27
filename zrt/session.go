@@ -9,7 +9,7 @@ import (
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
 
-// roomConfigData carries the resolved room settings into config building.
+// roomConfigData holds the resolved room settings for a session.
 type roomConfigData struct {
 	RoomID                      string
 	AuthToken                   string
@@ -31,7 +31,7 @@ type frameData struct {
 	data     []byte
 }
 
-// sessionTransport abstracts the outbound channel used by AgentSession command methods.
+// sessionTransport is the outbound channel used by AgentSession command methods.
 type sessionTransport interface {
 	sendSay(text string, interruptCurrent bool, voice string, interruptible bool) error
 	sendCancelGeneration() error
@@ -66,7 +66,7 @@ type AgentSessionOptions struct {
 }
 
 // AgentSession runs an agent with its pipeline and exposes the commands and
-// events for a live voice session.
+// events of a live voice session.
 type AgentSession struct {
 	EventEmitter
 
@@ -134,18 +134,16 @@ type AgentSession struct {
 	agentsByID           map[string]Agent
 	alternateIDs         map[string]bool
 	handoffs             []AgentHandoff
-	// busID identifies this session in the SessionBus, so a shared agent can resolve it
-	// per-call from context (see session_bus.go).
+	// busID lets a shared agent resolve this session per-call from context (see session_bus.go).
 	busID string
-	// A2A subscription is keyed on the active agent's id; track it so a handoff (which
-	// reassigns s.agent) can re-point the subscription to the new id.
+	// a2a* track the active agent's A2A subscription so a handoff can re-point it.
 	a2aSubscribed bool
 	a2aUnsub      func()
 	a2aTopic      string
 }
 
 // NewAgentSession creates a session that runs agent with pipeline. Call Start to
-// connect it to the runtime.
+// connect it and begin the call.
 func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) *AgentSession {
 	s := &AgentSession{
 		agent:             agent,
@@ -167,8 +165,8 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 		wakeUpReset:       make(chan struct{}, 1),
 	}
 	close(s.synthesisDone) // starts "done"
-	// Register in the SessionBus so a shared agent can resolve this session per-call from
-	// context. agent.base().session is still set below as the no-binding fallback.
+	// Register so a shared agent can resolve this session per-call from context;
+	// agent.base().session below is the no-binding fallback.
 	s.busID = sessionBusNewID()
 	sessionBusRegister(s.busID, s)
 	agent.base().session = s

@@ -17,11 +17,10 @@ var (
 	// token in RoomOptions.
 	ErrNoCredentials = errors.New("zrt: no credentials available")
 
-	// ErrAuthFailed means credentials were present but authentication failed
-	// (for example minting a JWT from the API key and secret failed).
+	// ErrAuthFailed means credentials were present but authentication failed.
 	ErrAuthFailed = errors.New("zrt: authentication failed")
 
-	// ErrConnection means the SDK could not reach the runtime.
+	// ErrConnection means the SDK could not establish a connection.
 	ErrConnection = errors.New("zrt: connection failed")
 
 	// ErrSessionRejected means the runtime rejected the session request

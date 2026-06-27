@@ -3,22 +3,24 @@ package speechify
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Speechify text-to-speech descriptor.
+// TTS is a Speechify text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 	Model string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures a Speechify TTS engine.
 type TTSOptions struct {
-	// APIKey overrides the SPEECHIFY_API_KEY environment variable.
-	APIKey  string
-	VoiceID string // default "kristy"
-	Model   string // default "simba-english"
+	// APIKey is the Speechify API key. If empty, the SPEECHIFY_API_KEY environment variable is used.
+	APIKey string
+	// VoiceID selects the voice. Defaults to "kristy".
+	VoiceID string
+	// Model selects the model. Defaults to "simba-english".
+	Model string
 }
 
-// NewTTS builds a TTS.
+// NewTTS creates a Speechify TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{Voice: zrt.StrOr(opts.VoiceID, "kristy"), Model: zrt.StrOr(opts.Model, "simba-english")}
 	t.InitTTS("speechify", zrt.APIKeyOr(opts.APIKey, "SPEECHIFY_API_KEY"), 24000)

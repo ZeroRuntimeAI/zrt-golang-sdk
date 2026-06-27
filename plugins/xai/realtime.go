@@ -6,7 +6,8 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// TurnDetectionConfig configures xAI realtime turn detection.
+// TurnDetectionConfig controls how the model decides the user has stopped
+// speaking.
 type TurnDetectionConfig struct {
 	Type              string // default "server_vad"
 	Threshold         float64
@@ -16,19 +17,23 @@ type TurnDetectionConfig struct {
 	InterruptResponse bool
 }
 
-// DefaultTurnDetectionConfig returns the default turn detection config.
+// DefaultTurnDetectionConfig returns the default server-VAD turn detection
+// settings.
 func DefaultTurnDetectionConfig() *TurnDetectionConfig {
 	return &TurnDetectionConfig{Type: "server_vad", Threshold: 0.5, PrefixPaddingMS: 300, SilenceDurationMS: 200, CreateResponse: true, InterruptResponse: true}
 }
 
-// InputAudioTranscriptionConfig configures input transcription.
+// InputAudioTranscriptionConfig selects the model used to transcribe the user's
+// speech.
 type InputAudioTranscriptionConfig struct {
 	Model string // default "gpt-4o-mini-transcribe"
 }
 
-// RealtimeOptions configures Realtime.
+// RealtimeOptions configures an xAI Realtime model. The zero value is valid;
+// empty and nil fields fall back to the defaults noted below.
 type RealtimeOptions struct {
-	// APIKey overrides the XAI_API_KEY environment variable.
+	// APIKey authenticates with xAI. Overrides the XAI_API_KEY environment
+	// variable.
 	APIKey                  string
 	Model                   string   // default "grok-realtime"
 	Voice                   string   // default "Ara"
@@ -41,7 +46,7 @@ type RealtimeOptions struct {
 	BaseURL                 string
 }
 
-// Realtime is the xAI realtime model descriptor.
+// Realtime is a configured xAI speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
 	Model      string
@@ -50,7 +55,7 @@ type Realtime struct {
 	params     map[string]string
 }
 
-// NewRealtime builds a Realtime from opts.
+// NewRealtime returns an xAI Realtime model configured from opts.
 func NewRealtime(opts RealtimeOptions) *Realtime {
 	modalities := opts.Modalities
 	if len(modalities) == 0 {

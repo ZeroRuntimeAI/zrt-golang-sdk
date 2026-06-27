@@ -135,7 +135,8 @@ func (h *PipelineHooks) registeredNames() []string {
 func (h *PipelineHooks) hasSTTStreamHook() bool { return h.customSTT != nil }
 func (h *PipelineHooks) hasTTSStreamHook() bool { return h.customTTS != nil }
 
-// Pipeline configures the voice stack the runtime executes.
+// Pipeline configures the agent's voice stack (STT, LLM, TTS, and related
+// components) and holds its event hooks.
 type Pipeline struct {
 	EventEmitter
 
@@ -192,7 +193,7 @@ type PipelineOptions struct {
 	LLMStreamHookTimeoutMS int
 	PlaybackGraceMS        int
 	// InactivityTimeoutSeconds is how long the session may go without user
-	// activity before the runtime ends it. nil means "use the runtime default".
+	// activity before it ends. nil uses the default.
 	InactivityTimeoutSeconds *int
 	// STTFilterPatterns overrides the default filter regexes. A nil slice uses
 	// DefaultSTTFilterPatterns; pass an empty (non-nil) slice to disable.

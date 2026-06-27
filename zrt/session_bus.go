@@ -7,12 +7,9 @@ import (
 	"sync"
 )
 
-// SessionBus lets a single shared agent resolve the correct per-call session. It is the Go
-// analog of the Python SDK's contextvars-based SessionBus: a process-global registry maps
-// each session's bus id to its *AgentSession, and the "current" bus id rides on
-// context.Context (Go has no goroutine-local storage, so the binding is threaded explicitly
-// through OnEnter, tools, and events). With it, Serve can hand one agent instance to many
-// concurrent sessions without cross-wiring callers — each resolves its own session from ctx.
+// SessionBus lets a single shared agent resolve the correct per-call session.
+// The current session's bus id is carried on context.Context, so one agent
+// instance can serve many concurrent sessions without cross-wiring callers.
 
 type sessionBusKeyT struct{}
 
@@ -28,8 +25,7 @@ var (
 func sessionBusNewID() string {
 	var b [16]byte
 	if _, err := rand.Read(b[:]); err != nil {
-		// crypto/rand should not fail; fall back to a fixed-but-unique-ish value rather
-		// than panicking in a constructor.
+		// Avoid panicking in a constructor if crypto/rand fails.
 		return hex.EncodeToString(b[:])
 	}
 	return hex.EncodeToString(b[:])
@@ -60,8 +56,7 @@ func sessionBusLookup(id string) *AgentSession {
 	return s
 }
 
-// bindSession returns a copy of ctx that carries id as the current session binding. The SDK
-// calls this around OnEnter, tool execution, and other per-session entry points.
+// bindSession returns a copy of ctx carrying id as the current session binding.
 func bindSession(ctx context.Context, id string) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
@@ -72,9 +67,9 @@ func bindSession(ctx context.Context, id string) context.Context {
 	return context.WithValue(ctx, sessionBusKey, id)
 }
 
-// SessionFromContext returns the AgentSession bound in ctx, or nil if none is bound. Use it
-// inside a function-tool handler (or any ctx-carrying callback) to reach the call's own
-// session even when the agent instance is shared across concurrent sessions:
+// SessionFromContext returns the AgentSession bound in ctx, or nil if none is
+// bound. Use it inside a function-tool handler (or any ctx-carrying callback) to
+// reach the call's own session when the agent instance is shared:
 //
 //	result := func(ctx context.Context, args map[string]any) (any, error) {
 //	    s := zrt.SessionFromContext(ctx)

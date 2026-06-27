@@ -393,10 +393,8 @@ func (w *WorkerJob) run() error {
 	return nil
 }
 
-// runRegistered registers the agent with the ZRT registry over a WebSocket
-// connection and serves dispatched sessions. There is no gRPC registration
-// handshake: each dispatched job runs the entrypoint, which starts a normal
-// AgentSession that connects directly via CreateSession. It blocks until shutdown.
+// runRegistered registers the agent with the ZRT registry and serves dispatched
+// sessions, running the entrypoint for each job. It blocks until shutdown.
 func (w *WorkerJob) runRegistered() error {
 	resolvedToken, _ := ResolveAuthToken(w.options.AuthToken)
 	if resolvedToken == "" || w.options.SignalingBaseURL == "" {

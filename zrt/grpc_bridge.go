@@ -54,7 +54,7 @@ func openGRPCChannel(addr, authToken string) (*grpc.ClientConn, error) {
 	return grpc.NewClient(addr, dialOpts...)
 }
 
-// grpcBridge owns the direct (non-registered) runtime connection for a session.
+// grpcBridge owns the direct gRPC connection for a single session.
 type grpcBridge struct {
 	addr      string
 	agent     Agent
@@ -341,13 +341,11 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		tc := ev.ToolCall
 		active := s.ActiveAgent()
 		tools := active.base().tools
-		// Bind the session into ctx so a shared agent's tool resolves THIS call's session
-		// via zrt.SessionFromContext / agent.Session(ctx).
+		// Bind the session into ctx so a shared agent resolves this call's session.
 		go executeToolWithFiller(s.bindBus(ctx), tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
 			toolFiller(tools, tc.GetToolName()),
 			toolFillerGracePeriod(tools, tc.GetToolName()),
-			// Non-interruptible so the filler plays fully before the model's tool-result
-			// response. Safe because the runtime keeps an in-tool say in the call's turn.
+			// Non-interruptible so the filler plays fully before the tool-result response.
 			func(text string) { _ = b.sendSay(text, false, "", false) },
 			b.sendToolResult, s.interceptToolResult)
 	case *pb.RuntimeEvent_BeforeLlm:

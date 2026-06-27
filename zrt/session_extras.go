@@ -82,8 +82,8 @@ func (s *AgentSession) WarmTransfer(ctx context.Context) error {
 	return fmt.Errorf("%w: AgentSession.WarmTransfer; use AgentSwitch(...) for multi-agent handoff", ErrNotImplemented)
 }
 
-// GetContextHistory returns the locally-cached conversation history (filtered).
-// Use FetchContextHistory to pull the authoritative history from the runtime.
+// GetContextHistory returns the locally-cached conversation history, filtered by
+// the given options. Use FetchContextHistory to pull the authoritative history.
 func (s *AgentSession) GetContextHistory(lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
 	s.mu.Lock()
 	source := s.chatHistoryCache
@@ -220,7 +220,7 @@ func (t *AudioTrack) CanPause() bool {
 	return v
 }
 
-// AddNewBytes pushes a raw PCM frame to the runtime.
+// AddNewBytes sends a raw PCM frame as the agent's outgoing audio.
 func (t *AudioTrack) AddNewBytes(ctx context.Context, pcm []byte, sampleRate int) error {
 	sampleRate = cmp.Or(sampleRate, t.sampleRate)
 	return t.session.PushAudioFrame(ctx, pcm, sampleRate)

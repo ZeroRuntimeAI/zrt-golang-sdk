@@ -9,12 +9,11 @@ const (
 	DefaultRecoveryCheckIntervalSec      = 300
 )
 
-// FallbackSTT wraps an ordered list of STT providers; the runtime falls back on
-// failure.
+// FallbackSTT wraps an ordered list of STT providers and falls back to the next
+// on failure.
 //
-// Only the primary provider's provider/model/language reach the runtime config
-// (endpointing fixed at 50); per-provider API keys passed inline are not
-// forwarded — set them via environment variables.
+// Per-provider API keys passed inline are ignored; set them via environment
+// variables.
 type FallbackSTT struct {
 	BaseSTT
 	Providers []STT
@@ -27,8 +26,8 @@ func NewFallbackSTT(providers ...STT) *FallbackSTT {
 	return f
 }
 
-// STTConfig returns the primary provider's config (endpointing fixed at 50) with
-// the remaining providers attached as an ordered fallback chain for the runtime.
+// STTConfig returns the primary provider's config with the remaining providers
+// attached as an ordered fallback chain.
 func (f *FallbackSTT) STTConfig() STTRuntimeConfig {
 	if len(f.Providers) == 0 {
 		return STTRuntimeConfig{EndpointingMs: 50}
@@ -61,7 +60,7 @@ func NewFallbackLLM(providers ...LLM) *FallbackLLM {
 }
 
 // LLMConfig returns the primary provider's config with the remaining providers
-// attached as an ordered fallback chain for the runtime.
+// attached as an ordered fallback chain.
 func (f *FallbackLLM) LLMConfig() LLMRuntimeConfig {
 	if len(f.Providers) == 0 {
 		return LLMRuntimeConfig{Temperature: 0.7, MaxOutputTokens: 1024}
@@ -98,8 +97,8 @@ func NewFallbackTTS(providers ...TTS) *FallbackTTS {
 	return f
 }
 
-// TTSConfig returns the primary provider's config (voice only) with the remaining
-// providers attached as an ordered fallback chain for the runtime.
+// TTSConfig returns the primary provider's config with the remaining providers
+// attached as an ordered fallback chain.
 func (f *FallbackTTS) TTSConfig() TTSRuntimeConfig {
 	if len(f.Providers) == 0 {
 		return TTSRuntimeConfig{}

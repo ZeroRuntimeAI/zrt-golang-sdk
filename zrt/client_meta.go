@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	// protoVersion is sent both in the x-zrt-proto-version gRPC header and in the
-	// structured VersionInfo.ProtoVersion field.
+	// protoVersion is sent in the x-zrt-proto-version header and VersionInfo.ProtoVersion.
 	protoVersion = "1"
 	// minimumRuntimeVersion is the lowest runtime version this SDK supports.
 	minimumRuntimeVersion = "0.0.1"
@@ -26,8 +25,7 @@ func sdkVersion() string {
 	return "0.0.0"
 }
 
-// clientVersionInfo is the single source of truth for the version info sent to
-// the runtime in session config and agent registration.
+// clientVersionInfo returns the version info sent in session config and registration.
 func clientVersionInfo() *pb.VersionInfo {
 	return &pb.VersionInfo{
 		SdkVersion:            sdkVersion(),
@@ -72,9 +70,8 @@ func staticHeaderPairs() []string {
 	return staticHeaders
 }
 
-// osRelease reports an OS release string for the device-os header. There is no
-// portable way to obtain it, so the Go runtime version is used (the runtime
-// treats this header as informational).
+// osRelease reports an OS release string for the device-os header. No portable
+// source exists, so the Go runtime version is used (header is informational).
 func osRelease() string {
 	return strings.TrimPrefix(runtime.Version(), "go")
 }

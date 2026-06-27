@@ -42,8 +42,7 @@ func DefaultInterruptConfig() *InterruptConfig {
 	}
 }
 
-// normalize derives the fade duration in milliseconds from the seconds value
-// when only the latter is set.
+// normalize derives the millisecond fade duration from the seconds value.
 func (ic *InterruptConfig) normalize() {
 	if ic.InterruptFadeDuration > 0 && ic.InterruptFadeDurationMS == 0 {
 		ic.InterruptFadeDurationMS = int(ic.InterruptFadeDuration * 1000)

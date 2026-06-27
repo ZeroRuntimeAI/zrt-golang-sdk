@@ -2,29 +2,102 @@
 package turn_detector
 
 import (
+	"log"
 	"strings"
 
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// TurnDetector is the Namo turn detector (provider "namo").
-type TurnDetector struct {
-	zrt.BaseEOU
+// inferenceModels maps each hosted TurnDetector model to its model identifier.
+// A model absent from this map is the on-device "namo" detector.
+var inferenceModels = map[string]string{
+	ModelNamoInference: "roberta",
+	ModelEchoSmall:     "echo_small",
+	ModelEchoLarge:     "echo_large",
 }
 
-// NewTurnDetector builds a TurnDetector. threshold defaults to 0.7 when 0.
-func NewTurnDetector(threshold float64) *TurnDetector {
+// TurnDetector is the end-of-turn detector — it decides when the caller has
+// finished speaking. A single type selected by TurnDetectorOptions.Model:
+// "namo" (the default), "namo-inference", "echo-small", or "echo-large". Which
+// extra options apply depends on the model (see TurnDetectorOptions).
+type TurnDetector struct {
+	zrt.BaseEOU
+	model       string
+	modelID     string
+	host        string
+	authToken   string
+	baseURL     string
+	isInference bool
+}
+
+// TurnDetectorOptions configures a TurnDetector. The zero value selects the
+// default "namo" detector at threshold 0.7.
+type TurnDetectorOptions struct {
+	// Model selects the detector: "namo" (the default), "namo-inference",
+	// "echo-small", or "echo-large". Empty is treated as "namo".
+	Model TurnDetectorModel
+	// Threshold is the end-of-turn probability cutoff, 0.0–1.0. Applies to every
+	// model. Defaults to 0.7 when 0.
+	Threshold float64
+	// Language is a BCP-47 language hint. Only used by the "namo" model.
+	Language string
+	// Host is the hosted-inference service address. Hosted models only.
+	Host string
+	// AuthToken authenticates with the hosted-inference service. Hosted models
+	// only.
+	AuthToken string
+	// BaseURL is the hosted-inference service base URL. Hosted models only.
+	BaseURL string
+}
+
+// NewTurnDetector builds a TurnDetector from opts. A zero-value
+// TurnDetectorOptions yields the default "namo" detector at threshold 0.7.
+// Options that do not apply to the selected model are ignored (with a warning).
+func NewTurnDetector(opts TurnDetectorOptions) *TurnDetector {
+	model := zrt.StrOr(opts.Model, ModelNamo)
+	threshold := opts.Threshold
 	if threshold == 0 {
 		threshold = 0.7
 	}
-	d := &TurnDetector{}
-	d.InitEOU("namo", threshold)
+
+	modelID, isInference := inferenceModels[model]
+	d := &TurnDetector{model: model, isInference: isInference, baseURL: opts.BaseURL}
+
+	if isInference && opts.Language != "" {
+		log.Printf("turn_detector: TurnDetector: Language is ignored for model %q — it only applies to model %q.", model, ModelNamo)
+	}
+	if !isInference && (opts.Host != "" || opts.AuthToken != "" || opts.BaseURL != "") {
+		log.Printf("turn_detector: TurnDetector: Host/AuthToken/BaseURL only apply to inference models (%q, %q, %q) — ignored for model %q.",
+			ModelNamoInference, ModelEchoSmall, ModelEchoLarge, model)
+	}
+
+	if isInference {
+		d.modelID = modelID
+		d.host = zrt.StrOr(opts.Host, defaultNamoHost())
+		d.authToken = opts.AuthToken
+		d.InitEOU("namo_v2", threshold)
+	} else {
+		d.modelID = strings.ToLower(opts.Language)
+		d.InitEOU("namo", threshold)
+	}
 	return d
 }
 
+// Model returns the selected model name.
+func (d *TurnDetector) Model() string { return d.model }
+
 // TurnConfig implements zrt.EOU.
 func (d *TurnDetector) TurnConfig() zrt.TurnRuntimeConfig {
-	return zrt.TurnRuntimeConfig{Threshold: float32(d.Threshold()), HasThreshold: true}
+	cfg := zrt.TurnRuntimeConfig{
+		Threshold:    float32(d.Threshold()),
+		HasThreshold: true,
+		ModelID:      d.modelID,
+	}
+	if d.isInference {
+		cfg.Host = d.host
+		cfg.AuthToken = d.authToken
+	}
+	return cfg
 }
 
 // TurnDetectorV2 is the TurnSense v2 detector.

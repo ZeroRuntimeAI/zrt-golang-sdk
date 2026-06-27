@@ -50,15 +50,13 @@ func maxConcurrentSessions(capacity int) int {
 	return max(4, runtime.NumCPU()*8)
 }
 
-// Serve registers an agent with the ZRT registry over a WebSocket connection and
-// listens for incoming sessions. It does not start a session on its own — call
-// Invoke to start one. Serve blocks until the worker shuts down (Ctrl+C / SIGTERM).
+// Serve registers an agent with the ZRT registry and listens for incoming sessions.
+// It does not start a session on its own — call Invoke to start one. Serve blocks
+// until the worker shuts down (Ctrl+C / SIGTERM).
 //
-// One agent instance is shared across all concurrent sessions. That is safe because the
-// session is resolved per-call through the SessionBus (see session_bus.go): agent code
-// reads its own session via a.Session(ctx) / zrt.SessionFromContext(ctx), not a shared
-// field. Capacity (concurrent sessions) defaults to a CPU-based value; tune it with
-// opts.Capacity or ZRT_MAX_CONCURRENT_SESSIONS.
+// One agent instance is shared across all concurrent sessions; each call resolves
+// its own session via the SessionBus rather than a shared field. Capacity defaults
+// to a CPU-based value; tune it with opts.Capacity or ZRT_MAX_CONCURRENT_SESSIONS.
 func Serve(agent Agent, opts ServeOptions) error {
 	if agent == nil {
 		return fmt.Errorf("zrt.Serve: agent is required")
@@ -70,8 +68,7 @@ func Serve(agent Agent, opts ServeOptions) error {
 			"or set AgentOptions.Pipeline when building the embedded BaseAgent")
 	}
 
-	// The registration handle is the agent's id (set via AgentOptions.AgentID),
-	// overridable per call via opts.AgentID.
+	// Registration handle: the agent's id, overridable via opts.AgentID.
 	registeredID := cmp.Or(opts.AgentID, agent.base().id)
 	if registeredID == "" {
 		return fmt.Errorf("zrt.Serve requires the agent to have an id: " +
@@ -80,8 +77,6 @@ func Serve(agent Agent, opts ServeOptions) error {
 	displayName := cmp.Or(agent.base().name, registeredID)
 
 	entrypoint := func(ctx context.Context, jobCtx *JobContext) error {
-		// One shared agent/pipeline; each session registers in the SessionBus so concurrent
-		// callers resolve their own session from context rather than a shared field.
 		session := NewAgentSession(agent, pipeline, AgentSessionOptions{})
 		return session.Start(ctx, jobCtx, StartOptions{
 			WaitForParticipant: true,

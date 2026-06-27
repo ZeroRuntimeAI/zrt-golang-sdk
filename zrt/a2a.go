@@ -5,16 +5,13 @@ import (
 	"encoding/json"
 )
 
-// a2aTopicPrefix is the pub/sub topic prefix for A2A messages: a message to agent
-// X is published to topic "a2a/X".
+// a2aTopicPrefix is the pub/sub topic prefix for A2A messages.
 const a2aTopicPrefix = "a2a/"
 
 // SendA2A sends an agent-to-agent (A2A) message to targetAgentID.
 //
-// A2A is transported over pub/sub (topic "a2a/<targetAgentID>"), NOT a runtime
-// RPC: the message is published as a JSON envelope
-// {source_agent_id, message_json, correlation_id}. The receiving agent must have
-// called SubscribeA2A to receive it (surfaced as an "a2a_message" event).
+// The receiving agent must have called SubscribeA2A; the message is delivered
+// there as an "a2a_message" event.
 func (s *AgentSession) SendA2A(ctx context.Context, targetAgentID, messageJSON, correlationID string) error {
 	if targetAgentID == "" {
 		logger.Warnf("AgentSession.SendA2A: targetAgentID is required — ignored")
@@ -38,13 +35,13 @@ func (s *AgentSession) SendA2A(ctx context.Context, targetAgentID, messageJSON, 
 	})
 }
 
-// SubscribeA2A starts receiving A2A messages addressed to this agent (topic
-// "a2a/<agent id>"). Each inbound envelope is re-emitted as an "a2a_message" event
-// carrying {source_agent_id, message_json, correlation_id}.
+// SubscribeA2A starts receiving A2A messages addressed to this agent. Each
+// inbound message is emitted as an "a2a_message" event carrying
+// {source_agent_id, message_json, correlation_id}.
 //
-// Safe to call more than once: a prior subscription's handler is removed first, so
-// re-subscribing (e.g. after a handoff re-points to the new agent's id) does not stack
-// duplicate listeners or leave the session bound to a stale topic.
+// Safe to call more than once: a prior subscription is replaced, so
+// re-subscribing (for example after a handoff) does not stack duplicate
+// listeners.
 func (s *AgentSession) SubscribeA2A(ctx context.Context) error {
 	own := ""
 	if a := s.ActiveAgent(); a != nil {
@@ -57,8 +54,7 @@ func (s *AgentSession) SubscribeA2A(ctx context.Context) error {
 	newTopic := a2aTopicPrefix + own
 
 	s.mu.Lock()
-	// Idempotent for an unchanged topic: re-sending the subscribe would register a second
-	// subscription on the runtime (which does not dedupe by topic), causing duplicate delivery.
+	// Already subscribed to this topic: nothing to do.
 	if s.a2aSubscribed && s.a2aTopic == newTopic && s.a2aUnsub != nil {
 		s.mu.Unlock()
 		return nil
@@ -67,7 +63,7 @@ func (s *AgentSession) SubscribeA2A(ctx context.Context) error {
 	s.a2aUnsub = nil
 	s.mu.Unlock()
 
-	// Drop any prior A2A handler before re-subscribing to a new topic (e.g. handoff).
+	// Drop any prior A2A handler before re-subscribing to a new topic.
 	if oldUnsub != nil {
 		oldUnsub()
 	}
