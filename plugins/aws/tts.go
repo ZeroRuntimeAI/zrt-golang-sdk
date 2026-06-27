@@ -3,7 +3,7 @@ package aws
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the AWS Polly text-to-speech descriptor.
+// TTS is the AWS Polly text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
 	Voice  string
@@ -11,15 +11,19 @@ type TTS struct {
 	Engine string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures an AWS Polly TTS instance.
 type TTSOptions struct {
+	// AWSAccessKeyID overrides the AWS_ACCESS_KEY_ID environment variable.
 	AWSAccessKeyID string
-	Region         string // default "us-east-1"
-	Voice          string // default "Joanna"
-	Engine         string // default "neural"
+	// Region is the AWS region. Defaults to "us-east-1".
+	Region string
+	// Voice is the Polly voice. Defaults to "Joanna".
+	Voice string
+	// Engine is the Polly synthesis engine. Defaults to "neural".
+	Engine string
 }
 
-// NewTTS builds a TTS.
+// NewTTS returns an AWS Polly TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{
 		Voice:  zrt.StrOr(opts.Voice, "Joanna"),

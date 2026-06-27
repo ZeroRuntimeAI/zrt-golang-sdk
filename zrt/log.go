@@ -23,8 +23,8 @@ const (
 
 // Logger is the SDK logging interface.
 //
-// Prefer wiring a standard library *slog.Logger via WorkerOptions.Logger; this
-// interface exists for back-compat and for adapting non-slog loggers.
+// Prefer wiring a standard library *slog.Logger via WorkerOptions.Logger. Use
+// this interface to adapt a non-slog logger.
 type Logger interface {
 	Debugf(format string, args ...any)
 	Infof(format string, args ...any)
@@ -32,8 +32,7 @@ type Logger interface {
 	Errorf(format string, args ...any)
 }
 
-// slogLogger adapts a *slog.Logger to the SDK Logger interface. Level filtering
-// is delegated to the slog handler; the SDK's own LogLevel does not apply.
+// slogLogger adapts a *slog.Logger to the SDK Logger interface.
 type slogLogger struct{ l *slog.Logger }
 
 // NewSlogLogger adapts a standard library *slog.Logger to the SDK Logger

@@ -3,7 +3,7 @@ package silero
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// VAD is the Silero VAD descriptor.
+// VAD is a Silero voice-activity-detection engine.
 type VAD struct {
 	zrt.BaseVAD
 	Threshold          float64

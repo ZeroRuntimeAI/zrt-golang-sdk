@@ -10,7 +10,7 @@ func defaultNamoHost() string {
 	return zrt.EnvOr("ZRT_INFERENCE_GATEWAY", "inference-gateway.videosdk.live:50053")
 }
 
-// NamoTurnDetectorV2 is the Namo v2 turn detector.
+// NamoTurnDetectorV2 is a Namo v2 end-of-utterance turn detector.
 type NamoTurnDetectorV2 struct {
 	zrt.BaseEOU
 	ModelID   string
@@ -18,15 +18,19 @@ type NamoTurnDetectorV2 struct {
 	AuthToken string
 }
 
-// NamoTurnDetectorV2Options configures NamoTurnDetectorV2.
+// NamoTurnDetectorV2Options configures a NamoTurnDetectorV2.
 type NamoTurnDetectorV2Options struct {
-	Threshold float64 // default 0.7
-	ModelID   string  // default "roberta"
-	Host      string  // default inference gateway
+	// Threshold is the end-of-utterance confidence cutoff. Defaults to 0.7.
+	Threshold float64
+	// ModelID selects the model. Defaults to "roberta".
+	ModelID string
+	// Host is the service endpoint. Defaults to the ZRT_INFERENCE_GATEWAY value.
+	Host string
+	// AuthToken authenticates requests to Host.
 	AuthToken string
 }
 
-// NewNamoTurnDetectorV2 builds a NamoTurnDetectorV2.
+// NewNamoTurnDetectorV2 creates a NamoTurnDetectorV2 from the given options.
 func NewNamoTurnDetectorV2(opts NamoTurnDetectorV2Options) (*NamoTurnDetectorV2, error) {
 	threshold := opts.Threshold
 	if threshold == 0 {

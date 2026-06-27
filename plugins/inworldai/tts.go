@@ -3,22 +3,24 @@ package inworldai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Inworld AI text-to-speech descriptor.
+// TTS is the Inworld AI text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 	Model string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures an Inworld AI TTS instance.
 type TTSOptions struct {
 	// APIKey overrides the INWORLDAI_API_KEY environment variable.
-	APIKey  string
-	VoiceID string // default "Hades"
-	ModelID string // default "inworld-tts-1"
+	APIKey string
+	// VoiceID is the Inworld AI voice. Defaults to "Hades".
+	VoiceID string
+	// ModelID is the Inworld AI model. Defaults to "inworld-tts-1".
+	ModelID string
 }
 
-// NewTTS builds a TTS.
+// NewTTS returns an Inworld AI TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{Voice: zrt.StrOr(opts.VoiceID, "Hades"), Model: zrt.StrOr(opts.ModelID, "inworld-tts-1")}
 	t.InitTTS("inworldai", zrt.APIKeyOr(opts.APIKey, "INWORLDAI_API_KEY"), 24000)

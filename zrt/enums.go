@@ -88,6 +88,7 @@ type ChatRole string
 
 const (
 	ChatRoleSystem    ChatRole = "system"
+	ChatRoleDeveloper ChatRole = "developer"
 	ChatRoleUser      ChatRole = "user"
 	ChatRoleAssistant ChatRole = "assistant"
 )

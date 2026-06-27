@@ -3,7 +3,7 @@ package openai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// LLM is the OpenAI LLM descriptor.
+// LLM is an OpenAI language model configured for use as an agent's LLM.
 type LLM struct {
 	zrt.BaseLLM
 	Model             string
@@ -18,23 +18,34 @@ type LLM struct {
 	ParallelToolCalls *bool
 }
 
-// LLMOptions configures LLM.
+// LLMOptions configures an OpenAI LLM.
 type LLMOptions struct {
-	// APIKey overrides the OPENAI_API_KEY environment variable.
-	APIKey            string
-	Model             string   // default "gpt-4o"
-	Temperature       *float64 // nil uses the default (0.7).
-	MaxOutputTokens   int      // default 1024
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	ResponseFormat    string
-	ToolChoice        string
+	// APIKey is the OpenAI API key. If empty, the OPENAI_API_KEY environment
+	// variable is used.
+	APIKey string
+	// Model is the OpenAI model to use. Defaults to "gpt-4o".
+	Model string
+	// Temperature controls randomness. nil uses the default (0.7).
+	Temperature *float64
+	// MaxOutputTokens caps the response length. Defaults to 1024.
+	MaxOutputTokens int
+	// TopP is the nucleus-sampling probability mass.
+	TopP *float64
+	// FrequencyPenalty penalizes tokens in proportion to their frequency.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens that have already appeared.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic for a given prompt.
+	Seed *int
+	// ResponseFormat requests a specific output format, such as "json_object".
+	ResponseFormat string
+	// ToolChoice controls how the model selects tools (for example "auto" or "none").
+	ToolChoice string
+	// ParallelToolCalls allows the model to invoke multiple tools in one turn.
 	ParallelToolCalls *bool
 }
 
-// NewLLM builds an LLM.
+// NewLLM creates an OpenAI LLM from opts, applying defaults for any unset fields.
 func NewLLM(opts LLMOptions) *LLM {
 	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
@@ -53,12 +64,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
-// LLMConfig implements zrt.LLM.
+// LLMConfig implements zrt.LLM and reports the model configuration.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "openai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
-// Knobs implements the credential knob source.
+// Knobs returns the provider-specific tuning options that are set.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{}
 	if l.TopP != nil {

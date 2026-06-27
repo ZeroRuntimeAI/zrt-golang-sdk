@@ -105,7 +105,14 @@ That's it — speech in → your agent → speech out, in real time.
 
 ## Examples
 
-Full, runnable examples live in a dedicated repo:
+Runnable examples live in [`examples/`](examples) — quickstart, a tool with a
+filler line (`booking`), provider fallback chains (`fallback`), multi-agent
+handoff (`handoff`), the ChatContext API + runtime context management
+(`chat_context`, `summary_llm`), and two background-audio walkthroughs
+(`background_audio`, `background_audio_hold_music`). Run any of them with
+`go run ./examples/<name>`. See [`examples/README.md`](examples/README.md).
+
+More live in a dedicated repo:
 **[ZeroRuntimeAI/zrt-golang-sdk-examples](https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples)**
 
 ## How it works
@@ -187,17 +194,35 @@ pipeline.OnEOUDetected(func(prob float64, waitMS uint32, text string) { /* ... *
 pipeline.OnFirstAudioByte(func(ttfbMS, byteCount uint32) { /* ... */ })
 ```
 
-## Registered-agent mode
+## Serve & invoke
 
-For multi-session workers, set `Register: true` on `Options`. The SDK registers
-once and the runtime dispatches sessions to your worker over a single stream:
+For multi-session workers, give your agent an `AgentID` and a pipeline, then
+`Serve` it. `Serve` registers the agent with the ZRT registry over a WebSocket
+connection and listens — it does **not** start a session on its own. Call `Invoke`
+to start one (from anywhere: a script, a CLI, a web handler). Scale out by running
+more `Serve` workers.
 
 ```go
-opts := zrt.NewWorkerOptions()
-opts.Register = true
-opts.AgentID = "my-agent"
-opts.MaxProcesses = 10
-zrt.NewWorkerJob(entrypoint, jobctx, opts).Start()
+// The agent embeds BaseAgent built with AgentOptions{AgentID: "my-agent", Pipeline: pipeline}.
+agent := NewAssistant(pipeline)
+
+// Serve registers and blocks. OnReady fires once registration is confirmed
+// call Invoke to kick off a session for local testing.
+zrt.Serve(agent, zrt.ServeOptions{
+    OnReady: func() {
+        res, err := zrt.Invoke("my-agent", zrt.InvokeOptions{})
+        if err == nil && res.PlaygroundURL != "" {
+            fmt.Println("Join the playground:", res.PlaygroundURL)
+        }
+    },
+})
+```
+
+Or invoke from a separate process once the worker is serving:
+
+```go
+res, _ := zrt.Invoke("my-agent", zrt.InvokeOptions{Room: &zrt.Room{RoomID: "existing-room"}})
+fmt.Println("session:", res.SessionID, "worker:", res.WorkerID)
 ```
 
 ## Environment variables

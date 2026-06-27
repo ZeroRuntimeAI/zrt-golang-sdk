@@ -15,7 +15,7 @@ import (
 type assistant struct{ zrt.BaseAgent }
 
 func (a *assistant) OnEnter(ctx context.Context) error {
-	_, err := a.Session().Say(ctx, "Hi! How can I help?")
+	_, err := a.Session(ctx).Say(ctx, "Hi! How can I help?")
 	return err
 }
 func (a *assistant) OnExit(ctx context.Context) error { return nil }
@@ -71,4 +71,33 @@ func ExampleFloat64() {
 	threshold := zrt.Float64(0.4)
 	fmt.Println(*threshold)
 	// Output: 0.4
+}
+
+// A tool whose result takes a moment to compute can speak a short "filler" line
+// to cover the latency. WithFiller attaches the line and an optional grace period
+// (ms): the filler is spoken only if the tool is still running after the grace,
+// so a fast tool stays silent.
+func ExampleWithFiller() {
+	checkAvailability := zrt.NewFunctionTool(
+		"check_availability",
+		"Check open appointment slots for a given day.",
+		map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"day": map[string]any{"type": "string", "description": "The day to check."},
+			},
+			"required": []any{"day"},
+		},
+		func(ctx context.Context, args map[string]any) (any, error) {
+			day, _ := args["day"].(string)
+			// ...a slow availability lookup; the filler covers this latency...
+			return "We have 10:00 AM and 2:30 PM open on " + day, nil
+		},
+		// Speak the filler only if the lookup runs longer than 500ms.
+		zrt.WithFiller("Let me check the schedule...", 500),
+	)
+
+	info := checkAvailability.ToolInfo()
+	fmt.Printf("%s filler=%q grace=%dms\n", info.Name, info.Filler, info.FillerGracePeriod)
+	// Output: check_availability filler="Let me check the schedule..." grace=500ms
 }

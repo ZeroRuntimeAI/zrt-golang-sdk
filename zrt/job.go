@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -68,17 +69,19 @@ type ObservabilityOptions struct {
 }
 
 // PubSubPublishConfig configures publishing a message on a room pubsub topic.
+// Persistence is requested through Options (e.g. {"persist": true}).
 type PubSubPublishConfig struct {
-	Topic    string // e.g. "CHAT", "AGENT_EVENT"
-	Message  any
-	Mode     string // "sendOnly" (default) or "sendAndPersist"
-	SendOnly bool
-	Payload  map[string]any
+	Topic   string // e.g. "CHAT", "AGENT_EVENT"
+	Message string
+	// Options are publish options forwarded to the room (e.g. {"persist": true}).
+	Options map[string]any
+	// Payload is an optional structured payload sent alongside Message.
+	Payload any
 }
 
-// NewPubSubPublishConfig returns a config with default send-only mode applied.
+// NewPubSubPublishConfig returns a config for the given topic.
 func NewPubSubPublishConfig(topic string) *PubSubPublishConfig {
-	return &PubSubPublishConfig{Topic: topic, Message: "", Mode: "sendOnly"}
+	return &PubSubPublishConfig{Topic: topic, Message: ""}
 }
 
 // RoomOptions configures the room/session the agent joins.
@@ -112,10 +115,6 @@ type RoomOptions struct {
 
 // NewRoomOptions returns RoomOptions with the default values.
 func NewRoomOptions() *RoomOptions {
-	signaling := os.Getenv("ZRT_SIGNALING_URL")
-	if signaling == "" {
-		signaling = "api.videosdk.live"
-	}
 	return &RoomOptions{
 		Name:                        "Agent",
 		Playground:                  true,
@@ -123,7 +122,7 @@ func NewRoomOptions() *RoomOptions {
 		AutoEndSession:              true,
 		SessionTimeoutSeconds:       60,
 		NoParticipantTimeoutSeconds: 180,
-		SignalingBaseURL:            signaling,
+		SignalingBaseURL:            cmp.Or(os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live"),
 		SendLogsToDashboard:         true,
 		DashboardLogLevel:           "INFO",
 	}
@@ -145,6 +144,11 @@ type WorkerOptions struct {
 	Port              int
 	LogLevel          string
 
+	// OnReady, when set, is called once registration is confirmed (registered/serve
+	// mode). It may block / call zrt.Invoke; it runs on its own goroutine and panics
+	// are recovered and logged.
+	OnReady func()
+
 	// Logger routes SDK logs through a standard library *slog.Logger. When set,
 	// it takes precedence over LogLevel (level filtering is handled by the slog
 	// handler). When nil, the SDK uses its built-in logger at LogLevel.
@@ -153,10 +157,6 @@ type WorkerOptions struct {
 
 // NewWorkerOptions returns WorkerOptions with the default values.
 func NewWorkerOptions() *WorkerOptions {
-	signaling := os.Getenv("ZRT_SIGNALING_URL")
-	if signaling == "" {
-		signaling = "api.videosdk.live"
-	}
 	return &WorkerOptions{
 		NumIdleProcesses:  1,
 		InitializeTimeout: 10 * time.Second,
@@ -165,14 +165,14 @@ func NewWorkerOptions() *WorkerOptions {
 		AgentID:           "ZeroRuntimeAgent",
 		MaxRetry:          16,
 		LoadThreshold:     0.75,
-		SignalingBaseURL:  signaling,
+		SignalingBaseURL:  cmp.Or(os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live"),
 		Host:              "0.0.0.0",
 		Port:              8081,
 		LogLevel:          "INFO",
 	}
 }
 
-// JobContext carries per-job configuration and runtime wiring.
+// JobContext carries per-job configuration and session state.
 type JobContext struct {
 	RoomOptions *RoomOptions
 	Metadata    map[string]any
@@ -182,15 +182,6 @@ type JobContext struct {
 	shuttingDown      bool
 	activeSession     *AgentSession
 	workerJob         *WorkerJob
-
-	registeredMode      bool
-	registeredSessionID string
-	registeredRegistry  *agentRegistry
-
-	registrationProbe bool
-	capturedAgent     Agent
-	capturedPipeline  *Pipeline
-	capturedRecording *RecordingConfig
 }
 
 // NewJobContext creates a JobContext.
@@ -280,13 +271,7 @@ func (j *JobContext) GetRoomID() (string, error) {
 }
 
 func createRoomStatic(authToken, signalingBaseURL string) (string, error) {
-	base := signalingBaseURL
-	if base == "" {
-		base = os.Getenv("ZRT_SIGNALING_URL")
-	}
-	if base == "" {
-		base = "api.videosdk.live"
-	}
+	base := cmp.Or(signalingBaseURL, os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live")
 	base = strings.TrimRight(strings.TrimSpace(base), "/")
 	base = strings.TrimPrefix(strings.TrimPrefix(base, "https://"), "http://")
 	url := "https://" + base + "/v2/rooms"
@@ -313,16 +298,13 @@ func createRoomStatic(authToken, signalingBaseURL string) (string, error) {
 	return roomID, nil
 }
 
-// errRegistrationProbeComplete aborts the probe entrypoint after capture.
-var errRegistrationProbeComplete = errors.New("zrt: registration probe complete")
-
 type runnerInfo struct {
 	session   *AgentSession
 	roomOpts  *RoomOptions
 	sessionID string
 }
 
-// WorkerJob runs an agent entrypoint and connects it to the runtime.
+// WorkerJob runs an agent entrypoint for each incoming job.
 type WorkerJob struct {
 	entrypoint    EntrypointFunc
 	jobctxFactory func() *JobContext
@@ -411,130 +393,54 @@ func (w *WorkerJob) run() error {
 	return nil
 }
 
+// runRegistered registers the agent with the ZRT registry and serves dispatched
+// sessions, running the entrypoint for each job. It blocks until shutdown.
 func (w *WorkerJob) runRegistered() error {
-	runtimeAddr := os.Getenv("ZRT_RUNTIME_ADDRESS")
-	if runtimeAddr == "" {
-		runtimeAddr = "localhost:50051"
-	}
-	// Registration probe: run the entrypoint to capture agent + pipeline.
-	probeCtx := w.buildProbeContext()
-	probeCtx.registrationProbe = true
-	probeRoot, probeCancel := context.WithCancel(context.Background())
-	err := w.entrypoint(probeRoot, probeCtx)
-	probeCancel()
-	if err != nil && !errors.Is(err, errRegistrationProbeComplete) {
-		logger.Errorf("Registration probe failed: %v", err)
-		return err
-	}
-	agentTemplate := probeCtx.capturedAgent
-	pipeline := probeCtx.capturedPipeline
-	defaultRecording := probeCtx.capturedRecording
-	if agentTemplate == nil || pipeline == nil {
-		return fmt.Errorf("register=true requires the entrypoint to construct an AgentSession (with agent + pipeline) so registration can capture the config")
-	}
 	resolvedToken, _ := ResolveAuthToken(w.options.AuthToken)
-
-	registry := newAgentRegistry(runtimeAddr, w.entrypoint, w.jobctxFactory, agentTemplate, pipeline, orDefault(w.options.AgentID, "ZeroRuntimeAgent"), maxInt(1, w.options.MaxProcesses), map[string]string{}, resolvedToken, defaultRecording, w.options.InitializeTimeout)
-
-	var legacy *legacyBackendRegistration
-	if resolvedToken != "" && w.options.SignalingBaseURL != "" {
-		base := w.options.SignalingBaseURL
-		if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
-			base = "https://" + base
-		}
-		legacy = newLegacyBackendRegistration(resolvedToken, orDefault(w.options.AgentID, "ZeroRuntimeAgent"), base, w.options.LoadThreshold, maxInt(1, w.options.MaxProcesses), w.entrypoint, w.jobctxFactory)
-		w.mu.Lock()
-		w.legacyReg = legacy
-		w.mu.Unlock()
+	if resolvedToken == "" || w.options.SignalingBaseURL == "" {
+		return fmt.Errorf("zrt.Serve registers over the WebSocket registry and needs auth " +
+			"(ZRT_AUTH_TOKEN / ZRT_API_KEY + ZRT_SECRET_KEY) plus a registry base URL " +
+			"(SignalingBaseURL / ZRT_SIGNALING_URL)")
 	}
+	base := w.options.SignalingBaseURL
+	if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
+		base = "https://" + base
+	}
+	agentID := cmp.Or(w.options.AgentID, "ZeroRuntimeAgent")
+	legacy := newLegacyBackendRegistration(resolvedToken, agentID, base, w.options.LoadThreshold, max(1, w.options.MaxProcesses), w.entrypoint, w.jobctxFactory)
+	w.mu.Lock()
+	w.legacyReg = legacy
+	w.mu.Unlock()
 
 	shutdownCh := make(chan struct{})
 	var shutdownOnce sync.Once
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		count := 0
-		for range sigCh {
-			count++
-			if count == 1 {
-				logger.Infof("Received shutdown signal — beginning drain (press Ctrl+C again to force-exit)")
-				go registry.beginDrain("sigterm")
-				shutdownOnce.Do(func() { close(shutdownCh) })
-			} else {
-				logger.Warnf("Received shutdown signal again — forcing immediate exit")
-				shutdownOnce.Do(func() { close(shutdownCh) })
-				return
-			}
-		}
+		<-sigCh
+		logger.Infof("Received shutdown signal — stopping registration")
+		shutdownOnce.Do(func() { close(shutdownCh) })
 	}()
 
-	if legacy != nil {
-		legacy.start()
-	}
-
-	supervisorDone := make(chan struct{})
-	go func() {
-		defer close(supervisorDone)
-		attempt := 0
-		for {
-			select {
-			case <-shutdownCh:
-				return
-			default:
-			}
-			runCtx, runCancel := context.WithCancel(context.Background())
+	if legacy.start() {
+		logger.Infof("Agent registered with registry: agent_id=%s worker_id=%s", agentID, legacy.workerID)
+		if w.options.OnReady != nil {
+			// OnReady may call zrt.Invoke; run it off the registration goroutine.
 			go func() {
-				<-shutdownCh
-				runCancel()
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Errorf("OnReady callback panicked: %v", r)
+					}
+				}()
+				w.options.OnReady()
 			}()
-			err := registry.run(runCtx)
-			runCancel()
-			if err != nil {
-				logger.Errorf("Registry stream error: %v", err)
-			}
-			select {
-			case <-shutdownCh:
-				return
-			default:
-			}
-			attempt++
-			delay := time.Duration(minInt(attempt*2, 10)) * time.Second
-			logger.Warnf("Runtime gRPC stream ended — reconnecting in %.1fs (attempt %d).", delay.Seconds(), attempt)
-			select {
-			case <-time.After(delay):
-			case <-shutdownCh:
-				return
-			}
 		}
-	}()
-
-	if registry.waitForRegistered(w.options.InitializeTimeout) {
-		logger.Infof("Registration confirmed within initialize_timeout=%.1fs", w.options.InitializeTimeout.Seconds())
 	} else {
-		logger.Warnf("Runtime did not confirm registration within initialize_timeout=%.1fs — continuing to wait in the background.", w.options.InitializeTimeout.Seconds())
+		logger.Warnf("Registry did not confirm registration on first attempt — retrying in the background.")
 	}
 
 	<-shutdownCh
-	<-supervisorDone
-	if legacy != nil {
-		legacy.stop()
-	}
-	registry.stop()
+	legacy.stop()
 	logger.Infof("Registered agent shutdown complete.")
 	return nil
-}
-
-func (w *WorkerJob) buildProbeContext() *JobContext {
-	ctx := w.buildJobContext()
-	if len(ctx.Metadata) == 0 {
-		ctx.Metadata = map[string]any{"callId": "__probe__", "sipCallTo": "+0000000000", "sipCallFrom": "+0000000000", "callType": "outbound", "webhook_url": ""}
-	}
-	return ctx
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

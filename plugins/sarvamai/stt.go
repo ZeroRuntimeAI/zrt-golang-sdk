@@ -3,7 +3,7 @@ package sarvamai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// STT is the Sarvam AI speech-to-text descriptor.
+// STT is a Sarvam AI speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
 	Model              string
@@ -17,22 +17,31 @@ type STT struct {
 	Prompt             string
 }
 
-// STTOptions configures STT.
+// STTOptions configures a Sarvam AI STT.
 type STTOptions struct {
 	// APIKey overrides the SARVAM_API_KEY environment variable.
-	APIKey             string
-	Model              string // default "saaras:v3"
-	Language           string // default "en-IN"
-	InputSampleRate    int    // default 48000
-	OutputSampleRate   int    // default 16000
-	Mode               string
+	APIKey string
+	// Model selects the recognition model. Defaults to "saaras:v3".
+	Model string
+	// Language is the recognition language. Defaults to "en-IN".
+	Language string
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// OutputSampleRate is the output audio sample rate in Hz. Defaults to 16000.
+	OutputSampleRate int
+	// Mode selects the transcription mode.
+	Mode string
+	// HighVADSensitivity raises voice-activity detection sensitivity.
 	HighVADSensitivity *bool
-	FlushSignals       *bool
-	Translation        bool
-	Prompt             string
+	// FlushSignals emits flush markers in the transcript stream.
+	FlushSignals *bool
+	// Translation translates recognized speech into the target language.
+	Translation bool
+	// Prompt biases recognition toward the given context.
+	Prompt string
 }
 
-// NewSTT builds an STT.
+// NewSTT returns a Sarvam AI STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	s := &STT{
 		Model:              zrt.StrOr(opts.Model, "saaras:v3"),
@@ -49,12 +58,12 @@ func NewSTT(opts STTOptions) *STT {
 	return s
 }
 
-// STTConfig implements zrt.STT.
+// STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "sarvamai", Model: s.Model, Language: s.Language}
 }
 
-// Knobs implements the credential knob source (general + STT knobs).
+// Knobs returns the Sarvam AI-specific options as a key/value map.
 func (s *STT) Knobs() map[string]any {
 	k := map[string]any{
 		"model":              s.Model,

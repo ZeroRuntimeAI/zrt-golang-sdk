@@ -7,7 +7,7 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// LLM is the Google Gemini LLM descriptor.
+// LLM is a Google Gemini language model configured for use as an agent's LLM.
 type LLM struct {
 	zrt.BaseLLM
 	Model            string
@@ -28,30 +28,50 @@ type LLM struct {
 	vertexServiceAccountPath string
 }
 
-// LLMOptions configures LLM.
+// LLMOptions configures a Google Gemini LLM.
 type LLMOptions struct {
-	// APIKey overrides the GOOGLE_API_KEY environment variable.
-	APIKey           string
-	Model            string   // default "gemini-2.5-flash-lite"
-	Temperature      *float64 // nil uses the default (0.7).
-	MaxOutputTokens  int      // default 8192
-	ThinkingBudget   *int     // default 0
-	IncludeThoughts  bool
-	SafetySettings   []zrt.SafetySetting
-	TopP             *float64
-	TopK             *int
-	PresencePenalty  *float64
+	// APIKey is the Google API key. If empty, the GOOGLE_API_KEY environment
+	// variable is used.
+	APIKey string
+	// Model is the Gemini model to use. Defaults to "gemini-2.5-flash-lite".
+	Model string
+	// Temperature controls randomness. nil uses the default (0.7).
+	Temperature *float64
+	// MaxOutputTokens caps the response length. Defaults to 8192.
+	MaxOutputTokens int
+	// ThinkingBudget is the token budget for the model's reasoning. Defaults to 0.
+	ThinkingBudget *int
+	// IncludeThoughts includes the model's reasoning in the response.
+	IncludeThoughts bool
+	// SafetySettings configures content-safety thresholds.
+	SafetySettings []zrt.SafetySetting
+	// TopP is the nucleus-sampling probability mass.
+	TopP *float64
+	// TopK limits sampling to the K most likely tokens.
+	TopK *int
+	// PresencePenalty penalizes tokens that have already appeared.
+	PresencePenalty *float64
+	// FrequencyPenalty penalizes tokens in proportion to their frequency.
 	FrequencyPenalty *float64
-	Seed             *int
+	// Seed makes sampling deterministic for a given prompt.
+	Seed *int
 
-	VertexAI           bool
-	ProjectID          string
-	Location           string // default "us-central1"
-	ServiceAccountJSON any    // string or map[string]any
+	// VertexAI routes requests through Vertex AI instead of the Gemini API.
+	VertexAI bool
+	// ProjectID is the Google Cloud project ID for Vertex AI.
+	ProjectID string
+	// Location is the Vertex AI region. Defaults to "us-central1".
+	Location string
+	// ServiceAccountJSON holds Vertex AI service-account credentials as either a
+	// JSON string or a map[string]any.
+	ServiceAccountJSON any
+	// ServiceAccountPath is the path to a Vertex AI service-account JSON file.
 	ServiceAccountPath string
 }
 
-// NewLLM builds an LLM.
+// NewLLM creates a Google Gemini LLM from opts, applying defaults for any unset
+// fields. When VertexAI is set, requests are routed through Vertex AI using the
+// supplied project, location, and service-account credentials.
 func NewLLM(opts LLMOptions) *LLM {
 	tb := opts.ThinkingBudget
 	if tb == nil {
@@ -91,12 +111,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
-// LLMConfig implements zrt.LLM.
+// LLMConfig implements zrt.LLM and reports the model configuration.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "gemini", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
-// Knobs implements the credential knob source.
+// Knobs returns the provider-specific tuning options that are set.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{"include_thoughts": l.IncludeThoughts}
 	if l.ThinkingBudget != nil {
@@ -120,7 +140,8 @@ func (l *LLM) Knobs() map[string]any {
 	return k
 }
 
-// GeminiLLMExtras implements zrt.GeminiExtrasProvider.
+// GeminiLLMExtras implements zrt.GeminiExtrasProvider and reports Gemini-specific
+// settings, including Vertex AI credentials when configured.
 func (l *LLM) GeminiLLMExtras() *zrt.GeminiLLMExtras {
 	e := &zrt.GeminiLLMExtras{
 		ThinkingBudget:  l.ThinkingBudget,

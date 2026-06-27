@@ -1,6 +1,7 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,9 +24,8 @@ var (
 	legacyStatusInterval       = 30 * time.Second
 	legacyReconnectMaxAttempts = 16
 	legacyReconnectMaxDelay    = 10 * time.Second
-	// legacyPongWait is how long the recv loop waits for any frame (or pong)
-	// before treating the connection as dead. It must exceed legacyStatusInterval
-	// (the ping cadence) so a single missed pong does not drop a live connection.
+	// legacyPongWait is the recv-loop read deadline before the connection is treated
+	// as dead. Must exceed legacyStatusInterval so one missed pong doesn't drop a live conn.
 	legacyPongWait = 60 * time.Second
 )
 
@@ -34,8 +34,7 @@ type legacyJobInfo struct {
 	cancel context.CancelFunc
 }
 
-// legacyBackendRegistration registers the worker over the legacy WebSocket
-// dispatch path.
+// legacyBackendRegistration registers the worker over the legacy WebSocket dispatch path.
 type legacyBackendRegistration struct {
 	authToken     string
 	agentID       string
@@ -60,9 +59,7 @@ type legacyBackendRegistration struct {
 }
 
 func newLegacyBackendRegistration(authToken, agentID, apiBaseURL string, loadThreshold float64, maxProcesses int, entrypoint EntrypointFunc, jobctxFactory func() *JobContext) *legacyBackendRegistration {
-	if agentID == "" {
-		agentID = "ZeroRuntimeAgent"
-	}
+	agentID = cmp.Or(agentID, "ZeroRuntimeAgent")
 	return &legacyBackendRegistration{
 		authToken:     authToken,
 		agentID:       agentID,
@@ -144,7 +141,7 @@ func (l *legacyBackendRegistration) supervisor() {
 			logger.Errorf("Legacy backend registration gave up after %d attempts (runtime gRPC registration unaffected)", legacyReconnectMaxAttempts)
 			return
 		}
-		delay := time.Duration(minInt(attempt*2, int(legacyReconnectMaxDelay.Seconds()))) * time.Second
+		delay := time.Duration(min(attempt*2, int(legacyReconnectMaxDelay.Seconds()))) * time.Second
 		select {
 		case <-time.After(delay):
 		case <-l.stopCh:
@@ -154,13 +151,7 @@ func (l *legacyBackendRegistration) supervisor() {
 }
 
 func (l *legacyBackendRegistration) fetchAgentInitConfig() (string, error) {
-	base := os.Getenv("ZRT_API_BASE_URL")
-	if base == "" {
-		base = l.apiBaseURL
-	}
-	if base == "" {
-		base = "https://api.videosdk.live"
-	}
+	base := cmp.Or(os.Getenv("ZRT_API_BASE_URL"), l.apiBaseURL, "https://api.videosdk.live")
 	endpoint := strings.TrimRight(base, "/") + "/v2/agent/init-config"
 	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
@@ -205,7 +196,7 @@ func sanitizeAgentID(agentID string) string {
 }
 
 func (l *legacyBackendRegistration) loadCachedWorkerID() string {
-	envKey := "ZRT_WORKER_ID_" + strings.ToUpper(orDefault(l.agentID, "default"))
+	envKey := "ZRT_WORKER_ID_" + strings.ToUpper(cmp.Or(l.agentID, "default"))
 	if v := os.Getenv(envKey); v != "" {
 		return v
 	}
@@ -315,8 +306,8 @@ func (l *legacyBackendRegistration) runOneConnection() {
 	}()
 	l.recvLoop()
 	close(done)
-	// Close the connection when the recv loop ends (e.g. the peer dropped it),
-	// otherwise the next reconnect overwrites l.conn and leaks this socket.
+	// Close the conn when the recv loop ends, else the next reconnect overwrites
+	// l.conn and leaks this socket.
 	l.mu.Lock()
 	c := l.conn
 	l.conn = nil
@@ -333,10 +324,8 @@ func (l *legacyBackendRegistration) recvLoop() {
 	if conn == nil {
 		return
 	}
-	// Keepalive: without a read deadline a silently dropped connection (no
-	// FIN/RST, e.g. an idle NAT/load-balancer timeout) would block ReadMessage
-	// forever. statusLoop sends periodic pings; each pong (and any other frame)
-	// extends the deadline.
+	// Keepalive: a read deadline detects a silently dropped connection (no FIN/RST)
+	// that would otherwise block ReadMessage forever. Each frame/pong extends it.
 	conn.SetReadDeadline(time.Now().Add(legacyPongWait))
 	conn.SetPongHandler(func(string) error {
 		conn.SetReadDeadline(time.Now().Add(legacyPongWait))
@@ -372,9 +361,8 @@ func (l *legacyBackendRegistration) statusLoop(done <-chan struct{}) {
 	}
 }
 
-// sendPing sends a websocket control ping so a silently half-open connection is
-// detected via the recv loop's read deadline. WriteControl is safe to call
-// concurrently with the loop's reads and other writes.
+// sendPing sends a websocket control ping so a half-open connection trips the
+// recv loop's read deadline. WriteControl is safe to call concurrently with reads/writes.
 func (l *legacyBackendRegistration) sendPing() {
 	l.mu.Lock()
 	conn := l.conn
@@ -513,10 +501,7 @@ func (l *legacyBackendRegistration) sendStatusUpdate() {
 	wid := l.workerID
 	draining := l.draining
 	l.mu.Unlock()
-	load := float64(jobCount) / float64(maxInt(1, l.maxProcesses))
-	if load > 1.0 {
-		load = 1.0
-	}
+	load := min(float64(jobCount)/float64(max(1, l.maxProcesses)), 1.0)
 	status := "available"
 	if draining {
 		status = "draining"

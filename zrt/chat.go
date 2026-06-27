@@ -1,9 +1,12 @@
 package zrt
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
+
+	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
 
 // ChatContent is a text content block.
@@ -39,12 +42,32 @@ type ChatMessage struct {
 	Role      ChatRole
 	Content   string
 	MessageID string
+	// ToolCalls the assistant requested on this message.
 	ToolCalls []FunctionCall
+	// ToolCallID, for a tool-result message, is the FunctionCall.CallID it answers.
+	ToolCallID string
+	// Images attached to this message.
+	Images []ImageContent
+	// AgentID attributes this message to the agent that produced it. Used for
+	// multi-agent audit/filtering; it is not sent to the LLM.
+	AgentID string
 }
 
-// ChatContext holds an ordered list of chat messages.
+// AgentHandoff records a transfer of control between agents. It is an audit-only
+// item: kept in the ChatContext for inspection but never sent to the LLM as a
+// message.
+type AgentHandoff struct {
+	ID        string
+	FromAgent string
+	ToAgent   string
+	Reason    string
+}
+
+// ChatContext holds an ordered list of chat messages plus structural items
+// (agent handoffs) that are tracked for attribution but not sent to the LLM.
 type ChatContext struct {
 	messages []ChatMessage
+	handoffs []AgentHandoff
 }
 
 // NewChatContext returns an empty chat context.
@@ -58,9 +81,7 @@ func (c *ChatContext) Items() []ChatMessage { return c.messages }
 
 // Messages returns a copy of the messages.
 func (c *ChatContext) Messages() []ChatMessage {
-	out := make([]ChatMessage, len(c.messages))
-	copy(out, c.messages)
-	return out
+	return slices.Clone(c.messages)
 }
 
 // TurnCount returns the number of user messages.
@@ -83,29 +104,75 @@ func (c *ChatContext) EstimatedTokens() int {
 	return total
 }
 
-// AddMessage appends a message and returns it.
-func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string) ChatMessage {
+// AddMessage appends a message and returns it. Optional images are attached to
+// the message. When messageID is empty a fresh UUID is generated.
+func (c *ChatContext) AddMessage(role ChatRole, content string, messageID string, images ...ImageContent) ChatMessage {
 	if messageID == "" {
 		messageID = uuid.NewString()
 	}
 	msg := ChatMessage{Role: role, Content: content, MessageID: messageID}
+	if len(images) > 0 {
+		msg.Images = slices.Clone(images)
+	}
 	c.messages = append(c.messages, msg)
 	return msg
 }
 
-// Copy returns a shallow copy of the context.
-func (c *ChatContext) Copy() *ChatContext {
-	out := &ChatContext{messages: make([]ChatMessage, len(c.messages))}
-	copy(out.messages, c.messages)
-	return out
+// AddAttributedMessage appends a message attributed to agentID and returns it.
+// When messageID is empty a fresh UUID is generated.
+func (c *ChatContext) AddAttributedMessage(role ChatRole, content, messageID, agentID string, images ...ImageContent) ChatMessage {
+	msg := c.AddMessage(role, content, messageID, images...)
+	c.messages[len(c.messages)-1].AgentID = agentID
+	msg.AgentID = agentID
+	return msg
 }
 
-// Truncate returns a context keeping at most maxItems most-recent messages
-// (maxItems <= 0 keeps all).
-func (c *ChatContext) Truncate(maxItems int) *ChatContext {
+// AddHandoff records a transfer of control between agents and returns the marker.
+// The handoff is structural (audit-only) and is excluded from LLM/runtime messages.
+func (c *ChatContext) AddHandoff(fromAgent, toAgent, reason string) AgentHandoff {
+	h := AgentHandoff{ID: "handoff_" + uuid.NewString(), FromAgent: fromAgent, ToAgent: toAgent, Reason: reason}
+	c.handoffs = append(c.handoffs, h)
+	return h
+}
+
+// Handoffs returns a copy of the recorded agent handoffs (most recent last).
+func (c *ChatContext) Handoffs() []AgentHandoff { return slices.Clone(c.handoffs) }
+
+// LastHandoff returns the most recent handoff, or nil if none was recorded.
+func (c *ChatContext) LastHandoff() *AgentHandoff {
+	if n := len(c.handoffs); n > 0 {
+		h := c.handoffs[n-1]
+		return &h
+	}
+	return nil
+}
+
+// Copy returns a shallow copy of the context (messages and handoff markers).
+func (c *ChatContext) Copy() *ChatContext {
+	return &ChatContext{messages: slices.Clone(c.messages), handoffs: slices.Clone(c.handoffs)}
+}
+
+type TruncateOptions struct {
+	MaxItems  int
+	MaxTokens int
+}
+
+func (c *ChatContext) Truncate(opts TruncateOptions) *ChatContext {
 	out := c.Copy()
-	if maxItems > 0 && len(out.messages) > maxItems {
-		out.messages = out.messages[len(out.messages)-maxItems:]
+	if opts.MaxItems > 0 && len(out.messages) > opts.MaxItems {
+		out.messages = out.messages[len(out.messages)-opts.MaxItems:]
+	}
+	if opts.MaxTokens > 0 {
+		tokensOf := func(m ChatMessage) int { return len(strings.Fields(m.Content)) * 2 }
+		total := 0
+		for _, m := range out.messages {
+			total += tokensOf(m)
+		}
+		// Drop oldest messages until under the token budget (keep at least one).
+		for len(out.messages) > 1 && total > opts.MaxTokens {
+			total -= tokensOf(out.messages[0])
+			out.messages = out.messages[1:]
+		}
 	}
 	return out
 }
@@ -117,4 +184,53 @@ func (c *ChatContext) ToOpenAIMessages() []map[string]string {
 		out = append(out, map[string]string{"role": string(m.Role), "content": m.Content})
 	}
 	return out
+}
+
+func (c *ChatContext) ToContextMessages() []*pb.ContextMessageProto {
+	out := make([]*pb.ContextMessageProto, 0, len(c.messages))
+	for _, m := range c.messages {
+		pm := &pb.ContextMessageProto{
+			Role:       string(m.Role),
+			Content:    m.Content,
+			MessageId:  m.MessageID,
+			ToolCallId: m.ToolCallID,
+		}
+		for _, img := range m.Images {
+			pm.Images = append(pm.Images, &pb.ImageContentProto{Url: img.URL, Detail: img.Detail})
+		}
+		for _, tc := range m.ToolCalls {
+			pm.ToolCalls = append(pm.ToolCalls, &pb.ToolCallProto{
+				CallId:        tc.CallID,
+				Name:          tc.Name,
+				ArgumentsJson: tc.Arguments,
+			})
+		}
+		out = append(out, pm)
+	}
+	return out
+}
+
+// ChatContextFromContextMessages builds a ChatContext from context messages.
+func ChatContextFromContextMessages(messages []*pb.ContextMessageProto) *ChatContext {
+	c := &ChatContext{}
+	for _, m := range messages {
+		msg := ChatMessage{
+			Role:       ChatRole(m.GetRole()),
+			Content:    m.GetContent(),
+			MessageID:  m.GetMessageId(),
+			ToolCallID: m.GetToolCallId(),
+		}
+		for _, img := range m.GetImages() {
+			msg.Images = append(msg.Images, ImageContent{URL: img.GetUrl(), Detail: img.GetDetail()})
+		}
+		for _, tc := range m.GetToolCalls() {
+			msg.ToolCalls = append(msg.ToolCalls, FunctionCall{
+				CallID:    tc.GetCallId(),
+				Name:      tc.GetName(),
+				Arguments: tc.GetArgumentsJson(),
+			})
+		}
+		c.messages = append(c.messages, msg)
+	}
+	return c
 }

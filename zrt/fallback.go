@@ -1,5 +1,7 @@
 package zrt
 
+import "cmp"
+
 // Fallback default timing knobs.
 const (
 	DefaultTemporaryDisableSec           = 60
@@ -7,12 +9,11 @@ const (
 	DefaultRecoveryCheckIntervalSec      = 300
 )
 
-// FallbackSTT wraps an ordered list of STT providers; the runtime falls back on
-// failure.
+// FallbackSTT wraps an ordered list of STT providers and falls back to the next
+// on failure.
 //
-// Only the primary provider's provider/model/language reach the runtime config
-// (endpointing fixed at 50); per-provider API keys passed inline are not
-// forwarded — set them via environment variables.
+// Per-provider API keys passed inline are ignored; set them via environment
+// variables.
 type FallbackSTT struct {
 	BaseSTT
 	Providers []STT
@@ -25,13 +26,24 @@ func NewFallbackSTT(providers ...STT) *FallbackSTT {
 	return f
 }
 
-// STTConfig returns the primary provider's config (endpointing fixed at 50).
+// STTConfig returns the primary provider's config with the remaining providers
+// attached as an ordered fallback chain.
 func (f *FallbackSTT) STTConfig() STTRuntimeConfig {
 	if len(f.Providers) == 0 {
 		return STTRuntimeConfig{EndpointingMs: 50}
 	}
-	c := f.Providers[0].STTConfig()
-	return STTRuntimeConfig{Provider: c.Provider, Model: c.Model, Language: c.Language, EndpointingMs: 50}
+	primary := f.Providers[0].STTConfig()
+	out := STTRuntimeConfig{Provider: primary.Provider, Model: primary.Model, Language: primary.Language, EndpointingMs: 50}
+	for _, p := range f.Providers[1:] {
+		c := p.STTConfig()
+		out.Fallbacks = append(out.Fallbacks, STTRuntimeConfig{
+			Provider:      c.Provider,
+			Model:         c.Model,
+			Language:      c.Language,
+			EndpointingMs: cmp.Or(c.EndpointingMs, 50),
+		})
+	}
+	return out
 }
 
 // FallbackLLM wraps an ordered list of LLM providers.
@@ -47,12 +59,29 @@ func NewFallbackLLM(providers ...LLM) *FallbackLLM {
 	return f
 }
 
-// LLMConfig returns the primary provider's config.
+// LLMConfig returns the primary provider's config with the remaining providers
+// attached as an ordered fallback chain.
 func (f *FallbackLLM) LLMConfig() LLMRuntimeConfig {
 	if len(f.Providers) == 0 {
 		return LLMRuntimeConfig{Temperature: 0.7, MaxOutputTokens: 1024}
 	}
-	return f.Providers[0].LLMConfig()
+	primary := f.Providers[0].LLMConfig()
+	out := LLMRuntimeConfig{
+		Provider:        primary.Provider,
+		Model:           primary.Model,
+		Temperature:     primary.Temperature,
+		MaxOutputTokens: primary.MaxOutputTokens,
+	}
+	for _, p := range f.Providers[1:] {
+		c := p.LLMConfig()
+		out.Fallbacks = append(out.Fallbacks, LLMRuntimeConfig{
+			Provider:        c.Provider,
+			Model:           c.Model,
+			Temperature:     c.Temperature,
+			MaxOutputTokens: c.MaxOutputTokens,
+		})
+	}
+	return out
 }
 
 // FallbackTTS wraps an ordered list of TTS providers.
@@ -68,11 +97,17 @@ func NewFallbackTTS(providers ...TTS) *FallbackTTS {
 	return f
 }
 
-// TTSConfig returns the primary provider's config (voice only).
+// TTSConfig returns the primary provider's config with the remaining providers
+// attached as an ordered fallback chain.
 func (f *FallbackTTS) TTSConfig() TTSRuntimeConfig {
 	if len(f.Providers) == 0 {
 		return TTSRuntimeConfig{}
 	}
-	c := f.Providers[0].TTSConfig()
-	return TTSRuntimeConfig{Provider: c.Provider, Voice: c.Voice}
+	primary := f.Providers[0].TTSConfig()
+	out := TTSRuntimeConfig{Provider: primary.Provider, Voice: primary.Voice}
+	for _, p := range f.Providers[1:] {
+		c := p.TTSConfig()
+		out.Fallbacks = append(out.Fallbacks, TTSRuntimeConfig{Provider: c.Provider, Voice: c.Voice})
+	}
+	return out
 }

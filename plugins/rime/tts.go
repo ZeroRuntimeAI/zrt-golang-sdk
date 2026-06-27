@@ -3,23 +3,26 @@ package rime
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Rime text-to-speech descriptor.
+// TTS is a Rime text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
 	Voice string
 	Model string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures a Rime TTS engine.
 type TTSOptions struct {
-	// APIKey overrides the RIME_API_KEY environment variable.
-	APIKey       string
-	Speaker      string // default "river"
-	ModelID      string // default "mist"
-	SamplingRate int    // default 24000
+	// APIKey is the Rime API key. If empty, the RIME_API_KEY environment variable is used.
+	APIKey string
+	// Speaker selects the voice. Defaults to "river".
+	Speaker string
+	// ModelID selects the model. Defaults to "mist".
+	ModelID string
+	// SamplingRate is the output sample rate in Hz. Defaults to 24000.
+	SamplingRate int
 }
 
-// NewTTS builds a TTS.
+// NewTTS creates a Rime TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
 	sr := opts.SamplingRate
 	if sr == 0 {

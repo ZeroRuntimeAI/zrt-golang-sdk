@@ -1,6 +1,6 @@
 package zrt
 
-// MCPServer describes a Model Context Protocol server the runtime should connect.
+// MCPServer describes a Model Context Protocol server to connect to.
 type MCPServer interface {
 	mcpType() string
 	mcpStdio() (command string, args []string, env map[string]string)

@@ -1,5 +1,7 @@
 package zrt
 
+import "cmp"
+
 // KnowledgeBaseConfig configures a RAG knowledge base.
 type KnowledgeBaseConfig struct {
 	Provider  string // default "custom"
@@ -12,15 +14,9 @@ type KnowledgeBaseConfig struct {
 
 // normalize applies default values and reconciles the index_name/id fields.
 func (cfg *KnowledgeBaseConfig) normalize() {
-	if cfg.Provider == "" {
-		cfg.Provider = "custom"
-	}
-	if cfg.TopK == 0 {
-		cfg.TopK = 5
-	}
-	if cfg.MinScore == 0 {
-		cfg.MinScore = 0.7
-	}
+	cfg.Provider = cmp.Or(cfg.Provider, "custom")
+	cfg.TopK = cmp.Or(cfg.TopK, 5)
+	cfg.MinScore = cmp.Or(cfg.MinScore, 0.7)
 	// Reconcile index_name <-> id.
 	switch {
 	case cfg.IndexName != "" && cfg.ID != "" && cfg.IndexName != cfg.ID:

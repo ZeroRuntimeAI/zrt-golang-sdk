@@ -7,9 +7,11 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// RealtimeOptions configures Realtime.
+// RealtimeOptions configures an Ultravox Realtime model. The zero value is
+// valid; empty and nil fields fall back to the defaults noted below.
 type RealtimeOptions struct {
-	// APIKey overrides the ULTRAVOX_API_KEY environment variable.
+	// APIKey authenticates with Ultravox. Overrides the ULTRAVOX_API_KEY
+	// environment variable.
 	APIKey                           string
 	Model                            string // default "fixie-ai/ultravox"
 	Voice                            string
@@ -29,7 +31,7 @@ type RealtimeOptions struct {
 	BaseURL                          string
 }
 
-// Realtime is the Ultravox model descriptor.
+// Realtime is a configured Ultravox speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
 	Model  string
@@ -37,7 +39,7 @@ type Realtime struct {
 	params map[string]string
 }
 
-// NewRealtime builds a Realtime from opts.
+// NewRealtime returns an Ultravox Realtime model configured from opts.
 func NewRealtime(opts RealtimeOptions) *Realtime {
 	inputSR := opts.InputSampleRate
 	if inputSR == 0 {
@@ -70,7 +72,6 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 	if opts.TimeExceededMessage != "" {
 		params["time_exceeded_message"] = opts.TimeExceededMessage
 	}
-	// VAD knobs with defaults (800 / 600 / 0.4 / FIRST_SPEAKER_USER).
 	params["vad_turn_endpoint_delay_ms"] = strconv.Itoa(zrt.IntOr(opts.VADTurnEndpointDelayMS, 800))
 	params["vad_minimum_turn_duration_ms"] = strconv.Itoa(zrt.IntOr(opts.VADMinimumTurnDurationMS, 600))
 	if opts.VADMinimumInterruptionDurationMS != nil {

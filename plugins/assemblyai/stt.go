@@ -3,7 +3,7 @@ package assemblyai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// STT is the AssemblyAI speech-to-text descriptor.
+// STT is an AssemblyAI speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
 	Model    string
@@ -11,15 +11,17 @@ type STT struct {
 	Region   string
 }
 
-// STTOptions configures STT.
+// STTOptions configures an AssemblyAI STT.
 type STTOptions struct {
 	// APIKey overrides the ASSEMBLYAI_API_KEY environment variable.
-	APIKey      string
-	SpeechModel string // default "universal-streaming-english"
-	Region      string // default "US"
+	APIKey string
+	// SpeechModel selects the recognition model. Defaults to "universal-streaming-english".
+	SpeechModel string
+	// Region selects the service region. Defaults to "US".
+	Region string
 }
 
-// NewSTT builds an STT.
+// NewSTT returns an AssemblyAI STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	s := &STT{
 		Model:    zrt.StrOr(opts.SpeechModel, "universal-streaming-english"),
@@ -30,7 +32,7 @@ func NewSTT(opts STTOptions) *STT {
 	return s
 }
 
-// STTConfig implements zrt.STT.
+// STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "assemblyai", Model: s.Model, Language: s.Language}
 }

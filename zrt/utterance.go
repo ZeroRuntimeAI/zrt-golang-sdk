@@ -6,9 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// UtteranceHandle is a handle to an in-flight say()/reply() utterance.
-//
-// Wait blocks until the utterance finishes (or is interrupted).
+// UtteranceHandle tracks an in-flight spoken utterance. Use it to wait for the
+// utterance to finish, interrupt it, or run a callback when its audio completes.
 type UtteranceHandle struct {
 	id            string
 	interruptible bool
@@ -48,7 +47,7 @@ func (u *UtteranceHandle) Interrupted() bool {
 	return u.interrupted
 }
 
-// Wait blocks until the utterance finishes.
+// Wait blocks until the utterance finishes or is interrupted.
 func (u *UtteranceHandle) Wait() {
 	<-u.doneCh
 }

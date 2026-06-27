@@ -7,7 +7,8 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// VoiceLiveTurnDetectionConfig configures Azure Voice Live turn detection.
+// VoiceLiveTurnDetectionConfig controls how Azure Voice Live decides the user
+// has stopped speaking.
 type VoiceLiveTurnDetectionConfig struct {
 	Type              string // default "server_vad"
 	Threshold         float64
@@ -17,22 +18,28 @@ type VoiceLiveTurnDetectionConfig struct {
 	InterruptResponse bool
 }
 
-// DefaultVoiceLiveTurnDetectionConfig returns the default config.
+// DefaultVoiceLiveTurnDetectionConfig returns the default server-VAD turn
+// detection settings.
 func DefaultVoiceLiveTurnDetectionConfig() *VoiceLiveTurnDetectionConfig {
 	return &VoiceLiveTurnDetectionConfig{Type: "server_vad", Threshold: 0.5, PrefixPaddingMS: 300, SilenceDurationMS: 500, CreateResponse: true, InterruptResponse: true}
 }
 
-// VoiceLiveInputAudioTranscriptionConfig configures input transcription.
+// VoiceLiveInputAudioTranscriptionConfig selects the model used to transcribe
+// the user's speech.
 type VoiceLiveInputAudioTranscriptionConfig struct {
 	Model string // default "gpt-4o-mini-transcribe"
 }
 
-// VoiceLiveOptions configures VoiceLive.
+// VoiceLiveOptions configures an Azure Voice Live model. The zero value is
+// valid; empty and nil fields fall back to the defaults noted below.
 type VoiceLiveOptions struct {
-	// APIKey overrides the AZURE_VOICE_LIVE_API_KEY environment variable.
-	APIKey                  string
-	Model                   string // default "gpt-4o-realtime-preview"
-	Voice                   string // default "en-US-AvaNeural"
+	// APIKey authenticates with Azure Voice Live. Overrides the
+	// AZURE_VOICE_LIVE_API_KEY environment variable.
+	APIKey string
+	Model  string // default "gpt-4o-realtime-preview"
+	Voice  string // default "en-US-AvaNeural"
+	// Endpoint is the Azure Voice Live endpoint. Falls back to the
+	// AZURE_VOICE_LIVE_ENDPOINT environment variable.
 	Endpoint                string
 	Modalities              []string // default ["text","audio"]
 	Temperature             *float64
@@ -42,7 +49,7 @@ type VoiceLiveOptions struct {
 	ToolChoice              string // default "auto"
 }
 
-// VoiceLive is the Azure Voice Live model descriptor.
+// VoiceLive is a configured Azure Voice Live speech-to-speech model.
 type VoiceLive struct {
 	zrt.BaseRealtime
 	Model      string
@@ -52,7 +59,7 @@ type VoiceLive struct {
 	params     map[string]string
 }
 
-// NewVoiceLive builds a VoiceLive from opts.
+// NewVoiceLive returns an Azure Voice Live model configured from opts.
 func NewVoiceLive(opts VoiceLiveOptions) *VoiceLive {
 	modalities := opts.Modalities
 	if len(modalities) == 0 {

@@ -7,7 +7,8 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// TurnDetectionConfig configures turn detection.
+// TurnDetectionConfig controls how the model decides the user has stopped
+// speaking.
 type TurnDetectionConfig struct {
 	Type              string // default "server_vad"
 	Threshold         float64
@@ -17,19 +18,23 @@ type TurnDetectionConfig struct {
 	InterruptResponse bool
 }
 
-// DefaultTurnDetectionConfig returns the default turn detection config.
+// DefaultTurnDetectionConfig returns the default server-VAD turn detection
+// settings.
 func DefaultTurnDetectionConfig() *TurnDetectionConfig {
 	return &TurnDetectionConfig{Type: "server_vad", Threshold: 0.5, PrefixPaddingMS: 300, SilenceDurationMS: 200, CreateResponse: true, InterruptResponse: true}
 }
 
-// InputAudioTranscriptionConfig configures input transcription.
+// InputAudioTranscriptionConfig selects the model used to transcribe the user's
+// speech.
 type InputAudioTranscriptionConfig struct {
 	Model string // default "gpt-4o-mini-transcribe"
 }
 
-// RealtimeOptions configures Realtime.
+// RealtimeOptions configures an OpenAI Realtime model. The zero value is valid;
+// empty and nil fields fall back to the defaults noted below.
 type RealtimeOptions struct {
-	// APIKey overrides the OPENAI_API_KEY environment variable.
+	// APIKey authenticates with OpenAI. Overrides the OPENAI_API_KEY
+	// environment variable.
 	APIKey                  string
 	Model                   string   // default "gpt-4o-realtime-preview"
 	Voice                   string   // default "alloy"
@@ -41,7 +46,7 @@ type RealtimeOptions struct {
 	ToolChoice              string // default "auto"
 }
 
-// Realtime is the OpenAI Realtime model descriptor.
+// Realtime is a configured OpenAI Realtime speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
 	Model      string
@@ -50,7 +55,7 @@ type Realtime struct {
 	params     map[string]string
 }
 
-// NewRealtime builds a Realtime from opts.
+// NewRealtime returns an OpenAI Realtime model configured from opts.
 func NewRealtime(opts RealtimeOptions) *Realtime {
 	model := zrt.StrOr(opts.Model, "gpt-4o-realtime-preview")
 	voice := zrt.StrOr(opts.Voice, "alloy")

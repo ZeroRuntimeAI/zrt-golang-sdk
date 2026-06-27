@@ -5,7 +5,7 @@ import "sync"
 // VoiceMailDetectorDefaultPrompt is the default classifier prompt.
 const VoiceMailDetectorDefaultPrompt = "You are a voicemail detection classifier for an OUTBOUND calling system. A bot has called a phone number and you need to determine if a human answered or if the call went to voicemail based on the provided text. Answer in one word yes or no."
 
-// VoiceMailDetector configures runtime voicemail detection and receives events.
+// VoiceMailDetector configures voicemail detection and receives its events.
 type VoiceMailDetector struct {
 	Callback           func(map[string]any)
 	Duration           float64 // seconds

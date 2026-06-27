@@ -1,7 +1,9 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
+	"slices"
 	"sync"
 )
 
@@ -133,7 +135,8 @@ func (h *PipelineHooks) registeredNames() []string {
 func (h *PipelineHooks) hasSTTStreamHook() bool { return h.customSTT != nil }
 func (h *PipelineHooks) hasTTSStreamHook() bool { return h.customTTS != nil }
 
-// Pipeline configures the voice stack the runtime executes.
+// Pipeline configures the agent's voice stack (STT, LLM, TTS, and related
+// components) and holds its event hooks.
 type Pipeline struct {
 	EventEmitter
 
@@ -150,14 +153,15 @@ type Pipeline struct {
 	VoiceMailDetector *VoiceMailDetector
 	RealtimeConfig    *RealtimeConfig
 
-	LLMStreamHookEnabled   bool
-	LLMStreamHookTimeoutMS int
-	PlaybackGraceMS        int
+	LLMStreamHookEnabled     bool
+	LLMStreamHookTimeoutMS   int
+	PlaybackGraceMS          int
+	InactivityTimeoutSeconds *int
 
 	STTFilterPatterns    []string
 	STTWordSubstitutions map[string]string
 
-	// Sentence buffer knobs (0 -> runtime defaults of 5/3/3).
+	// Sentence buffering thresholds. Leave a field at 0 to use the default.
 	SentenceMinClauseLen   int
 	SentenceFirstClauseLen int
 	SentenceMinSentenceLen int
@@ -188,6 +192,9 @@ type PipelineOptions struct {
 	LLMStreamHookEnabled   bool
 	LLMStreamHookTimeoutMS int
 	PlaybackGraceMS        int
+	// InactivityTimeoutSeconds is how long the session may go without user
+	// activity before it ends. nil uses the default.
+	InactivityTimeoutSeconds *int
 	// STTFilterPatterns overrides the default filter regexes. A nil slice uses
 	// DefaultSTTFilterPatterns; pass an empty (non-nil) slice to disable.
 	STTFilterPatterns    []string
@@ -198,30 +205,28 @@ type PipelineOptions struct {
 func NewPipeline(opts PipelineOptions) *Pipeline {
 	patterns := opts.STTFilterPatterns
 	if patterns == nil {
-		patterns = append([]string(nil), DefaultSTTFilterPatterns...)
+		patterns = slices.Clone(DefaultSTTFilterPatterns)
 	}
-	timeout := opts.LLMStreamHookTimeoutMS
-	if timeout == 0 {
-		timeout = 100
-	}
+	timeout := cmp.Or(opts.LLMStreamHookTimeoutMS, 100)
 	p := &Pipeline{
-		STT:                    opts.STT,
-		LLM:                    opts.LLM,
-		TTS:                    opts.TTS,
-		VAD:                    opts.VAD,
-		TurnDetector:           opts.TurnDetector,
-		Denoise:                opts.Denoise,
-		EOUConfig:              opts.EOUConfig,
-		InterruptConfig:        opts.InterruptConfig,
-		ContextWindow:          opts.ContextWindow,
-		VoiceMailDetector:      opts.VoiceMailDetector,
-		RealtimeConfig:         opts.RealtimeConfig,
-		LLMStreamHookEnabled:   opts.LLMStreamHookEnabled,
-		LLMStreamHookTimeoutMS: timeout,
-		PlaybackGraceMS:        opts.PlaybackGraceMS,
-		STTFilterPatterns:      patterns,
-		STTWordSubstitutions:   opts.STTWordSubstitutions,
-		Hooks:                  &PipelineHooks{},
+		STT:                      opts.STT,
+		LLM:                      opts.LLM,
+		TTS:                      opts.TTS,
+		VAD:                      opts.VAD,
+		TurnDetector:             opts.TurnDetector,
+		Denoise:                  opts.Denoise,
+		EOUConfig:                opts.EOUConfig,
+		InterruptConfig:          opts.InterruptConfig,
+		ContextWindow:            opts.ContextWindow,
+		VoiceMailDetector:        opts.VoiceMailDetector,
+		RealtimeConfig:           opts.RealtimeConfig,
+		LLMStreamHookEnabled:     opts.LLMStreamHookEnabled,
+		LLMStreamHookTimeoutMS:   timeout,
+		PlaybackGraceMS:          opts.PlaybackGraceMS,
+		InactivityTimeoutSeconds: opts.InactivityTimeoutSeconds,
+		STTFilterPatterns:        patterns,
+		STTWordSubstitutions:     opts.STTWordSubstitutions,
+		Hooks:                    &PipelineHooks{},
 	}
 	return p
 }
@@ -230,10 +235,10 @@ func (p *Pipeline) setAgent(a Agent) { p.agent = a }
 
 // ---- hook registration (typed, all on the Pipeline for convenience) ----
 
-// OnCustomSTT registers a custom speech-to-text hook (sets the stt stream hook).
+// OnCustomSTT registers a custom speech-to-text hook for the pipeline.
 func (p *Pipeline) OnCustomSTT(h CustomSTTHook) { p.Hooks.customSTT = h; p.Hooks.mark("stt") }
 
-// OnCustomTTS registers a custom text-to-speech hook (sets the tts stream hook).
+// OnCustomTTS registers a custom text-to-speech hook for the pipeline.
 func (p *Pipeline) OnCustomTTS(h CustomTTSHook) { p.Hooks.customTTS = h; p.Hooks.mark("tts") }
 
 // OnLLMStream registers a per-token LLM review hook.
@@ -404,12 +409,8 @@ func (p *Pipeline) GetLatestFrames(n int) []map[string]any {
 	}
 	p.frameMu.Lock()
 	defer p.frameMu.Unlock()
-	if n > len(p.frameBuffer) {
-		n = len(p.frameBuffer)
-	}
-	out := make([]map[string]any, n)
-	copy(out, p.frameBuffer[len(p.frameBuffer)-n:])
-	return out
+	n = min(n, len(p.frameBuffer))
+	return slices.Clone(p.frameBuffer[len(p.frameBuffer)-n:])
 }
 
 func fireFrameHook(h func(map[string]any), frame map[string]any) {
@@ -498,7 +499,8 @@ func (c PipelineConfigInfo) HasComponent(comp PipelineComponent) bool {
 	return c.ActiveComponents[comp]
 }
 
-// ChangePipeline mutates pipeline slots at runtime (nil values are ignored).
+// ChangePipeline swaps pipeline components at runtime. Nil fields in opts leave
+// the corresponding component unchanged.
 func (p *Pipeline) ChangePipeline(opts PipelineOptions) {
 	if opts.STT != nil {
 		p.STT = opts.STT

@@ -1,6 +1,9 @@
 package zrt
 
-import "os"
+import (
+	"cmp"
+	"os"
+)
 
 // Denoise is a noise-reduction descriptor.
 type Denoise struct {
@@ -27,10 +30,7 @@ type DenoiseOptions struct {
 
 // NewDenoise builds a Denoise descriptor.
 func NewDenoise(opts DenoiseOptions) *Denoise {
-	gw := opts.GatewayToken
-	if gw == "" {
-		gw = os.Getenv("ZRT_AUTH_TOKEN")
-	}
+	gw := cmp.Or(opts.GatewayToken, os.Getenv("ZRT_AUTH_TOKEN"))
 	d := &Denoise{
 		providerName: opts.Provider,
 		ModelID:      opts.ModelID,
@@ -56,28 +56,16 @@ func DenoiseRNNoise() *Denoise { return NewDenoise(DenoiseOptions{Provider: "rnn
 
 // DenoiseSanas builds a Sanas denoiser.
 func DenoiseSanas(modelID string, sampleRate, chunkMS int, gatewayToken, baseURL string) *Denoise {
-	if modelID == "" {
-		modelID = "VI_G_NC3.0"
-	}
-	if sampleRate == 0 {
-		sampleRate = 16000
-	}
-	if chunkMS == 0 {
-		chunkMS = 20
-	}
+	modelID = cmp.Or(modelID, "VI_G_NC3.0")
+	sampleRate = cmp.Or(sampleRate, 16000)
+	chunkMS = cmp.Or(chunkMS, 20)
 	return NewDenoise(DenoiseOptions{Provider: "sanas", ModelID: modelID, ModelSampleRate: &sampleRate, ChunkMS: &chunkMS, GatewayToken: gatewayToken, BaseURL: baseURL})
 }
 
 // DenoiseAicoustics builds an ai-coustics denoiser.
 func DenoiseAicoustics(modelID string, sampleRate, chunkMS int, gatewayToken, baseURL string) *Denoise {
-	if modelID == "" {
-		modelID = "sparrow-xxs-48khz"
-	}
-	if sampleRate == 0 {
-		sampleRate = 48000
-	}
-	if chunkMS == 0 {
-		chunkMS = 10
-	}
+	modelID = cmp.Or(modelID, "sparrow-xxs-48khz")
+	sampleRate = cmp.Or(sampleRate, 48000)
+	chunkMS = cmp.Or(chunkMS, 10)
 	return NewDenoise(DenoiseOptions{Provider: "aicoustics", ModelID: modelID, ModelSampleRate: &sampleRate, ChunkMS: &chunkMS, GatewayToken: gatewayToken, BaseURL: baseURL})
 }

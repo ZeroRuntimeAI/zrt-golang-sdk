@@ -1,6 +1,9 @@
 package zrt
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 // EventHandler receives a single event payload (usually a map[string]any).
 type EventHandler func(payload any)
@@ -9,10 +12,8 @@ type eventReg struct {
 	fn EventHandler
 }
 
-// EventEmitter is a minimal synchronous event emitter.
-//
-// Handlers are invoked synchronously in registration order; panics in a handler
-// are recovered and logged so one bad handler cannot break the emit loop.
+// EventEmitter invokes handlers synchronously in registration order; a panic in
+// one handler is recovered so it cannot break the emit loop.
 type EventEmitter struct {
 	mu       sync.Mutex
 	handlers map[string][]*eventReg
@@ -55,7 +56,7 @@ func (e *EventEmitter) Emit(event string, payload any) {
 		e.mu.Unlock()
 		return
 	}
-	regs := append([]*eventReg(nil), e.handlers[event]...)
+	regs := slices.Clone(e.handlers[event])
 	e.mu.Unlock()
 	for _, r := range regs {
 		invokeHandler(r.fn, payload, event)
@@ -71,9 +72,7 @@ func invokeHandler(fn EventHandler, payload any, event string) {
 	fn(payload)
 }
 
-// safeHook runs a user-supplied pipeline hook, recovering and logging any panic
-// so that one misbehaving hook cannot crash the session event loop. It mirrors
-// the panic isolation that invokeHandler provides for event handlers.
+// safeHook runs a pipeline hook, recovering any panic so it cannot crash the event loop.
 func safeHook(name string, fn func()) {
 	defer func() {
 		if rec := recover(); rec != nil {

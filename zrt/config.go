@@ -4,7 +4,7 @@ package zrt
 type EOUConfig struct {
 	// Mode is "ADAPTIVE" or "DEFAULT".
 	Mode string
-	// MinMaxSpeechWaitTimeout is [min, max] seconds the runtime waits for more speech.
+	// MinMaxSpeechWaitTimeout is [min, max] seconds to wait for more speech.
 	MinMaxSpeechWaitTimeout []float64
 }
 
@@ -42,8 +42,7 @@ func DefaultInterruptConfig() *InterruptConfig {
 	}
 }
 
-// normalize derives the fade duration in milliseconds from the seconds value
-// when only the latter is set.
+// normalize derives the millisecond fade duration from the seconds value.
 func (ic *InterruptConfig) normalize() {
 	if ic.InterruptFadeDuration > 0 && ic.InterruptFadeDurationMS == 0 {
 		ic.InterruptFadeDurationMS = int(ic.InterruptFadeDuration * 1000)
@@ -57,12 +56,13 @@ type RealtimeConfig struct {
 	ResponseModalities []string
 }
 
-// ContextWindow configures server-side context window management.
+// ContextWindow configures automatic context window management.
 type ContextWindow struct {
 	MaxTokens           int
 	MaxContextItems     int
 	KeepRecentTurns     int
 	MaxToolCallsPerTurn int
+	SummaryLLM          LLM
 }
 
 // DefaultContextWindow returns a ContextWindow with default values.

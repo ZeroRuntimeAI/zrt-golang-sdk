@@ -1,9 +1,12 @@
 package zrt
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -66,8 +69,7 @@ func floatStr(f float64) string {
 	return s
 }
 
-// serializeKnob applies the general knob serialization rules. ok=false means
-// the value should be skipped (nil / empty string).
+// serializeKnob stringifies a knob value. ok=false means skip it (nil / empty string).
 func serializeKnob(v any) (string, bool) {
 	switch x := v.(type) {
 	case nil:
@@ -107,38 +109,6 @@ func serializeKnob(v any) (string, bool) {
 	}
 }
 
-// serializeSTTKnob applies the simpler STT_KNOB_MAP serialization (bool or str).
-func serializeSTTKnob(v any) (string, bool) {
-	switch x := v.(type) {
-	case nil:
-		return "", false
-	case string:
-		if x == "" {
-			return "", false
-		}
-		return x, true
-	case bool:
-		if x {
-			return "true", true
-		}
-		return "false", true
-	case int:
-		return strconv.Itoa(x), true
-	case int32:
-		return strconv.FormatInt(int64(x), 10), true
-	case int64:
-		return strconv.FormatInt(x, 10), true
-	case uint32:
-		return strconv.FormatUint(uint64(x), 10), true
-	case float32:
-		return floatStr(float64(x)), true
-	case float64:
-		return floatStr(x), true
-	default:
-		return fmt.Sprintf("%v", x), true
-	}
-}
-
 // ---- provider config builders ----
 
 func buildSTTConfig(stt STT) *pb.STTProviderConfig {
@@ -146,16 +116,21 @@ func buildSTTConfig(stt STT) *pb.STTProviderConfig {
 		return &pb.STTProviderConfig{}
 	}
 	c := stt.STTConfig()
-	endpointing := c.EndpointingMs
-	if endpointing == 0 {
-		endpointing = 50
-	}
-	return &pb.STTProviderConfig{
+	cfg := &pb.STTProviderConfig{
 		Provider:      c.Provider,
 		Model:         c.Model,
 		Language:      c.Language,
-		EndpointingMs: endpointing,
+		EndpointingMs: cmp.Or(c.EndpointingMs, 50),
 	}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.STTProviderConfig{
+			Provider:      fb.Provider,
+			Model:         fb.Model,
+			Language:      fb.Language,
+			EndpointingMs: cmp.Or(fb.EndpointingMs, 50),
+		})
+	}
+	return cfg
 }
 
 func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
@@ -168,6 +143,14 @@ func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
 		Model:           c.Model,
 		Temperature:     c.Temperature,
 		MaxOutputTokens: c.MaxOutputTokens,
+	}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.LLMProviderConfig{
+			Provider:        fb.Provider,
+			Model:           fb.Model,
+			Temperature:     fb.Temperature,
+			MaxOutputTokens: fb.MaxOutputTokens,
+		})
 	}
 	if llm.ProviderName() == "gemini" {
 		if ge, ok := llm.(GeminiExtrasProvider); ok {
@@ -223,6 +206,9 @@ func buildTTSConfig(tts TTS) *pb.TTSProviderConfig {
 	}
 	c := tts.TTSConfig()
 	cfg := &pb.TTSProviderConfig{Provider: c.Provider, Voice: c.Voice}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.TTSProviderConfig{Provider: fb.Provider, Voice: fb.Voice})
+	}
 	if tts.ProviderName() == "cartesia" {
 		if emb := tts.VoiceEmbedding(); len(emb) > 0 {
 			ve := make([]float32, len(emb))
@@ -240,14 +226,8 @@ func buildVADConfig(vad VAD) *pb.VADProviderConfig {
 		return &pb.VADProviderConfig{}
 	}
 	c := vad.VADConfig()
-	stop := c.StopThreshold
-	if stop == 0 {
-		stop = 0.25
-	}
-	smoothing := c.SmoothingFactor
-	if smoothing == 0 {
-		smoothing = 0.35
-	}
+	stop := cmp.Or(c.StopThreshold, 0.25)
+	smoothing := cmp.Or(c.SmoothingFactor, 0.35)
 	return &pb.VADProviderConfig{
 		Threshold:          c.Threshold,
 		MinSpeechMs:        uint32(c.MinSpeechDuration * 1000),
@@ -262,20 +242,15 @@ func buildVADConfig(vad VAD) *pb.VADProviderConfig {
 	}
 }
 
+var interruptModeMap = map[string]string{"VAD_ONLY": "vad_only", "STT_ONLY": "stt_only", "HYBRID": "hybrid"}
+
 func buildInterruptConfig(ic *InterruptConfig) *pb.InterruptConfig {
 	if ic == nil {
 		return &pb.InterruptConfig{Mode: "hybrid", MinDurationMs: 500, MinWords: 2, CooldownMs: 500}
 	}
 	ic.normalize()
-	modeMap := map[string]string{"VAD_ONLY": "vad_only", "STT_ONLY": "stt_only", "HYBRID": "hybrid"}
-	mode := modeMap[ic.Mode]
-	if mode == "" {
-		mode = "hybrid"
-	}
-	pauseMS := ic.FalseInterruptPauseDurationMS
-	if pauseMS == 0 {
-		pauseMS = int(ic.FalseInterruptPauseDuration * 1000)
-	}
+	mode := cmp.Or(interruptModeMap[ic.Mode], "hybrid")
+	pauseMS := cmp.Or(ic.FalseInterruptPauseDurationMS, int(ic.FalseInterruptPauseDuration*1000))
 	return &pb.InterruptConfig{
 		Mode:                          mode,
 		MinDurationMs:                 uint32(ic.InterruptMinDuration * 1000),
@@ -329,7 +304,7 @@ func buildEOUConfig(eou *EOUConfig, turnDetector EOU) *pb.EOUConfig {
 func buildToolSchemas(tools []*FunctionTool) []*pb.ToolSchemaProto {
 	var out []*pb.ToolSchemaProto
 	for _, t := range tools {
-		if t == nil {
+		if !IsFunctionTool(t) {
 			continue
 		}
 		schema := t.Info.ParametersSchema
@@ -345,6 +320,17 @@ func buildToolSchemas(tools []*FunctionTool) []*pb.ToolSchemaProto {
 	}
 	return out
 }
+func resolveContextWindow(agent Agent, p *Pipeline) *ContextWindow {
+	if agent != nil {
+		if cw := agent.base().contextWindow(); cw != nil {
+			return cw
+		}
+	}
+	if p != nil {
+		return p.ContextWindow
+	}
+	return nil
+}
 
 func buildContextWindowConfig(cw *ContextWindow) *pb.ContextWindowConfig {
 	ctx := &pb.ContextWindowConfig{}
@@ -359,6 +345,9 @@ func buildContextWindowConfig(cw *ContextWindow) *pb.ContextWindowConfig {
 	}
 	ctx.KeepRecentTurns = uint32(cw.KeepRecentTurns)
 	ctx.MaxToolCallsPerTurn = uint32(cw.MaxToolCallsPerTurn)
+	if cw.SummaryLLM != nil {
+		ctx.SummaryLlm = buildLLMConfig(cw.SummaryLLM)
+	}
 	return ctx
 }
 
@@ -368,7 +357,7 @@ type inferenceMarked interface {
 	InferenceInfo() InferenceInfo
 }
 
-func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]string {
+func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent) map[string]string {
 	creds := map[string]string{}
 	for envVar, keys := range envKeyMap {
 		if v := os.Getenv(envVar); v != "" {
@@ -378,7 +367,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 		}
 	}
 	// Provider API keys.
-	for _, prov := range []Provider{asProvider(p.STT), asLLMProvider(p.LLM), asProvider(p.TTS)} {
+	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS)} {
 		if prov == nil {
 			continue
 		}
@@ -388,8 +377,16 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 			}
 		}
 	}
+	if cw := resolveContextWindow(agent, p); cw != nil && cw.SummaryLLM != nil {
+		sl := cw.SummaryLLM
+		if key := sl.APIKey(); key != "" {
+			if name := sl.ProviderName(); name != "" {
+				creds[name] = key
+			}
+		}
+	}
 	// General KNOB_MAP over stt, llm, tts, vad.
-	for _, prov := range []Provider{asProvider(p.STT), asLLMProvider(p.LLM), asProvider(p.TTS), asVADProvider(p.VAD)} {
+	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS), as[Provider](p.VAD)} {
 		if prov == nil {
 			continue
 		}
@@ -409,7 +406,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 		knobs := p.STT.Knobs()
 		for _, knob := range sttKnobMap[name] {
 			if v, ok := knobs[knob]; ok {
-				if s, keep := serializeSTTKnob(v); keep {
+				if s, keep := serializeKnob(v); keep {
 					creds[name+"_stt_"+knob] = s
 				}
 			}
@@ -441,7 +438,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 		}
 	}
 	// Dedicated-inference markers.
-	for _, m := range []inferenceMarked{asInference(p.STT), asInferenceLLM(p.LLM), asInference(p.TTS), asInferenceEOU(p.TurnDetector)} {
+	for _, m := range []inferenceMarked{as[inferenceMarked](p.STT), as[inferenceMarked](p.LLM), as[inferenceMarked](p.TTS), as[inferenceMarked](p.TurnDetector)} {
 		if m == nil {
 			continue
 		}
@@ -482,14 +479,8 @@ func buildVoicemailConfig(v *VoiceMailDetector) *pb.VoicemailConfig {
 	if v == nil {
 		return &pb.VoicemailConfig{Enabled: false}
 	}
-	duration := v.Duration
-	if duration == 0 {
-		duration = 2.0
-	}
-	threshold := v.DetectionThreshold
-	if threshold == 0 {
-		threshold = 1.0
-	}
+	duration := cmp.Or(v.Duration, 2.0)
+	threshold := cmp.Or(v.DetectionThreshold, 1.0)
 	return &pb.VoicemailConfig{
 		Enabled:             true,
 		DetectionThreshold:  float32(threshold),
@@ -527,22 +518,13 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 		ttsCfg = buildTTSConfig(ttsSlot)
 	}
 
-	minClause := uint32(5)
-	if p.SentenceMinClauseLen != 0 {
-		minClause = uint32(p.SentenceMinClauseLen)
-	}
-	firstClause := uint32(3)
-	if p.SentenceFirstClauseLen != 0 {
-		firstClause = uint32(p.SentenceFirstClauseLen)
-	}
-	minSentence := uint32(3)
-	if p.SentenceMinSentenceLen != 0 {
-		minSentence = uint32(p.SentenceMinSentenceLen)
-	}
+	minClause := uint32(cmp.Or(p.SentenceMinClauseLen, 5))
+	firstClause := uint32(cmp.Or(p.SentenceFirstClauseLen, 3))
+	minSentence := uint32(cmp.Or(p.SentenceMinSentenceLen, 3))
 
 	return &pb.CascadeConfig{
 		Stt:       sttCfg,
-		Llm:       buildLLMConfig(asLLM(p.LLM)),
+		Llm:       buildLLMConfig(as[LLM](p.LLM)),
 		Tts:       ttsCfg,
 		Vad:       buildVADConfig(p.VAD),
 		Interrupt: buildInterruptConfig(p.InterruptConfig),
@@ -566,20 +548,9 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 			MinSentenceLen: minSentence,
 		},
 		OrchestratorTiming:   &pb.OrchestratorTimingConfig{PollIntervalMs: 10, MaxDrainSecs: 10, TtsDrainGraceMs: 500},
-		SttFilterPatterns:    append([]string(nil), p.STTFilterPatterns...),
-		SttWordSubstitutions: copyStringMap(p.STTWordSubstitutions),
+		SttFilterPatterns:    slices.Clone(p.STTFilterPatterns),
+		SttWordSubstitutions: maps.Clone(p.STTWordSubstitutions),
 	}
-}
-
-func copyStringMap(m map[string]string) map[string]string {
-	if m == nil {
-		return nil
-	}
-	out := make(map[string]string, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
 }
 
 func llmIsRealtime(llm LLMLike) bool {
@@ -645,24 +616,18 @@ func buildRealtimeProviderConfig(p *Pipeline) *pb.RealtimeProviderConfig {
 	provider := ""
 	if rm, ok := p.LLM.(RealtimeModel); ok {
 		info = rm.RealtimeInfo()
-		provider = info.Provider
-		if provider == "" {
-			provider = rm.ProviderName()
-		}
+		provider = cmp.Or(info.Provider, rm.ProviderName())
 	}
-	params := map[string]string{}
-	for k, v := range info.Params {
-		params[k] = v
-	}
+	params := maps.Clone(info.Params)
 	var modalities []string
 	if p.RealtimeConfig != nil && len(p.RealtimeConfig.ResponseModalities) > 0 {
-		modalities = append([]string(nil), p.RealtimeConfig.ResponseModalities...)
+		modalities = slices.Clone(p.RealtimeConfig.ResponseModalities)
 		if p.RealtimeConfig.Mode == "llm_only" {
 			modalities = []string{"TEXT"}
 		}
 	}
 	if len(modalities) == 0 {
-		modalities = append([]string(nil), info.ResponseModalities...)
+		modalities = slices.Clone(info.ResponseModalities)
 	}
 	detected := detectPipelineMode(p)
 	protoMode := "full_s2s"
@@ -682,10 +647,7 @@ func buildRealtimeProviderConfig(p *Pipeline) *pb.RealtimeProviderConfig {
 		Params:             params,
 	}
 	if (provider == "gemini" || provider == "gemini_live") && info.Vertex != nil && info.Vertex.ProjectID != "" {
-		loc := info.Vertex.Location
-		if loc == "" {
-			loc = "us-central1"
-		}
+		loc := cmp.Or(info.Vertex.Location, "us-central1")
 		vx := &pb.VertexAIConfig{ProjectId: info.Vertex.ProjectID, Location: loc}
 		if info.Vertex.ServiceAccountJSON != "" {
 			vx.ServiceAccountJson = info.Vertex.ServiceAccountJSON
@@ -726,11 +688,7 @@ func buildMCPServerConfigs(a *BaseAgent) []*pb.MCPServerConfig {
 			out = append(out, &pb.MCPServerConfig{Type: "stdio", Command: cmd, Args: args, Env: env})
 		case "http":
 			url, headers := srv.mcpHTTP()
-			env := map[string]string{}
-			for k, v := range headers {
-				env[k] = v
-			}
-			out = append(out, &pb.MCPServerConfig{Type: "http", Url: url, Env: env})
+			out = append(out, &pb.MCPServerConfig{Type: "http", Url: url, Env: maps.Clone(headers)})
 		default:
 			out = append(out, &pb.MCPServerConfig{Type: srv.mcpType()})
 		}
@@ -747,25 +705,13 @@ func buildKnowledgeBaseConfig(a *BaseAgent) *pb.KnowledgeBaseConfig {
 	if cfg == nil {
 		return &pb.KnowledgeBaseConfig{Enabled: true}
 	}
-	provider := cfg.Provider
-	if provider == "" {
-		provider = "custom"
-	}
-	topK := cfg.TopK
-	if topK == 0 {
-		topK = 5
-	}
-	minScore := cfg.MinScore
-	if minScore == 0 {
-		minScore = 0.7
-	}
 	return &pb.KnowledgeBaseConfig{
 		Enabled:   true,
-		Provider:  provider,
+		Provider:  cmp.Or(cfg.Provider, "custom"),
 		IndexName: cfg.IndexName,
-		TopK:      uint32(topK),
-		MinScore:  float32(minScore),
-		Params:    copyStringMap(cfg.Params),
+		TopK:      uint32(cmp.Or(cfg.TopK, 5)),
+		MinScore:  float32(cmp.Or(cfg.MinScore, 0.7)),
+		Params:    maps.Clone(cfg.Params),
 	}
 }
 
@@ -781,10 +727,28 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 		suffixToSend = *a.voiceSuffix
 	}
 	var altProtos []*pb.NamedAgentConfig
-	for _, alt := range a.alternates {
-		if alt == nil || alt.AgentID == "" {
+	seenAlt := map[string]bool{}
+	for _, ag := range a.handoffAgents {
+		if ag == nil {
 			continue
 		}
+		hb := ag.base()
+		if hb.id == "" || seenAlt[hb.id] {
+			continue
+		}
+		seenAlt[hb.id] = true
+		altProtos = append(altProtos, &pb.NamedAgentConfig{
+			AgentId:      hb.id,
+			Instructions: hb.instructions,
+			Tools:        buildToolSchemas(hb.tools),
+			Greeting:     hb.greeting,
+		})
+	}
+	for _, alt := range a.alternates {
+		if alt == nil || alt.AgentID == "" || seenAlt[alt.AgentID] {
+			continue
+		}
+		seenAlt[alt.AgentID] = true
 		altProtos = append(altProtos, &pb.NamedAgentConfig{
 			AgentId:      alt.AgentID,
 			Instructions: alt.Instructions,
@@ -805,17 +769,15 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	autoBeforeLLM := autoEnable["llm"] || autoEnable["llm_messages"]
 	autoLLMStream := autoEnable["llm_stream"]
 	llmStreamEnabled := autoLLMStream || a.llmStreamHookEnabled || (p != nil && p.LLMStreamHookEnabled)
-	timeoutMS := a.llmStreamHookTimeoutMS
-	if timeoutMS == 0 {
-		timeoutMS = 100
-	}
+	timeoutMS := cmp.Or(a.llmStreamHookTimeoutMS, 100)
+	contextWindow := resolveContextWindow(agent, p)
 	return &pb.AgentConfig{
 		AgentId:                  a.id,
 		Instructions:             a.instructions,
 		Tools:                    buildToolSchemas(a.tools),
 		RegisteredHooks:          registeredHooks,
 		BeforeLlmHook:            autoBeforeLLM || a.beforeLLMHook,
-		ContextWindow:            buildContextWindowConfig(a.contextWindow()),
+		ContextWindow:            buildContextWindowConfig(contextWindow),
 		Greeting:                 userGreeting,
 		GreetingNonInterruptible: a.greetingNonInterruptible,
 		AppendVoiceSuffix:        a.appendVoiceSuffix,
@@ -829,18 +791,22 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	}
 }
 
+var (
+	recordingFormatMap        = map[string]pb.RecordingFormat{"wav": 0, "ogg_opus": 1, "mp3": 2, "flac": 3}
+	recordingChannelMap       = map[string]pb.RecordingChannelMode{"mixed": 0, "dual_channel": 1}
+	recordingTranscriptFmtMap = map[string]pb.RecordingTranscriptFormat{"json": 0, "srt": 1, "vtt": 2}
+)
+
 func buildRecordingConfig(rec *RecordingConfig) *pb.RecordingConfig {
 	if rec == nil {
 		return &pb.RecordingConfig{Enabled: false}
 	}
-	formatMap := map[string]pb.RecordingFormat{"wav": 0, "ogg_opus": 1, "mp3": 2, "flac": 3}
-	channelMap := map[string]pb.RecordingChannelMode{"mixed": 0, "dual_channel": 1}
 	format := pb.RecordingFormat(1)
-	if v, ok := formatMap[rec.Format]; ok {
+	if v, ok := recordingFormatMap[rec.Format]; ok {
 		format = v
 	}
 	channel := pb.RecordingChannelMode(1)
-	if v, ok := channelMap[rec.ChannelMode]; ok {
+	if v, ok := recordingChannelMap[rec.ChannelMode]; ok {
 		channel = v
 	}
 	cfg := &pb.RecordingConfig{
@@ -854,7 +820,7 @@ func buildRecordingConfig(rec *RecordingConfig) *pb.RecordingConfig {
 		MaxFileSizeMb:      uint32(rec.MaxFileSizeMB),
 		RecordingBeep:      rec.RecordingBeep,
 		RedactDtmf:         rec.RedactDTMF,
-		CustomMetadata:     copyStringMap(rec.CustomMetadata),
+		CustomMetadata:     maps.Clone(rec.CustomMetadata),
 		RecordingName:      rec.RecordingName,
 		RecordingGroup:     rec.RecordingGroup,
 		ApplyDenoise:       rec.ApplyDenoise,
@@ -882,17 +848,16 @@ func buildRecordingConfig(rec *RecordingConfig) *pb.RecordingConfig {
 			MultipartPartSizeMb:  uint32(s.MultipartPartSizeMB),
 			UploadTimeoutSeconds: uint32(s.UploadTimeoutSeconds),
 			MaxRetryAttempts:     uint32(s.MaxRetryAttempts),
-			Tags:                 copyStringMap(s.Tags),
-			UserMetadata:         copyStringMap(s.UserMetadata),
+			Tags:                 maps.Clone(s.Tags),
+			UserMetadata:         maps.Clone(s.UserMetadata),
 			ContentTypeOverride:  s.ContentTypeOverride,
 		}}}
 	}
 	if rec.Transcript != nil {
 		t := rec.Transcript
-		tfMap := map[string]pb.RecordingTranscriptFormat{"json": 0, "srt": 1, "vtt": 2}
 		cfg.Transcript = &pb.RecordingTranscriptConfig{
 			Enabled:               t.Enabled,
-			Format:                tfMap[t.Format],
+			Format:                recordingTranscriptFmtMap[t.Format],
 			IncludeWordTimestamps: t.IncludeWordTimestamps,
 			IncludeConfidence:     t.IncludeConfidence,
 			SpeakerLabels:         t.SpeakerLabels,
@@ -910,108 +875,42 @@ func buildSessionConfig(p *Pipeline, agent Agent, room roomConfigData, recording
 		Room: &pb.RoomConfig{
 			RoomId:                      room.RoomID,
 			AuthToken:                   room.AuthToken,
-			AgentName:                   orDefault(room.AgentName, "Agent"),
+			AgentName:                   cmp.Or(room.AgentName, "Agent"),
 			AutoEndSession:              room.AutoEndSession,
 			SessionTimeoutSeconds:       uint32(room.SessionTimeoutSeconds),
 			NoParticipantTimeoutSeconds: uint32(room.NoParticipantTimeoutSeconds),
 			AudioListenerEnabled:        room.AudioListenerEnabled,
 			AgentParticipantId:          room.AgentParticipantID,
-			Playground:                  room.Playground,
 			Vision:                      room.Vision,
 			RecordingEnabled:            room.RecordingEnabled,
 			BackgroundAudioEnabled:      room.BackgroundAudioEnabled,
 			SendLogsToDashboard:         true,
 		},
-		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions)},
-		Limits:        &pb.SessionLimits{InactivityTimeoutSeconds: 300},
+		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions, agent)},
+		Limits:        buildSessionLimits(agent, p),
 		ClientVersion: clientVersionInfo(),
 		Recording:     buildRecordingConfig(recording),
 	}
 }
 
-func buildAgentRegistration(agent Agent, p *Pipeline, agentKind string, maxConcurrent int, authToken string, labels map[string]string, defaultRecording *RecordingConfig, sessionOptions map[string]string) *pb.AgentRegistration {
-	return &pb.AgentRegistration{
-		AgentKind:             agentKind,
-		Agent:                 buildAgentConfig(agent, p),
-		Pipeline:              buildPipelineConfig(p),
-		Credentials:           &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions)},
-		DefaultRecording:      buildRecordingConfig(defaultRecording),
-		MaxConcurrentSessions: uint32(maxConcurrent),
-		Labels:                labels,
-		ClientVersion:         clientVersionInfo(),
-		AuthToken:             authToken,
+func buildSessionLimits(agent Agent, p *Pipeline) *pb.SessionLimits {
+	inactivity := uint32(300)
+	if p != nil && p.InactivityTimeoutSeconds != nil && *p.InactivityTimeoutSeconds > 0 {
+		inactivity = uint32(*p.InactivityTimeoutSeconds)
 	}
+	limits := &pb.SessionLimits{InactivityTimeoutSeconds: inactivity}
+	if agent != nil {
+		if d := agent.base().maxSessionDurationSeconds; d != nil && *d > 0 {
+			limits.MaxSessionDurationSeconds = uint32(*d)
+		}
+	}
+	return limits
 }
 
-func orDefault(v, def string) string {
-	if v == "" {
-		return def
-	}
-	return v
-}
+// ---- type-assertion helper ----
 
-// ---- type-assertion helpers ----
-
-func asProvider(v any) Provider {
-	if v == nil {
-		return nil
-	}
-	if p, ok := v.(Provider); ok {
-		return p
-	}
-	return nil
-}
-
-func asLLMProvider(v LLMLike) Provider {
-	if v == nil {
-		return nil
-	}
-	if p, ok := v.(Provider); ok {
-		return p
-	}
-	return nil
-}
-
-func asVADProvider(v VAD) Provider {
-	if v == nil {
-		return nil
-	}
-	return v
-}
-
-func asLLM(v LLMLike) LLM {
-	if v == nil {
-		return nil
-	}
-	if l, ok := v.(LLM); ok {
-		return l
-	}
-	return nil
-}
-
-func asInference(v any) inferenceMarked {
-	if v == nil {
-		return nil
-	}
-	if m, ok := v.(inferenceMarked); ok {
-		return m
-	}
-	return nil
-}
-
-func asInferenceLLM(v LLMLike) inferenceMarked {
-	if v == nil {
-		return nil
-	}
-	if m, ok := v.(inferenceMarked); ok {
-		return m
-	}
-	return nil
-}
-
-func asInferenceEOU(v EOU) inferenceMarked {
-	if v == nil {
-		return nil
-	}
-	return v
+// as returns v viewed as interface T, or the zero value of T if v does not implement T.
+func as[T any](v any) T {
+	t, _ := v.(T)
+	return t
 }
