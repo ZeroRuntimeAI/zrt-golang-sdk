@@ -144,6 +144,11 @@ type WorkerOptions struct {
 	Port              int
 	LogLevel          string
 
+	// OnReady, when set, is called once registration is confirmed (registered/serve
+	// mode). It may block / call zrt.Invoke; it runs on its own goroutine and panics
+	// are recovered and logged.
+	OnReady func()
+
 	// Logger routes SDK logs through a standard library *slog.Logger. When set,
 	// it takes precedence over LogLevel (level filtering is handled by the slog
 	// handler). When nil, the SDK uses its built-in logger at LogLevel.
@@ -177,15 +182,6 @@ type JobContext struct {
 	shuttingDown      bool
 	activeSession     *AgentSession
 	workerJob         *WorkerJob
-
-	registeredMode      bool
-	registeredSessionID string
-	registeredRegistry  *agentRegistry
-
-	registrationProbe bool
-	capturedAgent     Agent
-	capturedPipeline  *Pipeline
-	capturedRecording *RecordingConfig
 }
 
 // NewJobContext creates a JobContext.
@@ -302,9 +298,6 @@ func createRoomStatic(authToken, signalingBaseURL string) (string, error) {
 	return roomID, nil
 }
 
-// errRegistrationProbeComplete aborts the probe entrypoint after capture.
-var errRegistrationProbeComplete = errors.New("zrt: registration probe complete")
-
 type runnerInfo struct {
 	session   *AgentSession
 	roomOpts  *RoomOptions
@@ -400,120 +393,56 @@ func (w *WorkerJob) run() error {
 	return nil
 }
 
+// runRegistered registers the agent with the ZRT registry over a WebSocket
+// connection and serves dispatched sessions. There is no gRPC registration
+// handshake: each dispatched job runs the entrypoint, which starts a normal
+// AgentSession that connects directly via CreateSession. It blocks until shutdown.
 func (w *WorkerJob) runRegistered() error {
-	runtimeAddr := cmp.Or(os.Getenv("ZRT_RUNTIME_ADDRESS"), "localhost:50051")
-	// Registration probe: run the entrypoint to capture agent + pipeline.
-	probeCtx := w.buildProbeContext()
-	probeCtx.registrationProbe = true
-	probeRoot, probeCancel := context.WithCancel(context.Background())
-	err := w.entrypoint(probeRoot, probeCtx)
-	probeCancel()
-	if err != nil && !errors.Is(err, errRegistrationProbeComplete) {
-		logger.Errorf("Registration probe failed: %v", err)
-		return err
-	}
-	agentTemplate := probeCtx.capturedAgent
-	pipeline := probeCtx.capturedPipeline
-	defaultRecording := probeCtx.capturedRecording
-	if agentTemplate == nil || pipeline == nil {
-		return fmt.Errorf("register=true requires the entrypoint to construct an AgentSession (with agent + pipeline) so registration can capture the config")
-	}
 	resolvedToken, _ := ResolveAuthToken(w.options.AuthToken)
-
-	registry := newAgentRegistry(runtimeAddr, w.entrypoint, w.jobctxFactory, agentTemplate, pipeline, cmp.Or(w.options.AgentID, "ZeroRuntimeAgent"), max(1, w.options.MaxProcesses), map[string]string{}, resolvedToken, defaultRecording, w.options.InitializeTimeout)
-
-	var legacy *legacyBackendRegistration
-	if resolvedToken != "" && w.options.SignalingBaseURL != "" {
-		base := w.options.SignalingBaseURL
-		if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
-			base = "https://" + base
-		}
-		legacy = newLegacyBackendRegistration(resolvedToken, cmp.Or(w.options.AgentID, "ZeroRuntimeAgent"), base, w.options.LoadThreshold, max(1, w.options.MaxProcesses), w.entrypoint, w.jobctxFactory)
-		w.mu.Lock()
-		w.legacyReg = legacy
-		w.mu.Unlock()
+	if resolvedToken == "" || w.options.SignalingBaseURL == "" {
+		return fmt.Errorf("zrt.Serve registers over the WebSocket registry and needs auth " +
+			"(ZRT_AUTH_TOKEN / ZRT_API_KEY + ZRT_SECRET_KEY) plus a registry base URL " +
+			"(SignalingBaseURL / ZRT_SIGNALING_URL)")
 	}
+	base := w.options.SignalingBaseURL
+	if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
+		base = "https://" + base
+	}
+	agentID := cmp.Or(w.options.AgentID, "ZeroRuntimeAgent")
+	legacy := newLegacyBackendRegistration(resolvedToken, agentID, base, w.options.LoadThreshold, max(1, w.options.MaxProcesses), w.entrypoint, w.jobctxFactory)
+	w.mu.Lock()
+	w.legacyReg = legacy
+	w.mu.Unlock()
 
 	shutdownCh := make(chan struct{})
 	var shutdownOnce sync.Once
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		count := 0
-		for range sigCh {
-			count++
-			if count == 1 {
-				logger.Infof("Received shutdown signal — beginning drain (press Ctrl+C again to force-exit)")
-				go registry.beginDrain("sigterm")
-				shutdownOnce.Do(func() { close(shutdownCh) })
-			} else {
-				logger.Warnf("Received shutdown signal again — forcing immediate exit")
-				shutdownOnce.Do(func() { close(shutdownCh) })
-				return
-			}
-		}
+		<-sigCh
+		logger.Infof("Received shutdown signal — stopping registration")
+		shutdownOnce.Do(func() { close(shutdownCh) })
 	}()
 
-	if legacy != nil {
-		legacy.start()
-	}
-
-	supervisorDone := make(chan struct{})
-	go func() {
-		defer close(supervisorDone)
-		attempt := 0
-		for {
-			select {
-			case <-shutdownCh:
-				return
-			default:
-			}
-			runCtx, runCancel := context.WithCancel(context.Background())
+	if legacy.start() {
+		logger.Infof("Agent registered with registry: agent_id=%s worker_id=%s", agentID, legacy.workerID)
+		if w.options.OnReady != nil {
+			// OnReady may call zrt.Invoke; run it off the registration goroutine.
 			go func() {
-				<-shutdownCh
-				runCancel()
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Errorf("OnReady callback panicked: %v", r)
+					}
+				}()
+				w.options.OnReady()
 			}()
-			err := registry.run(runCtx)
-			runCancel()
-			if err != nil {
-				logger.Errorf("Registry stream error: %v", err)
-			}
-			select {
-			case <-shutdownCh:
-				return
-			default:
-			}
-			attempt++
-			delay := time.Duration(min(attempt*2, 10)) * time.Second
-			logger.Warnf("Runtime gRPC stream ended — reconnecting in %.1fs (attempt %d).", delay.Seconds(), attempt)
-			select {
-			case <-time.After(delay):
-			case <-shutdownCh:
-				return
-			}
 		}
-	}()
-
-	if registry.waitForRegistered(w.options.InitializeTimeout) {
-		logger.Infof("Registration confirmed within initialize_timeout=%.1fs", w.options.InitializeTimeout.Seconds())
 	} else {
-		logger.Warnf("Runtime did not confirm registration within initialize_timeout=%.1fs — continuing to wait in the background.", w.options.InitializeTimeout.Seconds())
+		logger.Warnf("Registry did not confirm registration on first attempt — retrying in the background.")
 	}
 
 	<-shutdownCh
-	<-supervisorDone
-	if legacy != nil {
-		legacy.stop()
-	}
-	registry.stop()
+	legacy.stop()
 	logger.Infof("Registered agent shutdown complete.")
 	return nil
-}
-
-func (w *WorkerJob) buildProbeContext() *JobContext {
-	ctx := w.buildJobContext()
-	if len(ctx.Metadata) == 0 {
-		ctx.Metadata = map[string]any{"callId": "__probe__", "sipCallTo": "+0000000000", "sipCallFrom": "+0000000000", "callType": "outbound", "webhook_url": ""}
-	}
-	return ctx
 }

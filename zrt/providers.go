@@ -56,7 +56,7 @@ type STTRuntimeConfig struct {
 	Model         string
 	Language      string
 	EndpointingMs uint32
-	Fallbacks []STTRuntimeConfig
+	Fallbacks     []STTRuntimeConfig
 }
 
 // LLMRuntimeConfig holds LLM settings for a pipeline.
@@ -65,13 +65,13 @@ type LLMRuntimeConfig struct {
 	Model           string
 	Temperature     float32
 	MaxOutputTokens uint32
-	Fallbacks []LLMRuntimeConfig
+	Fallbacks       []LLMRuntimeConfig
 }
 
 // TTSRuntimeConfig holds text-to-speech settings for a pipeline.
 type TTSRuntimeConfig struct {
-	Provider string
-	Voice    string
+	Provider  string
+	Voice     string
 	Fallbacks []TTSRuntimeConfig
 }
 

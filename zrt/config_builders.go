@@ -882,31 +882,30 @@ func buildSessionConfig(p *Pipeline, agent Agent, room roomConfigData, recording
 			NoParticipantTimeoutSeconds: uint32(room.NoParticipantTimeoutSeconds),
 			AudioListenerEnabled:        room.AudioListenerEnabled,
 			AgentParticipantId:          room.AgentParticipantID,
-			Playground:                  room.Playground,
 			Vision:                      room.Vision,
 			RecordingEnabled:            room.RecordingEnabled,
 			BackgroundAudioEnabled:      room.BackgroundAudioEnabled,
 			SendLogsToDashboard:         true,
 		},
 		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions, agent)},
-		Limits:        &pb.SessionLimits{InactivityTimeoutSeconds: 300},
+		Limits:        buildSessionLimits(agent, p),
 		ClientVersion: clientVersionInfo(),
 		Recording:     buildRecordingConfig(recording),
 	}
 }
 
-func buildAgentRegistration(agent Agent, p *Pipeline, agentKind string, maxConcurrent int, authToken string, labels map[string]string, defaultRecording *RecordingConfig, sessionOptions map[string]string) *pb.AgentRegistration {
-	return &pb.AgentRegistration{
-		AgentKind:             agentKind,
-		Agent:                 buildAgentConfig(agent, p),
-		Pipeline:              buildPipelineConfig(p),
-		Credentials:           &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions, agent)},
-		DefaultRecording:      buildRecordingConfig(defaultRecording),
-		MaxConcurrentSessions: uint32(maxConcurrent),
-		Labels:                labels,
-		ClientVersion:         clientVersionInfo(),
-		AuthToken:             authToken,
+func buildSessionLimits(agent Agent, p *Pipeline) *pb.SessionLimits {
+	inactivity := uint32(300)
+	if p != nil && p.InactivityTimeoutSeconds != nil && *p.InactivityTimeoutSeconds > 0 {
+		inactivity = uint32(*p.InactivityTimeoutSeconds)
 	}
+	limits := &pb.SessionLimits{InactivityTimeoutSeconds: inactivity}
+	if agent != nil {
+		if d := agent.base().maxSessionDurationSeconds; d != nil && *d > 0 {
+			limits.MaxSessionDurationSeconds = uint32(*d)
+		}
+	}
+	return limits
 }
 
 // ---- type-assertion helper ----

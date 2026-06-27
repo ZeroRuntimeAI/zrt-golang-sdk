@@ -78,19 +78,6 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		logger.Warnf("auto recording config skipped: %v", err)
 	}
 
-	// Registration probe: capture agent + pipeline, then abort before connecting.
-	if jobCtx != nil && jobCtx.registrationProbe {
-		jobCtx.capturedAgent = s.agent
-		jobCtx.capturedPipeline = s.pipeline
-		jobCtx.capturedRecording = s.recording
-		return errRegistrationProbeComplete
-	}
-
-	// Registered-agent mode: bind to the registry instead of opening a channel.
-	if jobCtx != nil && jobCtx.registeredMode {
-		return s.startBound(ctx, jobCtx, opts.RunUntilShutdown)
-	}
-
 	runtimeAddr := cmp.Or(opts.RuntimeAddress, os.Getenv("ZRT_RUNTIME_ADDRESS"), "localhost:50051")
 
 	room, err := s.resolveRoomConfig(jobCtx)
@@ -134,39 +121,6 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		case <-s.shutdownCh:
 		case <-ctx.Done():
 			logger.Infof("Session context cancelled — shutting down")
-		}
-		s.Close(context.Background(), "sdk_close")
-	}
-	return nil
-}
-
-func (s *AgentSession) startBound(ctx context.Context, jobCtx *JobContext, runUntilShutdown bool) error {
-	registry := jobCtx.registeredRegistry
-	sid := jobCtx.registeredSessionID
-	s.mu.Lock()
-	s.sessionID = sid
-	s.registeredSession = sid
-	s.boundRegistry = registry
-	s.transport = &registryTransport{registry: registry, sid: sid}
-	s.agentState = AgentStateIdle
-	s.mu.Unlock()
-	if registry != nil {
-		registry.bindSession(sid, s)
-	}
-	logger.Infof("Bound AgentSession to runtime session %s", sid)
-	s.Emit("agent_state_changed", map[string]any{"state": AgentStateIdle})
-	s.emitMeetingJoinedOnce()
-	s.awaitParticipantIfNeeded(ctx)
-	if err := s.agent.OnEnter(ctx); err != nil {
-		logger.Errorf("on_enter error: %v", err)
-	}
-	if s.wakeUp > 0 && s.onWakeUp != nil {
-		go s.wakeUpWatcher()
-	}
-	if runUntilShutdown {
-		select {
-		case <-s.shutdownCh:
-		case <-ctx.Done():
 		}
 		s.Close(context.Background(), "sdk_close")
 	}
@@ -891,7 +845,7 @@ func printPlaygroundURL(room roomConfigData) {
 	if !enabled || room.RoomID == "" || room.AuthToken == "" {
 		return
 	}
-	base := cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.videosdk.live/cli")
+	base := cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai//cli")
 	logger.Infof("Agent started in playground mode")
 	// Playground mode is an explicit, dev-facing opt-in and the URL is meant to be
 	// opened in a browser, so the full token is printed (it is unusable truncated).

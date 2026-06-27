@@ -128,14 +128,12 @@ type AgentSession struct {
 	wakeUpReset chan struct{}
 
 	shutdownCallbacks    []func()
-	boundRegistry        *agentRegistry
-	registeredSession    string
 	meetingJoinedEmitted bool
 	jobCtx               *JobContext
 	audioTrackCache      *AudioTrack
-	agentsByID   map[string]Agent
-	alternateIDs map[string]bool
-	handoffs []AgentHandoff
+	agentsByID           map[string]Agent
+	alternateIDs         map[string]bool
+	handoffs             []AgentHandoff
 }
 
 // NewAgentSession creates a session that runs agent with pipeline. Call Start to

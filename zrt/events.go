@@ -7,6 +7,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
@@ -298,10 +299,6 @@ func evVoicemail(s *AgentSession, v *pb.VoicemailDetectedEvent) {
 	s.Emit("voicemail_detected", map[string]any{"confidence": v.GetConfidence(), "transcript": v.GetTranscript()})
 }
 
-func evA2A(s *AgentSession, a *pb.A2AMessageEvent) {
-	s.Emit("a2a_message", map[string]any{"source_agent_id": a.GetSourceAgentId(), "message_json": a.GetMessageJson()})
-}
-
 func evPubSubMessage(s *AgentSession, m *pb.PubSubMessageEvent) {
 	var payload any
 	if pj := m.GetPayloadJson(); pj != "" {
@@ -517,6 +514,54 @@ func evAgentTurnEnd(s *AgentSession, ate *pb.AgentTurnEndEvent) {
 }
 
 // ---- tool execution (shared) ----
+
+func toolFiller(tools []*FunctionTool, toolName string) string {
+	for _, t := range tools {
+		if t != nil && t.Info.Name == toolName {
+			return t.Info.Filler
+		}
+	}
+	return ""
+}
+
+const toolFillerGraceMs = 300
+
+// toolFillerGracePeriod returns the per-tool grace period (ms) before the filler is
+// spoken, or 0 when the tool has no override (callers fall back to toolFillerGraceMs).
+func toolFillerGracePeriod(tools []*FunctionTool, toolName string) int {
+	for _, t := range tools {
+		if t != nil && t.Info.Name == toolName {
+			return t.Info.FillerGracePeriod
+		}
+	}
+	return 0
+}
+
+func executeToolWithFiller(ctx context.Context, tools []*FunctionTool, callID, toolName, argsJSON, filler string, graceMs int, say func(text string), sendResult func(callID, resultJSON string, isErr bool), onResult func(any) any) {
+	done := make(chan struct{})
+	if filler != "" && say != nil {
+		grace := graceMs
+		if grace <= 0 {
+			grace = toolFillerGraceMs
+		}
+		go func() {
+			timer := time.NewTimer(time.Duration(grace) * time.Millisecond)
+			defer timer.Stop()
+			select {
+			case <-timer.C:
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Debugf("tool filler say panicked: %v", r)
+					}
+				}()
+				say(filler)
+			case <-done:
+			}
+		}()
+	}
+	executeTool(ctx, tools, callID, toolName, argsJSON, sendResult, onResult)
+	close(done)
+}
 
 // executeTool runs the named tool and sends its result. onResult, when non-nil,
 // is applied to the raw return value before serialization; it is how a tool that

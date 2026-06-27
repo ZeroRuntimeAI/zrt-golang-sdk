@@ -139,9 +139,6 @@ func (s *AgentSession) applyAgentSwitch(from, to, reason string) {
 
 	newAgent.base().session = s
 	s.pipeline.setAgent(newAgent)
-	if s.boundRegistry != nil && s.registeredSession != "" {
-		s.boundRegistry.setSessionAgent(s.registeredSession, newAgent)
-	}
 
 	// For agents the runtime did not pre-load as alternates it warned and left the
 	// old persona in place, so apply the new instructions/tools ourselves. For

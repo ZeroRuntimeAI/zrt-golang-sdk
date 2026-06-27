@@ -7,9 +7,11 @@ import "context"
 // ParametersSchema is a JSON Schema object (e.g.
 // {"type":"object","properties":{...},"required":[...]}).
 type FunctionToolInfo struct {
-	Name             string
-	Description      string
-	ParametersSchema map[string]any
+	Name              string
+	Description       string
+	ParametersSchema  map[string]any
+	Filler            string
+	FillerGracePeriod int
 }
 
 // ToolHandler executes a tool call. args is the decoded arguments object. The
@@ -26,13 +28,37 @@ type FunctionTool struct {
 	Handler ToolHandler
 }
 
-// NewFunctionTool builds a FunctionTool. schema may be nil (treated as an empty
-// object schema).
-func NewFunctionTool(name, description string, schema map[string]any, handler ToolHandler) *FunctionTool {
-	return &FunctionTool{
-		Info:    FunctionToolInfo{Name: name, Description: description, ParametersSchema: schema},
-		Handler: handler,
+// ToolOption configures optional FunctionTool metadata (see WithFiller).
+type ToolOption func(*FunctionToolInfo)
+
+// WithFiller makes the tool speak filler when it is called — a short line that
+// covers the tool's latency. Pass it to NewFunctionTool.
+//
+// An optional grace period (in milliseconds) sets how long to wait for the tool to
+// return before the filler is spoken; if the tool finishes within it, the filler is
+// skipped. Omit it (or pass 0) to keep the default grace (300ms):
+//
+//	zrt.WithFiller("One moment...")      // default 300ms grace
+//	zrt.WithFiller("One moment...", 500) // custom 500ms grace
+func WithFiller(filler string, graceMs ...int) ToolOption {
+	return func(i *FunctionToolInfo) {
+		i.Filler = filler
+		if len(graceMs) > 0 {
+			i.FillerGracePeriod = graceMs[0]
+		}
 	}
+}
+
+// NewFunctionTool builds a FunctionTool. schema may be nil (treated as an empty
+// object schema). Optional behavior is set via ToolOptions, e.g.:
+//
+//	zrt.NewFunctionTool(name, desc, schema, handler, zrt.WithFiller("One moment..."))
+func NewFunctionTool(name, description string, schema map[string]any, handler ToolHandler, opts ...ToolOption) *FunctionTool {
+	info := FunctionToolInfo{Name: name, Description: description, ParametersSchema: schema}
+	for _, opt := range opts {
+		opt(&info)
+	}
+	return &FunctionTool{Info: info, Handler: handler}
 }
 
 // ToolInfo returns the tool metadata.

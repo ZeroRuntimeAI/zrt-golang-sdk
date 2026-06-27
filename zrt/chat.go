@@ -157,7 +157,6 @@ type TruncateOptions struct {
 	MaxTokens int
 }
 
-
 func (c *ChatContext) Truncate(opts TruncateOptions) *ChatContext {
 	out := c.Copy()
 	if opts.MaxItems > 0 && len(out.messages) > opts.MaxItems {

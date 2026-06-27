@@ -63,7 +63,7 @@ type ContextWindow struct {
 	MaxContextItems     int
 	KeepRecentTurns     int
 	MaxToolCallsPerTurn int
-	SummaryLLM LLM
+	SummaryLLM          LLM
 }
 
 // DefaultContextWindow returns a ContextWindow with default values.
