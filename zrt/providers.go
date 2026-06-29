@@ -71,6 +71,8 @@ type LLMRuntimeConfig struct {
 // TTSRuntimeConfig holds text-to-speech settings for a pipeline.
 type TTSRuntimeConfig struct {
 	Provider  string
+	Model     string
+	Language  string
 	Voice     string
 	Fallbacks []TTSRuntimeConfig
 }

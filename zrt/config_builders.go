@@ -116,10 +116,6 @@ func buildSTTConfig(stt STT) *pb.STTProviderConfig {
 		return &pb.STTProviderConfig{}
 	}
 	c := stt.STTConfig()
-	endpointing := c.EndpointingMs
-	if endpointing == 0 {
-		endpointing = 50
-	}
 	cfg := &pb.STTProviderConfig{
 		Provider:      c.Provider,
 		Model:         c.Model,
@@ -129,7 +125,6 @@ func buildSTTConfig(stt STT) *pb.STTProviderConfig {
 	if info := stt.InferenceInfo(); info.IsInference {
 		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
 	}
-	return cfg
 	for _, fb := range c.Fallbacks {
 		cfg.Fallbacks = append(cfg.Fallbacks, &pb.STTProviderConfig{
 			Provider:      fb.Provider,
@@ -216,9 +211,9 @@ func buildTTSConfig(tts TTS) *pb.TTSProviderConfig {
 		return &pb.TTSProviderConfig{}
 	}
 	c := tts.TTSConfig()
-	cfg := &pb.TTSProviderConfig{Provider: c.Provider, Voice: c.Voice}
+	cfg := &pb.TTSProviderConfig{Provider: c.Provider, Model: c.Model, Language: c.Language, Voice: c.Voice}
 	for _, fb := range c.Fallbacks {
-		cfg.Fallbacks = append(cfg.Fallbacks, &pb.TTSProviderConfig{Provider: fb.Provider, Voice: fb.Voice})
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.TTSProviderConfig{Provider: fb.Provider, Model: fb.Model, Language: fb.Language, Voice: fb.Voice})
 	}
 	if tts.ProviderName() == "cartesia" {
 		if emb := tts.VoiceEmbedding(); len(emb) > 0 {
