@@ -116,12 +116,20 @@ func buildSTTConfig(stt STT) *pb.STTProviderConfig {
 		return &pb.STTProviderConfig{}
 	}
 	c := stt.STTConfig()
+	endpointing := c.EndpointingMs
+	if endpointing == 0 {
+		endpointing = 50
+	}
 	cfg := &pb.STTProviderConfig{
 		Provider:      c.Provider,
 		Model:         c.Model,
 		Language:      c.Language,
 		EndpointingMs: cmp.Or(c.EndpointingMs, 50),
 	}
+	if info := stt.InferenceInfo(); info.IsInference {
+		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
+	}
+	return cfg
 	for _, fb := range c.Fallbacks {
 		cfg.Fallbacks = append(cfg.Fallbacks, &pb.STTProviderConfig{
 			Provider:      fb.Provider,
@@ -158,6 +166,9 @@ func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
 				cfg.GeminiExtras = extras
 			}
 		}
+	}
+	if info := llm.InferenceInfo(); info.IsInference {
+		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
 	}
 	return cfg
 }
@@ -217,6 +228,9 @@ func buildTTSConfig(tts TTS) *pb.TTSProviderConfig {
 			}
 			cfg.CartesiaExtras = &pb.CartesiaExtras{VoiceEmbedding: ve}
 		}
+	}
+	if info := tts.InferenceInfo(); info.IsInference {
+		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
 	}
 	return cfg
 }
@@ -437,27 +451,29 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 			}
 		}
 	}
-	// Dedicated-inference markers.
-	for _, m := range []inferenceMarked{as[inferenceMarked](p.STT), as[inferenceMarked](p.LLM), as[inferenceMarked](p.TTS), as[inferenceMarked](p.TurnDetector)} {
-		if m == nil {
+	zrtToken := os.Getenv("ZRT_AUTH_TOKEN")
+	if zrtToken == "" {
+		zrtToken = os.Getenv("VIDEOSDK_AUTH_TOKEN")
+	}
+	if zrtToken != "" {
+		creds["zrt_auth_token"] = zrtToken
+	}
+	for _, sc := range []struct {
+		slot string
+		prov inferenceMarked
+	}{{"stt", asInference(p.STT)}, {"llm", asInferenceLLM(p.LLM)}, {"tts", asInference(p.TTS)}} {
+		if sc.prov == nil {
 			continue
 		}
-		info := m.InferenceInfo()
-		if !info.IsInference {
+		if !sc.prov.InferenceInfo().IsInference {
 			continue
 		}
-		name := m.ProviderName()
-		if name == "" {
-			continue
-		}
-		creds[name+"_inference"] = "true"
-		if info.BaseURL != "" {
-			if _, exists := creds[name+"_base_url"]; !exists {
-				creds[name+"_base_url"] = info.BaseURL
+		if cm, ok := sc.prov.(interface{ InferenceConfigMap() map[string]any }); ok {
+			if m := cm.InferenceConfigMap(); len(m) > 0 {
+				if b, err := json.Marshal(m); err == nil {
+					creds[sc.slot+"_inference_config"] = string(b)
+				}
 			}
-		}
-		if info.Location != "" {
-			creds[name+"_location"] = info.Location
 		}
 	}
 	for k, v := range sessionOptions {
