@@ -15,7 +15,7 @@ type RealtimeOptions struct {
 	// APIKey authenticates with Gemini. Overrides the GOOGLE_API_KEY
 	// environment variable.
 	APIKey                          string
-	Model                           string   // default "gemini-2.0-flash-live-001"
+	Model                           string   // default "gemini-3.1-flash-live-preview"
 	Voice                           string   // default "Puck"
 	ResponseModalities              []string // default ["AUDIO"]
 	TopP                            *float64
@@ -33,8 +33,8 @@ type RealtimeOptions struct {
 	VADSilenceDurationMS            *int
 	ContextCompressionTriggerTokens *int
 	SessionResumptionHandle         *string
-	EnableInputTranscription        bool
-	EnableOutputTranscription       bool
+	EnableInputTranscription        *bool // default true
+	EnableOutputTranscription       *bool // default true
 
 	VertexAI                 bool
 	VertexProjectID          string
@@ -93,8 +93,8 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 	putInt("vad_prefix_padding_ms", opts.VADPrefixPaddingMS)
 	putInt("vad_silence_duration_ms", opts.VADSilenceDurationMS)
 	putInt("context_compression_trigger_tokens", opts.ContextCompressionTriggerTokens)
-	params["enable_input_transcription"] = boolStr(opts.EnableInputTranscription)
-	params["enable_output_transcription"] = boolStr(opts.EnableOutputTranscription)
+	params["enable_input_transcription"] = boolStr(boolOr(opts.EnableInputTranscription, true))
+	params["enable_output_transcription"] = boolStr(boolOr(opts.EnableOutputTranscription, true))
 	if opts.SessionResumptionHandle != nil {
 		params["session_resumption_handle"] = *opts.SessionResumptionHandle
 	}
@@ -118,7 +118,7 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 		}
 		vertex = &zrt.VertexInfo{ProjectID: opts.VertexProjectID, Location: loc, ServiceAccountJSON: saJSON, ServiceAccountPath: opts.VertexServiceAccountPath}
 	}
-	r := &Realtime{Model: zrt.StrOr(opts.Model, "gemini-2.0-flash-live-001"), Voice: zrt.StrOr(opts.Voice, "Puck"), Modalities: modalities, params: params, vertex: vertex}
+	r := &Realtime{Model: zrt.StrOr(opts.Model, "gemini-3.1-flash-live-preview"), Voice: zrt.StrOr(opts.Voice, "Puck"), Modalities: modalities, params: params, vertex: vertex}
 	r.Init("gemini_live", zrt.APIKeyOr(opts.APIKey, "GOOGLE_API_KEY"))
 	return r
 }
@@ -133,4 +133,13 @@ func boolStr(b bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+// boolOr returns *p when set, else def. Used for tri-state options whose
+// default is true (so a caller must pass &false to disable).
+func boolOr(p *bool, def bool) bool {
+	if p != nil {
+		return *p
+	}
+	return def
 }
