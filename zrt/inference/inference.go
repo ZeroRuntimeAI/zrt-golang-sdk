@@ -54,13 +54,37 @@ func intOr(v, def int) int {
 	}
 	return v
 }
+func floatPtrOr(p *float64, def float64) float64 {
+	if p == nil {
+		return def
+	}
+	return *p
+}
+
+func intPtrOr(p *int, def int) int {
+	if p == nil {
+		return def
+	}
+	return *p
+}
+
+func boolPtrOr(p *bool, def bool) bool {
+	if p == nil {
+		return def
+	}
+	return *p
+}
 
 type DeepgramSTTOptions struct {
-	BaseURL         string
-	Model           string
-	Language        string
-	InputSampleRate int
-	Endpointing     int
+	BaseURL           string
+	Model             string
+	Language          string
+	InputSampleRate   int
+	Endpointing       int
+	EagerEOTThreshold *float64
+	EOTThreshold      *float64
+	EOTTimeoutMs      *int
+	Keyterm           []string
 }
 
 func DeepgramSTT(o DeepgramSTTOptions) *deepgram.STT {
@@ -69,15 +93,22 @@ func DeepgramSTT(o DeepgramSTTOptions) *deepgram.STT {
 	rate := intOr(o.InputSampleRate, 48000)
 	ep := intOr(o.Endpointing, 50)
 	s := deepgram.NewSTT(deepgram.STTOptions{Model: model, Language: language, SampleRate: rate, Endpointing: &ep})
-	mark(s, o.BaseURL, map[string]any{
-		"model":             model,
-		"language":          language,
-		"input_sample_rate": rate,
-		"endpointing":       ep,
-		"interim_results":   true,
-		"punctuate":         true,
-		"smart_format":      true,
-	})
+	cfg := map[string]any{
+		"model":               model,
+		"language":            language,
+		"input_sample_rate":   rate,
+		"endpointing":         ep,
+		"interim_results":     true,
+		"punctuate":           true,
+		"smart_format":        true,
+		"eager_eot_threshold": floatPtrOr(o.EagerEOTThreshold, 0.6),
+		"eot_threshold":       floatPtrOr(o.EOTThreshold, 0.8),
+		"eot_timeout_ms":      intPtrOr(o.EOTTimeoutMs, 7000),
+	}
+	if len(o.Keyterm) > 0 {
+		cfg["keyterm"] = o.Keyterm
+	}
+	mark(s, o.BaseURL, cfg)
 	return s
 }
 
@@ -100,7 +131,7 @@ func GoogleSTT(o GoogleSTTOptions) *google.STT {
 	}
 	inRate := intOr(o.InputSampleRate, 48000)
 	outRate := intOr(o.OutputSampleRate, 16000)
-	location := strOr(o.Location, "asia-south1")
+	location := strOr(o.Location, "us-central1")
 	s := google.NewSTT(google.STTOptions{Model: model, Language: language, Languages: langs})
 	mark(s, o.BaseURL, map[string]any{
 		"model":              model,
@@ -139,22 +170,41 @@ func SarvamAISTT(o SarvamAISTTOptions) *sarvamai.STT {
 }
 
 type AssemblyAISTTOptions struct {
-	BaseURL     string
-	SpeechModel string
-	Region      string
+	BaseURL                          string
+	SpeechModel                      string
+	Region                           string
+	InputSampleRate                  int
+	TargetSampleRate                 int
+	FormatTurns                      *bool
+	KeytermsPrompt                   []string
+	EndOfTurnConfidenceThreshold     *float64
+	MinEndOfTurnSilenceWhenConfident *int
+	MaxTurnSilence                   *int
+	LanguageDetection                *bool
 }
 
 func AssemblyAISTT(o AssemblyAISTTOptions) *assemblyai.STT {
 	model := strOr(o.SpeechModel, "universal-streaming-english")
 	region := strOr(o.Region, "US")
+	inRate := intOr(o.InputSampleRate, 48000)
+	outRate := intOr(o.TargetSampleRate, 16000)
 	s := assemblyai.NewSTT(assemblyai.STTOptions{SpeechModel: model, Region: region})
-	mark(s, o.BaseURL, map[string]any{
-		"model":              model,
-		"language":           "en-US",
-		"input_sample_rate":  48000,
-		"output_sample_rate": 16000,
-		"region":             region,
-	})
+	cfg := map[string]any{
+		"model":                                  model,
+		"language":                               "en-US",
+		"input_sample_rate":                      inRate,
+		"output_sample_rate":                     outRate,
+		"format_turns":                           boolPtrOr(o.FormatTurns, true),
+		"end_of_turn_confidence_threshold":       floatPtrOr(o.EndOfTurnConfidenceThreshold, 0.5),
+		"min_end_of_turn_silence_when_confident": intPtrOr(o.MinEndOfTurnSilenceWhenConfident, 800),
+		"max_turn_silence":                       intPtrOr(o.MaxTurnSilence, 2000),
+		"language_detection":                     boolPtrOr(o.LanguageDetection, true),
+		"region":                                 region,
+	}
+	if len(o.KeytermsPrompt) > 0 {
+		cfg["keyterms_prompt"] = o.KeytermsPrompt
+	}
+	mark(s, o.BaseURL, cfg)
 	return s
 }
 
@@ -186,7 +236,11 @@ type GoogleLLMOptions struct {
 
 func GoogleLLM(o GoogleLLMOptions) *google.LLM {
 	l := google.NewLLM(google.LLMOptions{Model: o.Model, Temperature: o.Temperature, MaxOutputTokens: o.MaxOutputTokens})
-	mark(l, o.BaseURL, map[string]any{"model": l.Model})
+	mark(l, o.BaseURL, map[string]any{
+		"model":             l.Model,
+		"temperature":       l.Temperature,
+		"max_output_tokens": l.MaxOutputTokens,
+	})
 	return l
 }
 
@@ -199,7 +253,11 @@ type SarvamAILLMOptions struct {
 
 func SarvamAILLM(o SarvamAILLMOptions) *sarvamai.LLM {
 	l := sarvamai.NewLLM(sarvamai.LLMOptions{Model: o.Model, Temperature: o.Temperature, MaxCompletionTokens: o.MaxCompletionTokens})
-	mark(l, o.BaseURL, map[string]any{"model": l.Model})
+	mark(l, o.BaseURL, map[string]any{
+		"model":             l.Model,
+		"temperature":       l.Temperature,
+		"max_output_tokens": l.MaxOutputTokens,
+	})
 	return l
 }
 
