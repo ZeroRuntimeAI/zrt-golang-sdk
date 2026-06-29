@@ -371,6 +371,23 @@ type inferenceMarked interface {
 	InferenceInfo() InferenceInfo
 }
 
+func asInference(p Provider) inferenceMarked {
+	if p == nil {
+		return nil
+	}
+	return p
+}
+
+func asInferenceLLM(l LLMLike) inferenceMarked {
+	if l == nil {
+		return nil
+	}
+	if im, ok := l.(inferenceMarked); ok {
+		return im
+	}
+	return nil
+}
+
 func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent) map[string]string {
 	creds := map[string]string{}
 	for envVar, keys := range envKeyMap {

@@ -22,12 +22,10 @@ var inferenceModels = map[string]string{
 // extra options apply depends on the model (see TurnDetectorOptions).
 type TurnDetector struct {
 	zrt.BaseEOU
-	model       string
-	modelID     string
-	host        string
-	authToken   string
-	baseURL     string
-	isInference bool
+	model     string
+	modelID   string
+	host      string
+	authToken string
 }
 
 // TurnDetectorOptions configures a TurnDetector. The zero value selects the
@@ -61,7 +59,7 @@ func NewTurnDetector(opts TurnDetectorOptions) *TurnDetector {
 	}
 
 	modelID, isInference := inferenceModels[model]
-	d := &TurnDetector{model: model, isInference: isInference, baseURL: opts.BaseURL}
+	d := &TurnDetector{model: model}
 
 	if isInference && opts.Language != "" {
 		log.Printf("turn_detector: TurnDetector: Language is ignored for model %q — it only applies to model %q.", model, ModelNamo)
@@ -76,6 +74,11 @@ func NewTurnDetector(opts TurnDetectorOptions) *TurnDetector {
 		d.host = zrt.StrOr(opts.Host, defaultNamoHost())
 		d.authToken = opts.AuthToken
 		d.InitEOU("namo_v2", threshold)
+		// Mark as dedicated-inference (mirrors the Python SDK's _is_inference /
+		// _inference_base_url). The runtime drives the namo_v2 EOU entirely from
+		// the EOUConfig proto (provider/host/model_id/auth_token below), so BaseURL
+		// is recorded on InferenceInfo() for parity but not separately transmitted.
+		d.SetInference(opts.BaseURL, "")
 	} else {
 		d.modelID = strings.ToLower(opts.Language)
 		d.InitEOU("namo", threshold)
@@ -93,7 +96,7 @@ func (d *TurnDetector) TurnConfig() zrt.TurnRuntimeConfig {
 		HasThreshold: true,
 		ModelID:      d.modelID,
 	}
-	if d.isInference {
+	if d.InferenceInfo().IsInference {
 		cfg.Host = d.host
 		cfg.AuthToken = d.authToken
 	}
