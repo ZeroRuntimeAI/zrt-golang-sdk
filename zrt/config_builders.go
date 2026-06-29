@@ -799,6 +799,11 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	llmStreamEnabled := autoLLMStream || a.llmStreamHookEnabled || (p != nil && p.LLMStreamHookEnabled)
 	timeoutMS := cmp.Or(a.llmStreamHookTimeoutMS, 100)
 	contextWindow := resolveContextWindow(agent, p)
+	// Hook mode: a real server-side STT/TTS provider is configured AND a
+	// stt/tts hook is registered. The runtime then pauses and
+	// asks the SDK to rewrite the transcript / tts text.
+	sttHookEnabled := p != nil && p.STT != nil && p.Hooks != nil && p.Hooks.sttHook != nil
+	ttsHookEnabled := p != nil && p.TTS != nil && p.Hooks != nil && p.Hooks.ttsHook != nil
 	return &pb.AgentConfig{
 		AgentId:                  a.id,
 		Instructions:             a.instructions,
@@ -812,6 +817,8 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 		VoiceSuffix:              suffixToSend,
 		LlmStreamHookEnabled:     llmStreamEnabled,
 		LlmStreamHookTimeoutMs:   uint32(timeoutMS),
+		SttHookEnabled:           sttHookEnabled,
+		TtsHookEnabled:           ttsHookEnabled,
 		Alternates:               altProtos,
 		McpServers:               buildMCPServerConfigs(a),
 		KnowledgeBase:            buildKnowledgeBaseConfig(a),
