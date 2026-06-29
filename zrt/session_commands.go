@@ -581,10 +581,33 @@ func (s *AgentSession) FetchContextHistory(ctx context.Context, lastN int, inclu
 	}
 	var full []map[string]any
 	for _, m := range resp.GetMessages() {
-		full = append(full, map[string]any{"role": m.GetRole(), "content": m.GetContent(), "message_id": m.GetMessageId()})
+		full = append(full, contextMessageToMap(m))
 	}
 	s.chatHistoryCache = full
 	return filterHistory(full, lastN, includeFunctionCalls, includeSystemMessages), nil
+}
+
+func contextMessageToMap(m *pb.ContextMessageProto) map[string]any {
+	images := []map[string]any{}
+	for _, img := range m.GetImages() {
+		images = append(images, map[string]any{"url": img.GetUrl(), "detail": img.GetDetail()})
+	}
+	toolCalls := []map[string]any{}
+	for _, tc := range m.GetToolCalls() {
+		toolCalls = append(toolCalls, map[string]any{
+			"call_id":        tc.GetCallId(),
+			"name":           tc.GetName(),
+			"arguments_json": tc.GetArgumentsJson(),
+		})
+	}
+	return map[string]any{
+		"role":         m.GetRole(),
+		"content":      m.GetContent(),
+		"message_id":   m.GetMessageId(),
+		"images":       images,
+		"tool_calls":   toolCalls,
+		"tool_call_id": m.GetToolCallId(),
+	}
 }
 
 // RemoveMessage removes a message from the conversation context by id. Returns

@@ -46,7 +46,7 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/google"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/rnnoise"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/silero"
-	td "github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/turn_detector"
+	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/turn_detector"
 )
 
 // Assistant is your agent. Embed zrt.BaseAgent and implement OnEnter/OnExit.
@@ -70,7 +70,7 @@ func entrypoint(ctx context.Context, jobCtx *zrt.JobContext) error {
 		}),
 		TTS:          cartesia.NewTTS(cartesia.TTSOptions{}),
 		VAD:          silero.NewVAD(silero.VADOptions{Threshold: zrt.Float64(0.4)}),
-		TurnDetector: td.NewNamoTurnDetectorV1("en", 0.8),
+		TurnDetector: turn_detector.NewTurnDetector(turn_detector.TurnDetectorOptions{Model: turn_detector.ModelNamo, Threshold: 0.8}),
 		Denoise:      rnnoise.New(),
 		EOUConfig:    &zrt.EOUConfig{Mode: "ADAPTIVE", MinMaxSpeechWaitTimeout: []float64{0.1, 0.3}},
 		InterruptConfig: &zrt.InterruptConfig{
@@ -106,11 +106,15 @@ That's it — speech in → your agent → speech out, in real time.
 ## Examples
 
 Runnable examples live in [`examples/`](examples) — quickstart, a tool with a
-filler line (`booking`), provider fallback chains (`fallback`), multi-agent
-handoff (`handoff`), the ChatContext API + runtime context management
+filler line (`booking`) and standalone dispatch (`dispatch`), tool-call/context
+tracking (`tool_context`), provider fallback chains (`fallback`), multi-agent
+handoff (`handoff`) and agent-to-agent messaging (`a2a`), room pub/sub chat
+(`pubsub_chat`), vision (`vision`), human-in-the-loop escalation
+(`human_in_the_loop`), the ChatContext API + runtime context management
 (`chat_context`, `summary_llm`), and two background-audio walkthroughs
-(`background_audio`, `background_audio_hold_music`). Run any of them with
-`go run ./examples/<name>`. See [`examples/README.md`](examples/README.md).
+(`background_audio`, `background_audio_hold_music`). They mirror the Python SDK's
+`examples/` feature-for-feature. Run any of them with `go run ./examples/<name>`.
+See [`examples/README.md`](examples/README.md).
 
 More live in a dedicated repo:
 **[ZeroRuntimeAI/zrt-golang-sdk-examples](https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples)**
