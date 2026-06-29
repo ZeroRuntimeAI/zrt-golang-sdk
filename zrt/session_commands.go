@@ -889,7 +889,7 @@ func printPlaygroundURL(room roomConfigData) {
 	if !enabled || room.RoomID == "" || room.AuthToken == "" {
 		return
 	}
-	base := cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai//cli")
+	base := cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai/cli")
 	logger.Infof("Agent started in playground mode")
 	// Playground mode is an explicit, dev-facing opt-in and the URL is meant to be
 	// opened in a browser, so the full token is printed (it is unusable truncated).
