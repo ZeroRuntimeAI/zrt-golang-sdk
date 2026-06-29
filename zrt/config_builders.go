@@ -34,6 +34,8 @@ var envKeyMap = map[string][]string{
 	"SARVAMAI_API_KEY":          {"sarvamai", "sarvam"},
 	"COMETAPI_API_KEY":          {"cometapi", "comet"},
 	"COMETAPI_BASE_URL":         {"cometapi_base_url"},
+	"ANAM_API_KEY":              {"anam"},
+	"SIMLI_API_KEY":             {"simli"},
 }
 
 // knobMap lists the per-provider tuning knobs serialized into credentials.
@@ -393,7 +395,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 		}
 	}
 	// Provider API keys.
-	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS)} {
+	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS), as[Provider](p.Avatar)} {
 		if prov == nil {
 			continue
 		}
@@ -503,6 +505,25 @@ func buildDenoiseConfig(d *Denoise) *pb.DenoiseConfig {
 	return &pb.DenoiseConfig{Enabled: true, Provider: d.ProviderName()}
 }
 
+func buildAvatarConfig(a Avatar) *pb.AvatarProviderConfig {
+	if a == nil {
+		return &pb.AvatarProviderConfig{Provider: ""}
+	}
+	c := a.AvatarConfig()
+	provider := c.Provider
+	if provider == "" {
+		provider = a.ProviderName()
+	}
+	return &pb.AvatarProviderConfig{
+		Provider:  provider,
+		AvatarId:  c.AvatarID,
+		FaceId:    c.FaceID,
+		Model:     c.Model,
+		IsTrinity: c.IsTrinity,
+		Params:    c.Params,
+	}
+}
+
 func buildVoicemailConfig(v *VoiceMailDetector) *pb.VoicemailConfig {
 	if v == nil {
 		return &pb.VoicemailConfig{Enabled: false}
@@ -578,6 +599,7 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 		OrchestratorTiming:   &pb.OrchestratorTimingConfig{PollIntervalMs: 10, MaxDrainSecs: 10, TtsDrainGraceMs: 500},
 		SttFilterPatterns:    slices.Clone(p.STTFilterPatterns),
 		SttWordSubstitutions: maps.Clone(p.STTWordSubstitutions),
+		Avatar:               buildAvatarConfig(p.Avatar),
 	}
 }
 

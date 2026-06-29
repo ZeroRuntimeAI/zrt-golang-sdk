@@ -50,8 +50,18 @@ func TestSessionBusConcurrent(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
 		wg.Add(2)
-		go func() { defer wg.Done(); if agent.Session(ctx1) != s1 { t.Error("ctx1 resolved wrong session") } }()
-		go func() { defer wg.Done(); if agent.Session(ctx2) != s2 { t.Error("ctx2 resolved wrong session") } }()
+		go func() {
+			defer wg.Done()
+			if agent.Session(ctx1) != s1 {
+				t.Error("ctx1 resolved wrong session")
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			if agent.Session(ctx2) != s2 {
+				t.Error("ctx2 resolved wrong session")
+			}
+		}()
 	}
 	wg.Wait()
 }

@@ -21,7 +21,7 @@ func TestInferenceContract(t *testing.T) {
 		t.Fatal("expected STTProviderConfig.Inference to be non-nil for an inference provider")
 	}
 
-	creds := buildCredentials(&Pipeline{STT: stt}, nil)
+	creds := buildCredentials(&Pipeline{STT: stt}, nil, nil)
 	if creds["zrt_auth_token"] != "test-token" {
 		t.Errorf("expected zrt_auth_token credential, got %q", creds["zrt_auth_token"])
 	}
