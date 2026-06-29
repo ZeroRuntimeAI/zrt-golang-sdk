@@ -2,8 +2,6 @@
 package turn_detector
 
 import (
-	"strings"
-
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
@@ -47,31 +45,10 @@ func (d *TurnDetectorV2) TurnConfig() zrt.TurnRuntimeConfig {
 	return zrt.TurnRuntimeConfig{Threshold: float32(d.Threshold()), HasThreshold: true}
 }
 
-// NamoTurnDetectorV1 is the Namo v1 turn detector (model from language).
-type NamoTurnDetectorV1 struct {
-	zrt.BaseEOU
-	Language string
-}
-
-// NewNamoTurnDetectorV1 builds a NamoTurnDetectorV1.
-func NewNamoTurnDetectorV1(language string, threshold float64) *NamoTurnDetectorV1 {
-	if threshold == 0 {
-		threshold = 0.7
-	}
-	d := &NamoTurnDetectorV1{Language: language}
-	d.InitEOU("namo", threshold)
-	return d
-}
-
-// TurnConfig implements zrt.EOU.
-func (d *NamoTurnDetectorV1) TurnConfig() zrt.TurnRuntimeConfig {
-	return zrt.TurnRuntimeConfig{Threshold: float32(d.Threshold()), HasThreshold: true, ModelID: strings.ToLower(d.Language)}
-}
-
 // ZeroRuntimeTurnDetector is an alias of NamoTurnDetectorV1.
 type ZeroRuntimeTurnDetector = NamoTurnDetectorV1
 
 // NewZeroRuntimeTurnDetector builds a ZeroRuntimeTurnDetector.
-func NewZeroRuntimeTurnDetector(language string, threshold float64) *ZeroRuntimeTurnDetector {
-	return NewNamoTurnDetectorV1(language, threshold)
+func NewZeroRuntimeTurnDetector(opts NamoTurnDetectorV1Options) *ZeroRuntimeTurnDetector {
+	return NewNamoTurnDetectorV1(opts)
 }
