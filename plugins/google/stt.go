@@ -1,57 +1,179 @@
 package google
 
-import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
+import (
+	"encoding/json"
+	"os"
+	"strings"
 
-// STT is a Google speech-to-text engine (provider name "google_stt").
+	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
+)
+
 type STT struct {
 	zrt.BaseSTT
-	Model           string
-	Language        string
-	Punctuate       bool
-	ProfanityFilter bool
+	Model                     string
+	Language                  string
+	ServiceAccountJSON        string
+	ProjectID                 string
+	Stream                    bool
+	Location                  string
+	AudioChannelCount         int
+	InterimResults            bool
+	Punctuate                 bool
+	ProfanityFilter           bool
+	EnableSpokenPunctuation   bool
+	EnableSpokenEmojis        bool
+	EnableWordTimeOffsets     bool
+	EnableWordConfidence      bool
+	MaxAlternatives           int
+	EnableVoiceActivityEvents bool
+	SpeechStartTimeout        *float64
+	SpeechEndTimeout          *float64
+	MinSpeakerCount           *int
+	MaxSpeakerCount           *int
+	MinConfidenceThreshold    float64
+	SampleRate                int
 }
 
-// STTOptions configures a Google STT.
 type STTOptions struct {
-	// APIKey overrides the GOOGLE_API_KEY environment variable.
-	APIKey string
-	// Languages lists the recognition languages; the first entry is used.
-	// Defaults to ["en-US"].
-	Languages []string
-	// Language is the recognition language used when Languages is empty.
-	// Defaults to "en-US".
-	Language string
-	// Model selects the recognition model. Defaults to "latest_long".
-	Model string
-	// Punctuate adds punctuation to transcripts. Defaults to true.
-	Punctuate *bool
-	// ProfanityFilter masks profanity in transcripts. Defaults to false.
-	ProfanityFilter *bool
+	APIKey                    string
+	CredentialsJSON           string
+	ServiceAccountPath        string
+	ProjectID                 string
+	Languages                 []string
+	Language                  string
+	Model                     string
+	Stream                    *bool
+	Location                  string
+	AudioChannelCount         int
+	InterimResults            *bool
+	Punctuate                 *bool
+	ProfanityFilter           *bool
+	EnableSpokenPunctuation   *bool
+	EnableSpokenEmojis        *bool
+	EnableWordTimeOffsets     *bool
+	EnableWordConfidence      *bool
+	MaxAlternatives           int
+	EnableVoiceActivityEvents *bool
+	SpeechStartTimeout        *float64
+	SpeechEndTimeout          *float64
+	MinSpeakerCount           *int
+	MaxSpeakerCount           *int
+	MinConfidenceThreshold    *float64
+	SampleRate                int
 }
 
-// NewSTT returns a Google STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	lang := opts.Language
 	if len(opts.Languages) > 0 {
-		lang = opts.Languages[0]
+		lang = strings.Join(opts.Languages, ",")
 	}
 	lang = zrt.StrOr(lang, "en-US")
+
+	saJSON := resolveServiceAccountJSON(opts.CredentialsJSON, opts.ServiceAccountPath, opts.APIKey)
+	projectID := zrt.StrOr(opts.ProjectID, projectIDFromJSON(saJSON))
+
 	s := &STT{
-		Model:           zrt.StrOr(opts.Model, "latest_long"),
-		Language:        lang,
-		Punctuate:       zrt.BoolOr(opts.Punctuate, true),
-		ProfanityFilter: zrt.BoolOr(opts.ProfanityFilter, false),
+		Model:                     zrt.StrOr(opts.Model, "latest_long"),
+		Language:                  lang,
+		ServiceAccountJSON:        saJSON,
+		ProjectID:                 projectID,
+		Stream:                    zrt.BoolOr(opts.Stream, true),
+		Location:                  zrt.StrOr(opts.Location, "us"),
+		AudioChannelCount:         orInt(opts.AudioChannelCount, 1),
+		InterimResults:            zrt.BoolOr(opts.InterimResults, true),
+		Punctuate:                 zrt.BoolOr(opts.Punctuate, true),
+		ProfanityFilter:           zrt.BoolOr(opts.ProfanityFilter, false),
+		EnableSpokenPunctuation:   zrt.BoolOr(opts.EnableSpokenPunctuation, false),
+		EnableSpokenEmojis:        zrt.BoolOr(opts.EnableSpokenEmojis, false),
+		EnableWordTimeOffsets:     zrt.BoolOr(opts.EnableWordTimeOffsets, false),
+		EnableWordConfidence:      zrt.BoolOr(opts.EnableWordConfidence, false),
+		MaxAlternatives:           orInt(opts.MaxAlternatives, 1),
+		EnableVoiceActivityEvents: zrt.BoolOr(opts.EnableVoiceActivityEvents, false),
+		SpeechStartTimeout:        opts.SpeechStartTimeout,
+		SpeechEndTimeout:          opts.SpeechEndTimeout,
+		MinSpeakerCount:           opts.MinSpeakerCount,
+		MaxSpeakerCount:           opts.MaxSpeakerCount,
+		MinConfidenceThreshold:    zrt.FloatOr(opts.MinConfidenceThreshold, 0.0),
+		SampleRate:                orInt(opts.SampleRate, 48000),
 	}
 	s.Init("google_stt", zrt.APIKeyOr(opts.APIKey, "GOOGLE_API_KEY"))
 	return s
 }
 
-// STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "google_stt", Model: s.Model, Language: s.Language}
 }
 
-// Knobs returns the Google-specific options as a key/value map.
 func (s *STT) Knobs() map[string]any {
-	return map[string]any{"punctuate": s.Punctuate, "profanity_filter": s.ProfanityFilter}
+	k := map[string]any{
+		"location":                     s.Location,
+		"stream":                       s.Stream,
+		"audio_channel_count":          s.AudioChannelCount,
+		"interim_results":              s.InterimResults,
+		"punctuate":                    s.Punctuate,
+		"profanity_filter":             s.ProfanityFilter,
+		"enable_spoken_punctuation":    s.EnableSpokenPunctuation,
+		"enable_spoken_emojis":         s.EnableSpokenEmojis,
+		"enable_word_time_offsets":     s.EnableWordTimeOffsets,
+		"enable_word_confidence":       s.EnableWordConfidence,
+		"max_alternatives":             s.MaxAlternatives,
+		"enable_voice_activity_events": s.EnableVoiceActivityEvents,
+		"min_confidence_threshold":     s.MinConfidenceThreshold,
+	}
+	if s.ServiceAccountJSON != "" {
+		k["service_account_json"] = s.ServiceAccountJSON
+	}
+	if s.ProjectID != "" {
+		k["project_id"] = s.ProjectID
+	}
+	if s.SpeechStartTimeout != nil {
+		k["speech_start_timeout"] = *s.SpeechStartTimeout
+	}
+	if s.SpeechEndTimeout != nil {
+		k["speech_end_timeout"] = *s.SpeechEndTimeout
+	}
+	if s.MinSpeakerCount != nil {
+		k["min_speaker_count"] = *s.MinSpeakerCount
+	}
+	if s.MaxSpeakerCount != nil {
+		k["max_speaker_count"] = *s.MaxSpeakerCount
+	}
+	return k
+}
+
+func coerceToJSONContent(value string) string {
+	if value == "" {
+		return ""
+	}
+	if strings.HasPrefix(strings.TrimSpace(value), "{") {
+		return value
+	}
+	b, err := os.ReadFile(value)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
+func resolveServiceAccountJSON(credentialsJSON, serviceAccountPath, apiKey string) string {
+	for _, candidate := range []string{credentialsJSON, serviceAccountPath, apiKey, os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"), "credentials.json"} {
+		if content := coerceToJSONContent(candidate); content != "" {
+			return content
+		}
+	}
+	return ""
+}
+
+func projectIDFromJSON(saJSON string) string {
+	if saJSON == "" {
+		return ""
+	}
+	var m map[string]any
+	if err := json.Unmarshal([]byte(saJSON), &m); err != nil {
+		return ""
+	}
+	if v, ok := m["project_id"].(string); ok {
+		return v
+	}
+	return ""
 }

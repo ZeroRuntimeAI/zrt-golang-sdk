@@ -36,25 +36,48 @@ var envKeyMap = map[string][]string{
 	"COMETAPI_BASE_URL":         {"cometapi_base_url"},
 	"ANAM_API_KEY":              {"anam"},
 	"SIMLI_API_KEY":             {"simli"},
+	"AZURE_OPENAI_API_KEY":      {"azure_openai"},
+	"HUMEAI_API_KEY":            {"humeai"},
+	"INWORLDAI_API_KEY":         {"inworldai"},
+	"LMNT_API_KEY":              {"lmnt"},
+	"RIME_API_KEY":              {"rime"},
+	"SMALLESTAI_API_KEY":        {"smallestai"},
+	"SPEECHIFY_API_KEY":         {"speechify"},
+	"CAMBAI_API_KEY":            {"cambai"},
+	"MURFAI_API_KEY":            {"murfai"},
+	"NEUPHONIC_API_KEY":         {"neuphonic"},
+	"PAPLA_API_KEY":             {"papla"},
+	"RESEMBLE_API_KEY":          {"resemble"},
 }
 
 // knobMap lists the per-provider tuning knobs serialized into credentials.
 var knobMap = map[string][]string{
-	"cartesia":   {"model", "language", "speed", "volume", "emotion", "max_buffer_delay_ms", "pronunciation_dict_id", "enable_word_timestamps"},
-	"deepgram":   {"smart_format", "punctuate", "filler_words", "profanity_filter", "numerals", "tag", "keywords", "keyterm", "redact", "interim_results", "diarize", "base_url"},
-	"silero":     {"smoothing_factor", "min_volume"},
-	"elevenlabs": {"model", "stability", "similarity_boost", "style", "use_speaker_boost", "apply_text_normalization", "enable_word_timestamps"},
-	"anthropic":  {"thinking_budget"},
-	"gemini":     {"thinking_budget", "include_thoughts", "top_p", "top_k", "presence_penalty", "frequency_penalty", "seed"},
-	"openai":     {"top_p", "frequency_penalty", "presence_penalty", "seed", "response_format", "tool_choice", "parallel_tool_calls"},
-	"sarvamai":   {"model", "language", "streaming", "pitch", "pace", "loudness", "temperature", "preprocessing", "bitrate"},
-	"google":     {"language", "voice", "speaking_rate", "pitch"},
+	"cartesia":     {"model", "language", "speed", "volume", "emotion", "max_buffer_delay_ms", "pronunciation_dict_id", "enable_word_timestamps"},
+	"deepgram":     {"endpointing", "smart_format", "punctuate", "filler_words", "profanity_filter", "numerals", "tag", "keywords", "keyterm", "redact", "interim_results", "diarize", "base_url", "tts_stream", "tts_encoding"},
+	"silero":       {"smoothing_factor", "min_volume"},
+	"elevenlabs":   {"model", "stability", "similarity_boost", "style", "use_speaker_boost", "apply_text_normalization", "enable_word_timestamps", "speed", "language", "enable_ssml_parsing", "tts_stream"},
+	"anthropic":    {"top_p", "top_k", "stop_sequences", "thinking_budget"},
+	"gemini":       {"thinking_budget", "include_thoughts", "top_p", "top_k", "presence_penalty", "frequency_penalty", "seed"},
+	"openai":       {"top_p", "frequency_penalty", "presence_penalty", "seed", "response_format", "tool_choice", "parallel_tool_calls", "stop", "user", "reasoning_effort", "verbosity", "streaming", "wss_url", "store", "tts_stream", "speed"},
+	"cerebras":     {"top_p", "seed", "stop", "user", "tool_choice"},
+	"groq":         {"top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort", "reasoning_format", "service_tier"},
+	"cometapi":     {"base_url", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format"},
+	"xai":          {"top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort", "prompt_cache_key", "service_tier"},
+	"azure_openai": {"endpoint", "api_version", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort"},
+	"sarvamai":     {"model", "language", "streaming", "pitch", "pace", "loudness", "temperature", "preprocessing", "bitrate", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort", "wiki_grounding"},
+	"smallestai":   {"tts_stream", "model", "language", "speed"},
+	"navana":       {"customer_id"},
+	"google":       {"language", "voice", "speaking_rate", "pitch", "tts_stream", "tts_service_account_json"},
 }
 
 // sttKnobMap lists the per-provider STT-specific tuning knobs.
 var sttKnobMap = map[string][]string{
-	"sarvamai":   {"mode", "translation", "prompt", "high_vad_sensitivity", "flush_signals", "input_sample_rate", "output_sample_rate"},
-	"google_stt": {"punctuate", "profanity_filter"},
+	"sarvamai":         {"mode", "translation", "prompt", "high_vad_sensitivity", "flush_signals", "input_sample_rate", "output_sample_rate", "input_audio_codec", "vad_signals", "positive_speech_threshold", "negative_speech_threshold", "min_speech_frames", "first_turn_min_speech_frames", "pre_speech_pad_frames", "interrupt_min_speech_frames"},
+	"google_stt":       {"service_account_json", "project_id", "location", "stream", "audio_channel_count", "interim_results", "punctuate", "profanity_filter", "enable_spoken_punctuation", "enable_spoken_emojis", "enable_word_time_offsets", "enable_word_confidence", "max_alternatives", "enable_voice_activity_events", "speech_start_timeout", "speech_end_timeout", "min_speaker_count", "max_speaker_count", "min_confidence_threshold"},
+	"assemblyai":       {"output_sample_rate", "encoding", "format_turns", "end_of_turn_confidence_threshold", "min_end_of_turn_silence_when_confident", "max_turn_silence", "keyterms_prompt", "language_detection", "base_url"},
+	"cartesia_stt":     {"input_sample_rate", "output_sample_rate", "encoding", "cartesia_version", "min_volume", "max_silence_duration_secs", "base_url"},
+	"openai_stt":       {"stream", "input_sample_rate", "output_sample_rate", "prompt", "turn_detection", "vad_threshold", "vad_prefix_padding_ms", "vad_silence_duration_ms", "noise_reduction", "response_format", "base_url"},
+	"azure_openai_stt": {"endpoint", "deployment", "api_version", "stream", "input_sample_rate", "output_sample_rate", "prompt", "temperature", "response_format", "turn_detection"},
 }
 
 // DefaultVoiceSuffix is appended to instructions unless overridden.
@@ -432,10 +455,11 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 	if p.STT != nil {
 		name := p.STT.ProviderName()
 		knobs := p.STT.Knobs()
+		sttBase := strings.TrimSuffix(name, "_stt")
 		for _, knob := range sttKnobMap[name] {
 			if v, ok := knobs[knob]; ok {
 				if s, keep := serializeKnob(v); keep {
-					creds[name+"_stt_"+knob] = s
+					creds[sttBase+"_stt_"+knob] = s
 				}
 			}
 		}

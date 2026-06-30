@@ -5,11 +5,15 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the Google text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice        string
-	LanguageCode string
-	Model        string
-	SpeakingRate *float64
-	Pitch        *float64
+	Voice              string
+	LanguageCode       string
+	Model              string
+	SpeakingRate       *float64
+	Pitch              *float64
+	CredentialsJSON    string
+	ServiceAccountPath string
+	ServiceAccountJSON string
+	Stream             bool
 }
 
 // TTSOptions configures a Google TTS instance.
@@ -25,17 +29,25 @@ type TTSOptions struct {
 	// SpeakingRate scales the speaking rate.
 	SpeakingRate *float64
 	// Pitch shifts the voice pitch.
-	Pitch *float64
+	Pitch              *float64
+	CredentialsJSON    string
+	ServiceAccountPath string
+	Stream             *bool
 }
 
 // NewTTS returns a Google TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
+	saJSON := resolveServiceAccountJSON(opts.CredentialsJSON, opts.ServiceAccountPath, opts.APIKey)
 	t := &TTS{
-		Voice:        zrt.StrOr(opts.Voice, "en-US-Neural2-F"),
-		LanguageCode: zrt.StrOr(opts.LanguageCode, "en-US"),
-		Model:        opts.Model,
-		SpeakingRate: opts.SpeakingRate,
-		Pitch:        opts.Pitch,
+		Voice:              zrt.StrOr(opts.Voice, "en-US-Neural2-F"),
+		LanguageCode:       zrt.StrOr(opts.LanguageCode, "en-US"),
+		Model:              opts.Model,
+		SpeakingRate:       opts.SpeakingRate,
+		Pitch:              opts.Pitch,
+		CredentialsJSON:    opts.CredentialsJSON,
+		ServiceAccountPath: opts.ServiceAccountPath,
+		ServiceAccountJSON: saJSON,
+		Stream:             zrt.BoolOr(opts.Stream, true),
 	}
 	t.InitTTS("google", zrt.APIKeyOr(opts.APIKey, "GOOGLE_API_KEY"), 24000)
 	return t
@@ -48,12 +60,15 @@ func (t *TTS) TTSConfig() zrt.TTSRuntimeConfig {
 
 // Knobs returns the provider-specific TTS settings.
 func (t *TTS) Knobs() map[string]any {
-	k := map[string]any{"language": t.LanguageCode, "voice": t.Voice}
+	k := map[string]any{"language": t.LanguageCode, "voice": t.Voice, "tts_stream": t.Stream}
 	if t.SpeakingRate != nil {
 		k["speaking_rate"] = *t.SpeakingRate
 	}
 	if t.Pitch != nil {
 		k["pitch"] = *t.Pitch
+	}
+	if t.ServiceAccountJSON != "" {
+		k["tts_service_account_json"] = t.ServiceAccountJSON
 	}
 	return k
 }

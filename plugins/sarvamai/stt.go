@@ -6,15 +6,23 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // STT is a Sarvam AI speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
-	Model              string
-	Language           string
-	InputSampleRate    int
-	OutputSampleRate   int
-	Mode               string
-	HighVADSensitivity *bool
-	FlushSignals       *bool
-	Translation        bool
-	Prompt             string
+	Model                    string
+	Language                 string
+	InputSampleRate          int
+	OutputSampleRate         int
+	Mode                     string
+	HighVADSensitivity       *bool
+	FlushSignals             *bool
+	Translation              bool
+	Prompt                   string
+	InputAudioCodec          string
+	VadSignals               bool
+	PositiveSpeechThreshold  *float64
+	NegativeSpeechThreshold  *float64
+	MinSpeechFrames          *int
+	FirstTurnMinSpeechFrames *int
+	PreSpeechPadFrames       *int
+	InterruptMinSpeechFrames *int
 }
 
 // STTOptions configures a Sarvam AI STT.
@@ -38,21 +46,37 @@ type STTOptions struct {
 	// Translation translates recognized speech into the target language.
 	Translation bool
 	// Prompt biases recognition toward the given context.
-	Prompt string
+	Prompt                   string
+	InputAudioCodec          string
+	VadSignals               *bool
+	PositiveSpeechThreshold  *float64
+	NegativeSpeechThreshold  *float64
+	MinSpeechFrames          *int
+	FirstTurnMinSpeechFrames *int
+	PreSpeechPadFrames       *int
+	InterruptMinSpeechFrames *int
 }
 
 // NewSTT returns a Sarvam AI STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	s := &STT{
-		Model:              zrt.StrOr(opts.Model, "saaras:v3"),
-		Language:           zrt.StrOr(opts.Language, "en-IN"),
-		InputSampleRate:    orInt(opts.InputSampleRate, 48000),
-		OutputSampleRate:   orInt(opts.OutputSampleRate, 16000),
-		Mode:               opts.Mode,
-		HighVADSensitivity: opts.HighVADSensitivity,
-		FlushSignals:       opts.FlushSignals,
-		Translation:        opts.Translation,
-		Prompt:             opts.Prompt,
+		Model:                    zrt.StrOr(opts.Model, "saaras:v3"),
+		Language:                 zrt.StrOr(opts.Language, "en-IN"),
+		InputSampleRate:          orInt(opts.InputSampleRate, 48000),
+		OutputSampleRate:         orInt(opts.OutputSampleRate, 16000),
+		Mode:                     opts.Mode,
+		HighVADSensitivity:       opts.HighVADSensitivity,
+		FlushSignals:             opts.FlushSignals,
+		Translation:              opts.Translation,
+		Prompt:                   opts.Prompt,
+		InputAudioCodec:          zrt.StrOr(opts.InputAudioCodec, "pcm_s16le"),
+		VadSignals:               zrt.BoolOr(opts.VadSignals, true),
+		PositiveSpeechThreshold:  opts.PositiveSpeechThreshold,
+		NegativeSpeechThreshold:  opts.NegativeSpeechThreshold,
+		MinSpeechFrames:          opts.MinSpeechFrames,
+		FirstTurnMinSpeechFrames: opts.FirstTurnMinSpeechFrames,
+		PreSpeechPadFrames:       opts.PreSpeechPadFrames,
+		InterruptMinSpeechFrames: opts.InterruptMinSpeechFrames,
 	}
 	s.Init("sarvamai", zrt.APIKeyOr(opts.APIKey, "SARVAM_API_KEY"))
 	return s
@@ -71,6 +95,8 @@ func (s *STT) Knobs() map[string]any {
 		"translation":        s.Translation,
 		"input_sample_rate":  s.InputSampleRate,
 		"output_sample_rate": s.OutputSampleRate,
+		"input_audio_codec":  s.InputAudioCodec,
+		"vad_signals":        s.VadSignals,
 	}
 	if s.Mode != "" {
 		k["mode"] = s.Mode
@@ -83,6 +109,24 @@ func (s *STT) Knobs() map[string]any {
 	}
 	if s.FlushSignals != nil {
 		k["flush_signals"] = *s.FlushSignals
+	}
+	if s.PositiveSpeechThreshold != nil {
+		k["positive_speech_threshold"] = *s.PositiveSpeechThreshold
+	}
+	if s.NegativeSpeechThreshold != nil {
+		k["negative_speech_threshold"] = *s.NegativeSpeechThreshold
+	}
+	if s.MinSpeechFrames != nil {
+		k["min_speech_frames"] = *s.MinSpeechFrames
+	}
+	if s.FirstTurnMinSpeechFrames != nil {
+		k["first_turn_min_speech_frames"] = *s.FirstTurnMinSpeechFrames
+	}
+	if s.PreSpeechPadFrames != nil {
+		k["pre_speech_pad_frames"] = *s.PreSpeechPadFrames
+	}
+	if s.InterruptMinSpeechFrames != nil {
+		k["interrupt_min_speech_frames"] = *s.InterruptMinSpeechFrames
 	}
 	return k
 }

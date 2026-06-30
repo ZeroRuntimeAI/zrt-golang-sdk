@@ -1,80 +1,80 @@
-package openai
+package azure
 
-import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
+import (
+	"os"
+
+	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
+)
 
 type LLM struct {
 	zrt.BaseLLM
 	Model             string
+	Endpoint          string
+	APIVersion        string
 	Temperature       float64
 	MaxOutputTokens   int
 	TopP              *float64
 	FrequencyPenalty  *float64
 	PresencePenalty   *float64
 	Seed              *int
-	ResponseFormat    string
-	ToolChoice        string
-	ParallelToolCalls *bool
 	Stop              string
 	User              string
+	ToolChoice        string
+	ParallelToolCalls *bool
+	ResponseFormat    string
 	ReasoningEffort   string
-	Verbosity         string
-	Streaming         bool
-	WssURL            string
-	Store             bool
 }
 
 type LLMOptions struct {
 	APIKey            string
-	Model             string
+	AzureEndpoint     string
+	Deployment        string
+	APIVersion        string
 	Temperature       *float64
 	MaxOutputTokens   int
 	TopP              *float64
 	FrequencyPenalty  *float64
 	PresencePenalty   *float64
 	Seed              *int
-	ResponseFormat    string
-	ToolChoice        string
-	ParallelToolCalls *bool
 	Stop              string
 	User              string
+	ToolChoice        string
+	ParallelToolCalls *bool
+	ResponseFormat    string
 	ReasoningEffort   string
-	Verbosity         string
-	Streaming         *bool
-	WssURL            string
-	Store             *bool
 }
 
 func NewLLM(opts LLMOptions) *LLM {
-	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
-		Model:             zrt.StrOr(opts.Model, "gpt-5.4-nano"),
-		Temperature:       temp,
+		Model:             opts.Deployment,
+		Endpoint:          zrt.StrOr(opts.AzureEndpoint, os.Getenv("AZURE_OPENAI_ENDPOINT")),
+		APIVersion:        zrt.StrOr(opts.APIVersion, "2024-10-21"),
+		Temperature:       zrt.FloatOr(opts.Temperature, 0.7),
 		MaxOutputTokens:   orInt(opts.MaxOutputTokens, 1024),
 		TopP:              opts.TopP,
 		FrequencyPenalty:  opts.FrequencyPenalty,
 		PresencePenalty:   opts.PresencePenalty,
 		Seed:              opts.Seed,
-		ResponseFormat:    opts.ResponseFormat,
-		ToolChoice:        opts.ToolChoice,
-		ParallelToolCalls: opts.ParallelToolCalls,
 		Stop:              opts.Stop,
 		User:              opts.User,
+		ToolChoice:        opts.ToolChoice,
+		ParallelToolCalls: opts.ParallelToolCalls,
+		ResponseFormat:    opts.ResponseFormat,
 		ReasoningEffort:   opts.ReasoningEffort,
-		Verbosity:         opts.Verbosity,
-		Streaming:         zrt.BoolOr(opts.Streaming, false),
-		WssURL:            opts.WssURL,
-		Store:             zrt.BoolOr(opts.Store, true),
 	}
-	l.Init("openai", zrt.APIKeyOr(opts.APIKey, "OPENAI_API_KEY"))
+	l.Init("azure_openai", zrt.APIKeyOr(opts.APIKey, "AZURE_OPENAI_API_KEY"))
 	return l
 }
 
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
-	return zrt.LLMRuntimeConfig{Provider: "openai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
+	return zrt.LLMRuntimeConfig{Provider: "azure_openai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
 func (l *LLM) Knobs() map[string]any {
-	k := map[string]any{}
+	k := map[string]any{"api_version": l.APIVersion}
+	if l.Endpoint != "" {
+		k["endpoint"] = l.Endpoint
+	}
 	if l.TopP != nil {
 		k["top_p"] = *l.TopP
 	}
@@ -87,8 +87,11 @@ func (l *LLM) Knobs() map[string]any {
 	if l.Seed != nil {
 		k["seed"] = *l.Seed
 	}
-	if l.ResponseFormat != "" {
-		k["response_format"] = l.ResponseFormat
+	if l.Stop != "" {
+		k["stop"] = l.Stop
+	}
+	if l.User != "" {
+		k["user"] = l.User
 	}
 	if l.ToolChoice != "" {
 		k["tool_choice"] = l.ToolChoice
@@ -96,23 +99,12 @@ func (l *LLM) Knobs() map[string]any {
 	if l.ParallelToolCalls != nil {
 		k["parallel_tool_calls"] = *l.ParallelToolCalls
 	}
-	if l.Stop != "" {
-		k["stop"] = l.Stop
-	}
-	if l.User != "" {
-		k["user"] = l.User
+	if l.ResponseFormat != "" {
+		k["response_format"] = l.ResponseFormat
 	}
 	if l.ReasoningEffort != "" {
 		k["reasoning_effort"] = l.ReasoningEffort
 	}
-	if l.Verbosity != "" {
-		k["verbosity"] = l.Verbosity
-	}
-	k["streaming"] = l.Streaming
-	if l.WssURL != "" {
-		k["wss_url"] = l.WssURL
-	}
-	k["store"] = l.Store
 	return k
 }
 

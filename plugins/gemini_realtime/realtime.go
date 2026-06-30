@@ -3,6 +3,7 @@ package gemini_realtime
 
 import (
 	"encoding/json"
+	"os"
 	"strconv"
 
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
@@ -33,8 +34,8 @@ type RealtimeOptions struct {
 	VADSilenceDurationMS            *int
 	ContextCompressionTriggerTokens *int
 	SessionResumptionHandle         *string
-	EnableInputTranscription        *bool // default true
-	EnableOutputTranscription       *bool // default true
+	EnableInputTranscription        *bool
+	EnableOutputTranscription       *bool
 
 	VertexAI                 bool
 	VertexProjectID          string
@@ -93,8 +94,8 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 	putInt("vad_prefix_padding_ms", opts.VADPrefixPaddingMS)
 	putInt("vad_silence_duration_ms", opts.VADSilenceDurationMS)
 	putInt("context_compression_trigger_tokens", opts.ContextCompressionTriggerTokens)
-	params["enable_input_transcription"] = boolStr(boolOr(opts.EnableInputTranscription, true))
-	params["enable_output_transcription"] = boolStr(boolOr(opts.EnableOutputTranscription, true))
+	params["enable_input_transcription"] = boolStr(zrt.BoolOr(opts.EnableInputTranscription, true))
+	params["enable_output_transcription"] = boolStr(zrt.BoolOr(opts.EnableOutputTranscription, true))
 	if opts.SessionResumptionHandle != nil {
 		params["session_resumption_handle"] = *opts.SessionResumptionHandle
 	}
@@ -111,12 +112,16 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 			b, _ := json.Marshal(v)
 			saJSON = string(b)
 		}
+		saPath := opts.VertexServiceAccountPath
+		if saPath == "" {
+			saPath = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+		}
 		if saJSON != "" {
 			params["vertex_service_account_json"] = saJSON
-		} else if opts.VertexServiceAccountPath != "" {
-			params["vertex_service_account_path"] = opts.VertexServiceAccountPath
+		} else if saPath != "" {
+			params["vertex_service_account_path"] = saPath
 		}
-		vertex = &zrt.VertexInfo{ProjectID: opts.VertexProjectID, Location: loc, ServiceAccountJSON: saJSON, ServiceAccountPath: opts.VertexServiceAccountPath}
+		vertex = &zrt.VertexInfo{ProjectID: opts.VertexProjectID, Location: loc, ServiceAccountJSON: saJSON, ServiceAccountPath: saPath}
 	}
 	r := &Realtime{Model: zrt.StrOr(opts.Model, "gemini-3.1-flash-live-preview"), Voice: zrt.StrOr(opts.Voice, "Puck"), Modalities: modalities, params: params, vertex: vertex}
 	r.Init("gemini_live", zrt.APIKeyOr(opts.APIKey, "GOOGLE_API_KEY"))

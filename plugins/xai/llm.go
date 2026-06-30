@@ -1,45 +1,110 @@
-// Package xai provides the xAI Grok LLM and realtime providers.
 package xai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// LLM is an xAI Grok large language model.
 type LLM struct {
 	zrt.BaseLLM
-	Model           string
-	Temperature     float64
-	MaxOutputTokens int
-	BaseURL         string
+	Model             string
+	Temperature       float64
+	MaxOutputTokens   int
+	BaseURL           string
+	ToolChoice        string
+	TopP              *float64
+	FrequencyPenalty  *float64
+	PresencePenalty   *float64
+	Seed              *int
+	Stop              string
+	User              string
+	ParallelToolCalls *bool
+	ResponseFormat    string
+	ReasoningEffort   string
+	PromptCacheKey    string
+	ServiceTier       string
 }
 
-// LLMOptions configures an xAI Grok LLM.
 type LLMOptions struct {
-	// APIKey is the xAI API key. If empty, the XAI_API_KEY environment variable is used.
-	APIKey string
-	// Model is the Grok model to use. Defaults to "grok-4-1-fast-non-reasoning".
-	Model string
-	// BaseURL is the xAI API endpoint. Defaults to "https://api.x.ai/v1".
-	BaseURL string
-	// Temperature controls sampling randomness. nil uses the default (0.7).
-	Temperature *float64
-	// MaxCompletionTokens caps the response length. Defaults to 1024.
+	APIKey              string
+	Model               string
+	BaseURL             string
+	Temperature         *float64
 	MaxCompletionTokens *int
+	ToolChoice          string
+	TopP                *float64
+	FrequencyPenalty    *float64
+	PresencePenalty     *float64
+	Seed                *int
+	Stop                string
+	User                string
+	ParallelToolCalls   *bool
+	ResponseFormat      string
+	ReasoningEffort     string
+	PromptCacheKey      string
+	ServiceTier         string
 }
 
-// NewLLM creates an xAI Grok LLM from the given options.
 func NewLLM(opts LLMOptions) *LLM {
 	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
-		Model:           zrt.StrOr(opts.Model, "grok-4-1-fast-non-reasoning"),
-		Temperature:     temp,
-		MaxOutputTokens: zrt.IntOr(opts.MaxCompletionTokens, 1024),
-		BaseURL:         zrt.StrOr(opts.BaseURL, "https://api.x.ai/v1"),
+		Model:             zrt.StrOr(opts.Model, "grok-4-1-fast-non-reasoning"),
+		Temperature:       temp,
+		MaxOutputTokens:   zrt.IntOr(opts.MaxCompletionTokens, 1024),
+		BaseURL:           zrt.StrOr(opts.BaseURL, "https://api.x.ai/v1"),
+		ToolChoice:        zrt.StrOr(opts.ToolChoice, "auto"),
+		TopP:              opts.TopP,
+		FrequencyPenalty:  opts.FrequencyPenalty,
+		PresencePenalty:   opts.PresencePenalty,
+		Seed:              opts.Seed,
+		Stop:              opts.Stop,
+		User:              opts.User,
+		ParallelToolCalls: opts.ParallelToolCalls,
+		ResponseFormat:    opts.ResponseFormat,
+		ReasoningEffort:   opts.ReasoningEffort,
+		PromptCacheKey:    opts.PromptCacheKey,
+		ServiceTier:       opts.ServiceTier,
 	}
 	l.Init("xai", zrt.APIKeyOr(opts.APIKey, "XAI_API_KEY"))
 	return l
 }
 
-// LLMConfig implements zrt.LLM.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "xai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
+}
+
+func (l *LLM) Knobs() map[string]any {
+	k := map[string]any{}
+	k["tool_choice"] = l.ToolChoice
+	if l.TopP != nil {
+		k["top_p"] = *l.TopP
+	}
+	if l.FrequencyPenalty != nil {
+		k["frequency_penalty"] = *l.FrequencyPenalty
+	}
+	if l.PresencePenalty != nil {
+		k["presence_penalty"] = *l.PresencePenalty
+	}
+	if l.Seed != nil {
+		k["seed"] = *l.Seed
+	}
+	if l.Stop != "" {
+		k["stop"] = l.Stop
+	}
+	if l.User != "" {
+		k["user"] = l.User
+	}
+	if l.ParallelToolCalls != nil {
+		k["parallel_tool_calls"] = *l.ParallelToolCalls
+	}
+	if l.ResponseFormat != "" {
+		k["response_format"] = l.ResponseFormat
+	}
+	if l.ReasoningEffort != "" {
+		k["reasoning_effort"] = l.ReasoningEffort
+	}
+	if l.PromptCacheKey != "" {
+		k["prompt_cache_key"] = l.PromptCacheKey
+	}
+	if l.ServiceTier != "" {
+		k["service_tier"] = l.ServiceTier
+	}
+	return k
 }
