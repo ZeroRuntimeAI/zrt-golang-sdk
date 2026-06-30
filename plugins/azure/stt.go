@@ -6,9 +6,12 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // STT is an Azure speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
-	Model        string
-	Language     string
-	SpeechRegion string
+	Model            string
+	Language         string
+	SpeechRegion     string
+	SampleRate       int
+	EnablePhraseList bool
+	PhraseList       []string
 }
 
 // STTOptions configures an Azure STT.
@@ -19,15 +22,21 @@ type STTOptions struct {
 	// environment variable, or "eastus".
 	SpeechRegion string
 	// Language is the recognition language. Defaults to "en-US".
-	Language string
+	Language         string
+	SampleRate       int
+	EnablePhraseList *bool
+	PhraseList       []string
 }
 
 // NewSTT returns an Azure STT configured from opts.
 func NewSTT(opts STTOptions) *STT {
 	s := &STT{
-		Model:        "",
-		Language:     zrt.StrOr(opts.Language, "en-US"),
-		SpeechRegion: zrt.StrOr(opts.SpeechRegion, zrt.EnvOr("AZURE_REGION", "eastus")),
+		Model:            "",
+		Language:         zrt.StrOr(opts.Language, "en-US"),
+		SpeechRegion:     zrt.StrOr(opts.SpeechRegion, zrt.EnvOr("AZURE_REGION", "eastus")),
+		SampleRate:       orInt(opts.SampleRate, 16000),
+		EnablePhraseList: zrt.BoolOr(opts.EnablePhraseList, false),
+		PhraseList:       opts.PhraseList,
 	}
 	s.Init("azure", zrt.APIKeyOr(opts.SpeechKey, "AZURE_SPEECH_KEY"))
 	return s

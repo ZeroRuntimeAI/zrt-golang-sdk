@@ -29,5 +29,5 @@ func NewTTS(opts TTSOptions) *TTS {
 
 // TTSConfig implements zrt.TTS.
 func (t *TTS) TTSConfig() zrt.TTSRuntimeConfig {
-	return zrt.TTSRuntimeConfig{Provider: "lmnt", Voice: t.Voice}
+	return zrt.TTSRuntimeConfig{Provider: "lmnt", Model: t.Model, Voice: t.Voice}
 }

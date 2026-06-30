@@ -17,17 +17,22 @@ type TTSOptions struct {
 	// Voice selects the voice. Defaults to "en-US-natalie".
 	Voice string
 	// Model selects the model. Defaults to "Falcon".
-	Model string
+	Model      string
+	SampleRate int
 }
 
 // NewTTS creates a Murf AI TTS engine from the given options.
 func NewTTS(opts TTSOptions) *TTS {
+	sr := opts.SampleRate
+	if sr == 0 {
+		sr = 24000
+	}
 	t := &TTS{Voice: zrt.StrOr(opts.Voice, "en-US-natalie"), Model: zrt.StrOr(opts.Model, "Falcon")}
-	t.InitTTS("murfai", zrt.APIKeyOr(opts.APIKey, "MURFAI_API_KEY"), 24000)
+	t.InitTTS("murfai", zrt.APIKeyOr(opts.APIKey, "MURFAI_API_KEY"), sr)
 	return t
 }
 
 // TTSConfig implements zrt.TTS.
 func (t *TTS) TTSConfig() zrt.TTSRuntimeConfig {
-	return zrt.TTSRuntimeConfig{Provider: "murfai", Voice: t.Voice}
+	return zrt.TTSRuntimeConfig{Provider: "murfai", Model: t.Model, Voice: t.Voice}
 }

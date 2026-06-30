@@ -188,7 +188,7 @@ func AssemblyAISTT(o AssemblyAISTTOptions) *assemblyai.STT {
 	region := strOr(o.Region, "US")
 	inRate := intOr(o.InputSampleRate, 48000)
 	outRate := intOr(o.TargetSampleRate, 16000)
-	s := assemblyai.NewSTT(assemblyai.STTOptions{SpeechModel: model, Region: region})
+	s := assemblyai.NewSTT(assemblyai.STTOptions{Model: model})
 	cfg := map[string]any{
 		"model":                                  model,
 		"language":                               "en-US",

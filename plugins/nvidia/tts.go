@@ -5,7 +5,8 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is an NVIDIA text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
-	Voice string
+	Voice  string
+	Server string
 }
 
 // TTSOptions configures an NVIDIA TTS engine.
@@ -18,6 +19,7 @@ type TTSOptions struct {
 	LanguageCode string
 	// SampleRate is the output sample rate in Hz. Defaults to 22050.
 	SampleRate int
+	Server     string
 }
 
 // NewTTS creates an NVIDIA TTS engine from the given options.
@@ -26,7 +28,7 @@ func NewTTS(opts TTSOptions) *TTS {
 	if sr == 0 {
 		sr = 22050
 	}
-	t := &TTS{Voice: zrt.StrOr(opts.Voice, "English-US-Female-1")}
+	t := &TTS{Voice: zrt.StrOr(opts.Voice, "English-US-Female-1"), Server: opts.Server}
 	t.InitTTS("nvidia", zrt.APIKeyOr(opts.APIKey, "NVIDIA_API_KEY"), sr)
 	return t
 }

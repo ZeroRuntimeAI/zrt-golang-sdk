@@ -14,6 +14,10 @@ type TTS struct {
 	UseSpeakerBoost        bool
 	ApplyTextNormalization string
 	EnableWordTimestamps   bool
+	Speed                  *float64
+	Language               string
+	EnableSSMLParsing      *bool
+	Stream                 bool
 }
 
 // TTSOptions configures an ElevenLabs TTS instance. Nil pointer fields fall back
@@ -37,6 +41,10 @@ type TTSOptions struct {
 	ApplyTextNormalization string
 	// EnableWordTimestamps requests per-word timing information.
 	EnableWordTimestamps bool
+	Speed                *float64
+	Language             string
+	EnableSSMLParsing    *bool
+	Stream               *bool
 }
 
 // NewTTS returns an ElevenLabs TTS configured from opts.
@@ -50,6 +58,10 @@ func NewTTS(opts TTSOptions) *TTS {
 		UseSpeakerBoost:        zrt.BoolOr(opts.UseSpeakerBoost, true),
 		ApplyTextNormalization: opts.ApplyTextNormalization,
 		EnableWordTimestamps:   opts.EnableWordTimestamps,
+		Speed:                  opts.Speed,
+		Language:               opts.Language,
+		EnableSSMLParsing:      opts.EnableSSMLParsing,
+		Stream:                 zrt.BoolOr(opts.Stream, true),
 	}
 	t.InitTTS("elevenlabs", zrt.APIKeyOr(opts.APIKey, "ELEVENLABS_API_KEY"), 24000)
 	return t
@@ -57,7 +69,7 @@ func NewTTS(opts TTSOptions) *TTS {
 
 // TTSConfig implements zrt.TTS.
 func (t *TTS) TTSConfig() zrt.TTSRuntimeConfig {
-	return zrt.TTSRuntimeConfig{Provider: "elevenlabs", Voice: t.Voice}
+	return zrt.TTSRuntimeConfig{Provider: "elevenlabs", Model: t.Model, Voice: t.Voice}
 }
 
 // Knobs returns the provider-specific TTS settings.
@@ -69,9 +81,19 @@ func (t *TTS) Knobs() map[string]any {
 		"style":                  t.Style,
 		"use_speaker_boost":      t.UseSpeakerBoost,
 		"enable_word_timestamps": t.EnableWordTimestamps,
+		"tts_stream":             t.Stream,
 	}
 	if t.ApplyTextNormalization != "" {
 		k["apply_text_normalization"] = t.ApplyTextNormalization
+	}
+	if t.Speed != nil {
+		k["speed"] = *t.Speed
+	}
+	if t.Language != "" {
+		k["language"] = t.Language
+	}
+	if t.EnableSSMLParsing != nil {
+		k["enable_ssml_parsing"] = *t.EnableSSMLParsing
 	}
 	return k
 }

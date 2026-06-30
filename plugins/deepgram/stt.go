@@ -96,6 +96,7 @@ func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 // Knobs returns the Deepgram-specific options as a key/value map.
 func (s *STT) Knobs() map[string]any {
 	k := map[string]any{
+		"endpointing":      s.Endpointing,
 		"smart_format":     s.SmartFormat,
 		"punctuate":        s.Punctuate,
 		"filler_words":     s.FillerWords,
