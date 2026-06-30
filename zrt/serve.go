@@ -31,6 +31,14 @@ type ServeOptions struct {
 	RtcBaseURL string
 	// LogLevel is the worker log level (default "INFO").
 	LogLevel string
+	// SessionOptions configures each served AgentSession — e.g. a DTMFHandler, a
+	// VoiceMailDetector, a background-audio bed, or wake-up. The same options are
+	// shared by every concurrent session this worker serves.
+	SessionOptions AgentSessionOptions
+	// RoomOptions configures the room each served session joins — e.g. Vision (to
+	// subscribe the caller's video) or BackgroundAudio. It is cloned per session;
+	// Name defaults to the agent's display name when empty.
+	RoomOptions *RoomOptions
 	// Options, when set, is used as the base worker configuration and tuned for
 	// registered (serve) mode. The fields above win over the matching fields here.
 	Options *WorkerOptions
@@ -77,7 +85,7 @@ func Serve(agent Agent, opts ServeOptions) error {
 	displayName := cmp.Or(agent.base().name, registeredID)
 
 	entrypoint := func(ctx context.Context, jobCtx *JobContext) error {
-		session := NewAgentSession(agent, pipeline, AgentSessionOptions{})
+		session := NewAgentSession(agent, pipeline, opts.SessionOptions)
 		return session.Start(ctx, jobCtx, StartOptions{
 			WaitForParticipant: true,
 			RunUntilShutdown:   true,
@@ -113,7 +121,15 @@ func Serve(agent Agent, opts ServeOptions) error {
 	}
 
 	jobctxFactory := func() *JobContext {
-		return NewJobContext(&RoomOptions{Name: displayName}, nil)
+		ro := &RoomOptions{Name: displayName}
+		if opts.RoomOptions != nil {
+			clone := *opts.RoomOptions 
+			ro = &clone
+			if ro.Name == "" {
+				ro.Name = displayName
+			}
+		}
+		return NewJobContext(ro, nil)
 	}
 
 	return NewWorkerJob(entrypoint, jobctxFactory, workerOpts).Start()
