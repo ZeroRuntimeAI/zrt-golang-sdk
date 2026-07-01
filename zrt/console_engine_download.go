@@ -26,7 +26,7 @@ func engineCDNBase() string {
 
 // engineAssetURL returns the download URL for the engine tarball.
 func engineAssetURL(version, target string) string {
-	return fmt.Sprintf("%s/%s/zrt-console-%s.tar.gz", engineCDNBase(), version, target)
+	return fmt.Sprintf("%s/%s/zrt-%s.tar.gz", engineCDNBase(), version, target)
 }
 
 // fetchToFile downloads url into dest.

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// requiredEngineVersion is the zrt-console engine channel the SDK expects.
+// requiredEngineVersion is the zrt engine channel the SDK expects.
 const requiredEngineVersion = "latest"
 
 // errConsoleRoomRequired is returned when console mode is started without a room.
@@ -41,9 +41,9 @@ func detectTarget() (string, error) {
 // engineBinaryName returns the platform-specific engine binary filename.
 func engineBinaryName() string {
 	if runtime.GOOS == "windows" {
-		return "zrt-console.exe"
+		return "zrt.exe"
 	}
-	return "zrt-console"
+	return "zrt"
 }
 
 // zrtHome returns the base directory for installed engine binaries.
@@ -102,7 +102,7 @@ func localBuildFallback() string {
 	}
 }
 
-// resolveEngineBinary locates the zrt-console engine, downloading it if needed.
+// resolveEngineBinary locates the zrt engine, downloading it if needed.
 func resolveEngineBinary(version string) (string, error) {
 	target, err := detectTarget()
 	if err != nil {
@@ -125,6 +125,6 @@ func resolveEngineBinary(version string) (string, error) {
 		return installed, nil
 	}
 	return "", fmt.Errorf(
-		"could not resolve the zrt-console engine v%s: set ZRT_CONSOLE_BIN to a built binary, "+
+		"could not resolve the zrt engine v%s: set ZRT_CONSOLE_BIN to a built binary, "+
 			"or ensure network access to the engine CDN", version)
 }

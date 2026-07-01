@@ -31,7 +31,7 @@ type consoleStage struct {
 }
 
 // pipelineJSON encodes the pipeline's STT/LLM/TTS provider+model into the JSON
-// shape the zrt-console engine expects. Returns "" if the pipeline is nil.
+// shape the zrt engine expects. Returns "" if the pipeline is nil.
 func pipelineJSON(p *Pipeline) string {
 	if p == nil {
 		return ""
@@ -62,7 +62,7 @@ func pipelineJSON(p *Pipeline) string {
 	return string(b)
 }
 
-// spawnConsoleEngine resolves and launches the local zrt-console engine wired to
+// spawnConsoleEngine resolves and launches the local zrt engine wired to
 // the current terminal. The returned command has already been started.
 func spawnConsoleEngine(room roomConfigData, pipelineCfg string) (*exec.Cmd, error) {
 	binary, err := resolveEngineBinary(requiredEngineVersion)
@@ -96,7 +96,7 @@ func driveConsoleEngine(ctx context.Context, s *AgentSession, room roomConfigDat
 		return err
 	}
 
-	logPath := filepath.Join(os.TempDir(), "zrt-console-host.log")
+	logPath := filepath.Join(os.TempDir(), "zrt-host.log")
 	prevLogger := logger
 	var logFile *os.File
 	if f, ferr := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644); ferr == nil {
@@ -120,7 +120,7 @@ func driveConsoleEngine(ctx context.Context, s *AgentSession, room roomConfigDat
 		logger.Errorf("console session close error: %v", err)
 	}
 	if logFile != nil {
-		logger.Infof("[zrt-console] SDK logs during the session were written to %s", logPath)
+		logger.Infof("[zrt] SDK logs during the session were written to %s", logPath)
 	}
 	return waitErr
 }
