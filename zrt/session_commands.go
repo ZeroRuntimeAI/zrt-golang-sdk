@@ -520,7 +520,9 @@ func (s *AgentSession) Close(ctx context.Context, reason string) error {
 		}()
 	}
 
-	_, _ = s.FetchContextHistory(ctx, 0, false, false)
+	hctx, hcancel := context.WithTimeout(ctx, 2*time.Second)
+	_, _ = s.FetchContextHistory(hctx, 0, false, false)
+	hcancel()
 	if err := s.agent.OnExit(ctx); err != nil {
 		logger.Errorf("on_exit error: %v", err)
 	}
