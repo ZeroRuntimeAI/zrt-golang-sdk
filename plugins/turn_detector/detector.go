@@ -74,10 +74,9 @@ func NewTurnDetector(opts TurnDetectorOptions) *TurnDetector {
 		d.host = zrt.StrOr(opts.Host, defaultNamoHost())
 		d.authToken = opts.AuthToken
 		d.InitEOU("namo_v2", threshold)
-		// Mark as dedicated-inference (mirrors the Python SDK's _is_inference /
-		// _inference_base_url). The runtime drives the namo_v2 EOU entirely from
-		// the EOUConfig proto (provider/host/model_id/auth_token below), so BaseURL
-		// is recorded on InferenceInfo() for parity but not separately transmitted.
+		// Mark as dedicated-inference. The runtime drives the namo_v2 EOU entirely
+		// from the EOUConfig proto (provider/host/model_id/auth_token below), so
+		// BaseURL is recorded on InferenceInfo() but not separately transmitted.
 		d.SetInference(opts.BaseURL, "")
 	} else {
 		d.modelID = strings.ToLower(opts.Language)

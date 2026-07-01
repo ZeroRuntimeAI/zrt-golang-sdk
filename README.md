@@ -103,29 +103,20 @@ go run .
 
 That's it — speech in → your agent → speech out, in real time.
 
-## Examples
-
-Runnable examples live in [`examples/`](examples) — quickstart, a tool with a
-filler line (`booking`) and standalone dispatch (`dispatch`), tool-call/context
-tracking (`tool_context`), provider fallback chains (`fallback`), multi-agent
-handoff (`handoff`) and agent-to-agent messaging (`a2a`), room pub/sub chat
-(`pubsub_chat`), vision (`vision`), human-in-the-loop escalation
-(`human_in_the_loop`), the ChatContext API + runtime context management
-(`chat_context`, `summary_llm`), and two background-audio walkthroughs
-(`background_audio`, `background_audio_hold_music`). They mirror the Python SDK's
-`examples/` feature-for-feature. Run any of them with `go run ./examples/<name>`.
-See [`examples/README.md`](examples/README.md).
-
-More live in a dedicated repo:
-**[ZeroRuntimeAI/zrt-golang-sdk-examples](https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples)**
-
 ## How it works
 
 | Piece | What it is |
 |---|---|
-| **`zrt.Agent`** | Your behavior — instructions, tools, what it says on enter/exit. Embed `zrt.BaseAgent`. |
-| **`zrt.Pipeline`** | The voice stack: STT → LLM → TTS, plus VAD, turn detection, and denoising. |
-| **`zrt.WorkerJob`** | Runs your agent and connects it to Zero Runtime. |
+| `zrt.Agent` | Your behavior — instructions, tools, what it says on enter/exit. Embed `zrt.BaseAgent` and implement `OnEnter`/`OnExit`. Carries its `Pipeline`. |
+| `zrt.Pipeline` | The voice stack: STT (hear) → LLM (think) → TTS (speak), plus VAD, turn detection, denoising. |
+| `zrt.Serve(agent, ServeOptions{...})` | Registers the agent and listens for sessions. `SessionOptions` carries per-session features (DTMF, voicemail, wake-up, background audio). |
+| `zrt.Invoke(agentID, InvokeOptions{...})` | Starts a session for a registered agent (returns a `PlaygroundURL`). |
+
+Each example serves its agent and self-invokes one playground session on `OnReady`,
+then prints a joinable URL — just run it and open the printed link.
+
+More: https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples
+
 
 ## Give your agent tools
 
@@ -255,6 +246,6 @@ fmt.Println("session:", res.SessionID, "worker:", res.WorkerID)
 
 ## Contact
 
-support@videosdk.live
+support@zeroruntime.ai
 
 Copyright © 2026 Zujo Tech Pvt Ltd. All rights reserved.
