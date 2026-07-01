@@ -12,6 +12,7 @@ type VoiceMailDetector struct {
 	CustomPrompt       string
 	AutoHangup         bool
 	DetectionThreshold float64
+	LLM LLMLike
 
 	mu        sync.Mutex
 	detected  bool
@@ -26,6 +27,7 @@ type VoiceMailDetectorOptions struct {
 	AutoHangup          bool
 	DetectionThreshold  *float64 // default 1.0
 	MaxDetectionSeconds *int     // overrides Duration if set
+	LLM LLMLike
 }
 
 // NewVoiceMailDetector builds a VoiceMailDetector from the given options.
@@ -47,6 +49,7 @@ func NewVoiceMailDetector(opts VoiceMailDetectorOptions) *VoiceMailDetector {
 		CustomPrompt:       opts.CustomPrompt,
 		AutoHangup:         opts.AutoHangup,
 		DetectionThreshold: threshold,
+		LLM:                opts.LLM,
 	}
 }
 

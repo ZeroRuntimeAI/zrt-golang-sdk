@@ -68,6 +68,7 @@ var knobMap = map[string][]string{
 	"smallestai":   {"tts_stream", "model", "language", "speed"},
 	"navana":       {"customer_id"},
 	"google":       {"language", "voice", "speaking_rate", "pitch", "tts_stream", "tts_service_account_json"},
+	"bedrock":      {"top_p", "top_k", "stop_sequences", "tool_choice", "cache_system", "cache_tools", "strip_thinking", "text_tool_calls", "additional_request_fields"},
 }
 
 // sttKnobMap lists the per-provider STT-specific tuning knobs.
@@ -407,6 +408,12 @@ func asInferenceLLM(l LLMLike) inferenceMarked {
 	}
 	return nil
 }
+type bedrockCredentials interface {
+	AWSRegion() string
+	AWSAccessKeyID() string
+	AWSSecretAccessKey() string
+	AWSSessionToken() string
+}
 
 func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent) map[string]string {
 	creds := map[string]string{}
@@ -436,6 +443,30 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 			}
 		}
 	}
+	if vmd := p.VoiceMailDetector; vmd != nil && vmd.LLM != nil {
+		provider := ""
+		if prov, ok := vmd.LLM.(Provider); ok {
+			provider = prov.ProviderName()
+		}
+		if provider != "" {
+			creds["voicemail_llm_provider"] = provider
+		}
+		if lc, ok := vmd.LLM.(interface{ LLMConfig() LLMRuntimeConfig }); ok {
+			if model := lc.LLMConfig().Model; model != "" {
+				creds["voicemail_llm_model"] = model
+			}
+		}
+		if prov, ok := vmd.LLM.(Provider); ok {
+			if key := prov.APIKey(); provider != "" && key != "" {
+				if _, exists := creds[provider]; !exists {
+					creds[provider] = key
+				}
+			}
+			if info := prov.InferenceInfo(); info.BaseURL != "" {
+				creds["voicemail_llm_inference"] = info.BaseURL
+			}
+		}
+	}
 	// General KNOB_MAP over stt, llm, tts, vad.
 	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS), as[Provider](p.VAD)} {
 		if prov == nil {
@@ -448,6 +479,19 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 				if s, keep := serializeKnob(v); keep {
 					creds[name+"_"+knob] = s
 				}
+			}
+		}
+	}
+	// AWS Bedrock LLM credentials travel as dedicated keys.
+	if bc, ok := p.LLM.(bedrockCredentials); ok {
+		for k, v := range map[string]string{
+			"aws_region":            bc.AWSRegion(),
+			"aws_access_key_id":     bc.AWSAccessKeyID(),
+			"aws_secret_access_key": bc.AWSSecretAccessKey(),
+			"aws_session_token":     bc.AWSSessionToken(),
+		} {
+			if v != "" {
+				creds[k] = v
 			}
 		}
 	}
