@@ -12,7 +12,7 @@ import (
 )
 
 // isConsoleMode reports whether the agent was launched in console mode, either
-// via the --console flag or ZRT_MODE=console. 
+// via the --console flag or ZRT_MODE=console.
 func isConsoleMode() bool {
 	for _, a := range os.Args {
 		if a == "--console" {
@@ -37,18 +37,18 @@ func pipelineJSON(p *Pipeline) string {
 		return ""
 	}
 	stages := []consoleStage{}
-	if p.STT != nil {
-		c := p.STT.STTConfig()
+	if p.stt != nil {
+		c := p.stt.STTConfig()
 		stages = append(stages, consoleStage{Kind: "STT", Provider: c.Provider, Model: c.Model})
 	}
 	// The LLM slot may hold a realtime (speech-to-speech) model that does not
 	// implement LLMConfig(); include it only when it is a text LLM.
-	if llm, ok := p.LLM.(LLM); ok && llm != nil {
+	if llm, ok := p.llm.(LLM); ok && llm != nil {
 		c := llm.LLMConfig()
 		stages = append(stages, consoleStage{Kind: "LLM", Provider: c.Provider, Model: c.Model})
 	}
-	if p.TTS != nil {
-		c := p.TTS.TTSConfig()
+	if p.tts != nil {
+		c := p.tts.TTSConfig()
 		model := c.Model
 		if model == "" {
 			model = c.Voice

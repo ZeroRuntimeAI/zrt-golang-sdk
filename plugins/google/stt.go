@@ -79,7 +79,7 @@ func NewSTT(opts STTOptions) *STT {
 		ProjectID:                 projectID,
 		Stream:                    zrt.BoolOr(opts.Stream, true),
 		Location:                  zrt.StrOr(opts.Location, "us"),
-		AudioChannelCount:         orInt(opts.AudioChannelCount, 1),
+		AudioChannelCount:         zrt.IntZeroOr(opts.AudioChannelCount, 1),
 		InterimResults:            zrt.BoolOr(opts.InterimResults, true),
 		Punctuate:                 zrt.BoolOr(opts.Punctuate, true),
 		ProfanityFilter:           zrt.BoolOr(opts.ProfanityFilter, false),
@@ -87,14 +87,14 @@ func NewSTT(opts STTOptions) *STT {
 		EnableSpokenEmojis:        zrt.BoolOr(opts.EnableSpokenEmojis, false),
 		EnableWordTimeOffsets:     zrt.BoolOr(opts.EnableWordTimeOffsets, false),
 		EnableWordConfidence:      zrt.BoolOr(opts.EnableWordConfidence, false),
-		MaxAlternatives:           orInt(opts.MaxAlternatives, 1),
+		MaxAlternatives:           zrt.IntZeroOr(opts.MaxAlternatives, 1),
 		EnableVoiceActivityEvents: zrt.BoolOr(opts.EnableVoiceActivityEvents, false),
 		SpeechStartTimeout:        opts.SpeechStartTimeout,
 		SpeechEndTimeout:          opts.SpeechEndTimeout,
 		MinSpeakerCount:           opts.MinSpeakerCount,
 		MaxSpeakerCount:           opts.MaxSpeakerCount,
 		MinConfidenceThreshold:    zrt.FloatOr(opts.MinConfidenceThreshold, 0.0),
-		SampleRate:                orInt(opts.SampleRate, 48000),
+		SampleRate:                zrt.IntZeroOr(opts.SampleRate, 48000),
 	}
 	s.Init("google_stt", zrt.APIKeyOr(opts.APIKey, "GOOGLE_API_KEY"))
 	return s

@@ -40,7 +40,7 @@ func NewSTT(opts STTOptions) *STT {
 		Language:             zrt.StrOr(opts.LanguageCode, "en-US"),
 		Server:               zrt.StrOr(opts.Server, "grpc.nvcf.nvidia.com:443"),
 		FunctionID:           opts.FunctionID,
-		SampleRate:           orInt(opts.SampleRate, 16000),
+		SampleRate:           zrt.IntZeroOr(opts.SampleRate, 16000),
 		UseSSL:               zrt.BoolOr(opts.UseSSL, true),
 		ProfanityFilter:      zrt.BoolOr(opts.ProfanityFilter, false),
 		AutomaticPunctuation: zrt.BoolOr(opts.AutomaticPunctuation, true),
@@ -52,11 +52,4 @@ func NewSTT(opts STTOptions) *STT {
 // STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "nvidia", Model: s.Model, Language: s.Language}
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

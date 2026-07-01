@@ -62,8 +62,8 @@ func NewSTT(opts STTOptions) *STT {
 	s := &STT{
 		Model:                    zrt.StrOr(opts.Model, "saaras:v3"),
 		Language:                 zrt.StrOr(opts.Language, "en-IN"),
-		InputSampleRate:          orInt(opts.InputSampleRate, 48000),
-		OutputSampleRate:         orInt(opts.OutputSampleRate, 16000),
+		InputSampleRate:          zrt.IntZeroOr(opts.InputSampleRate, 48000),
+		OutputSampleRate:         zrt.IntZeroOr(opts.OutputSampleRate, 16000),
 		Mode:                     opts.Mode,
 		HighVADSensitivity:       opts.HighVADSensitivity,
 		FlushSignals:             opts.FlushSignals,
@@ -129,11 +129,4 @@ func (s *STT) Knobs() map[string]any {
 		k["interrupt_min_speech_frames"] = *s.InterruptMinSpeechFrames
 	}
 	return k
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

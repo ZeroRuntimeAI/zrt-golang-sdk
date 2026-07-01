@@ -43,8 +43,8 @@ func NewSTT(opts STTOptions) *STT {
 	s := &STT{
 		Model:                            zrt.StrOr(opts.Model, "universal-streaming-english"),
 		Language:                         zrt.StrOr(opts.Language, "en-US"),
-		InputSampleRate:                  orInt(opts.InputSampleRate, 48000),
-		OutputSampleRate:                 orInt(opts.OutputSampleRate, 16000),
+		InputSampleRate:                  zrt.IntZeroOr(opts.InputSampleRate, 48000),
+		OutputSampleRate:                 zrt.IntZeroOr(opts.OutputSampleRate, 16000),
 		Encoding:                         zrt.StrOr(opts.Encoding, "pcm_s16le"),
 		FormatTurns:                      zrt.BoolOr(opts.FormatTurns, true),
 		EndOfTurnConfidenceThreshold:     zrt.FloatOr(opts.EndOfTurnConfidenceThreshold, 0.4),
@@ -80,11 +80,4 @@ func (s *STT) Knobs() map[string]any {
 		k["base_url"] = s.BaseURL
 	}
 	return k
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

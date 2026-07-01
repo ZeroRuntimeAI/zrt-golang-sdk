@@ -58,7 +58,7 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 		"input_sample_rate":      strconv.Itoa(inputSR),
 		"output_sample_rate":     strconv.Itoa(outputSR),
 		"client_buffer_size_ms":  strconv.Itoa(bufSize),
-		"enable_greeting_prompt": boolStr(opts.EnableGreetingPrompt),
+		"enable_greeting_prompt": zrt.BoolStr(opts.EnableGreetingPrompt),
 	}
 	if opts.BaseURL != "" {
 		params["base_url"] = opts.BaseURL
@@ -88,11 +88,4 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 // RealtimeInfo implements zrt.RealtimeModel.
 func (r *Realtime) RealtimeInfo() zrt.RealtimeInfo {
 	return zrt.RealtimeInfo{Model: r.Model, Voice: r.Voice, Params: r.params, ResponseModalities: []string{"AUDIO"}}
-}
-
-func boolStr(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }

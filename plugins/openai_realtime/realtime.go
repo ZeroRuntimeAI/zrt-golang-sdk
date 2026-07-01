@@ -85,8 +85,8 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 		params["turn_detection_threshold"] = zrt.FloatStr(td.Threshold)
 		params["turn_detection_prefix_padding_ms"] = strconv.Itoa(td.PrefixPaddingMS)
 		params["turn_detection_silence_duration_ms"] = strconv.Itoa(td.SilenceDurationMS)
-		params["turn_detection_create_response"] = boolStr(td.CreateResponse)
-		params["turn_detection_interrupt_response"] = boolStr(td.InterruptResponse)
+		params["turn_detection_create_response"] = zrt.BoolStr(td.CreateResponse)
+		params["turn_detection_interrupt_response"] = zrt.BoolStr(td.InterruptResponse)
 	}
 	r := &Realtime{Model: model, Voice: voice, Modalities: modalities, params: params}
 	r.Init("openai_realtime", zrt.APIKeyOr(opts.APIKey, "OPENAI_API_KEY"))
@@ -96,11 +96,4 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 // RealtimeInfo implements zrt.RealtimeModel.
 func (r *Realtime) RealtimeInfo() zrt.RealtimeInfo {
 	return zrt.RealtimeInfo{Model: r.Model, Voice: r.Voice, Params: r.params, ResponseModalities: r.Modalities}
-}
-
-func boolStr(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }

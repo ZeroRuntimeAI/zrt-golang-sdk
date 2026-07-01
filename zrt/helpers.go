@@ -35,6 +35,16 @@ func IntOr(p *int, def int) int {
 	return *p
 }
 
+// IntZeroOr returns v if non-zero, else def. Unlike IntOr (which works on
+// pointers), this treats the int zero value as "unset", for plugin option
+// fields that aren't optional pointers.
+func IntZeroOr(v, def int) int {
+	if v == 0 {
+		return def
+	}
+	return v
+}
+
 // BoolOr dereferences p, or returns def if p is nil.
 func BoolOr(p *bool, def bool) bool {
 	if p == nil {
@@ -62,6 +72,14 @@ func EnvOr(key, fallback string) string {
 // FloatStr formats a float so the result always contains a decimal point
 // (for example "1.0" rather than "1"), for plugins building string param maps.
 func FloatStr(f float64) string { return floatStr(f) }
+
+// BoolStr formats b as "true" or "false", for plugins building string param maps.
+func BoolStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
 
 // APIKeyOr returns explicit if non-empty, else the value of env var envKey.
 func APIKeyOr(explicit, envKey string) string {

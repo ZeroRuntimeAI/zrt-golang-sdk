@@ -38,7 +38,7 @@ func (s *AgentSession) PublishMessage(ctx context.Context, cfg PubSubPublishConf
 	if t := s.transportRef(); t != nil {
 		return t.sendPublishMessage(cfg.Topic, cfg.Message, optionsJSON, payloadJSON)
 	}
-	return fmt.Errorf("AgentSession.PublishMessage: cannot publish to %q — no transport is ready (publish after Start has connected)", cfg.Topic)
+	return fmt.Errorf("cannot publish to %q: no transport is ready (publish after Start has connected)", cfg.Topic)
 }
 
 // SubscribePubSub subscribes to a room pub/sub topic. Messages are delivered via

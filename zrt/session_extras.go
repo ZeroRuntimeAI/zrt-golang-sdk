@@ -82,9 +82,9 @@ func (s *AgentSession) WarmTransfer(ctx context.Context) error {
 	return fmt.Errorf("%w: AgentSession.WarmTransfer; use AgentSwitch(...) for multi-agent handoff", ErrNotImplemented)
 }
 
-// GetContextHistory returns the locally-cached conversation history, filtered by
+// ContextHistory returns the locally-cached conversation history, filtered by
 // the given options. Use FetchContextHistory to pull the authoritative history.
-func (s *AgentSession) GetContextHistory(lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
+func (s *AgentSession) ContextHistory(lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
 	s.mu.Lock()
 	source := s.chatHistoryCache
 	if len(source) == 0 && len(s.transcriptMirror) > 0 {
@@ -180,7 +180,7 @@ func (s *AgentSession) AudioTrack() *AudioTrack {
 		return t
 	}
 	sampleRate := 48000
-	if tts, ok := s.pipeline.TTS.(interface{ SampleRate() int }); ok && s.pipeline.TTS != nil {
+	if tts, ok := s.pipeline.tts.(interface{ SampleRate() int }); ok && s.pipeline.tts != nil {
 		sampleRate = tts.SampleRate()
 	}
 	t := &AudioTrack{session: s, sampleRate: sampleRate}

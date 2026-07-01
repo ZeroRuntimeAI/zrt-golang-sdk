@@ -49,7 +49,7 @@ func NewLLM(opts LLMOptions) *LLM {
 	l := &LLM{
 		Model:             zrt.StrOr(opts.Model, "gpt-5.4-nano"),
 		Temperature:       temp,
-		MaxOutputTokens:   orInt(opts.MaxOutputTokens, 1024),
+		MaxOutputTokens:   zrt.IntZeroOr(opts.MaxOutputTokens, 1024),
 		TopP:              opts.TopP,
 		FrequencyPenalty:  opts.FrequencyPenalty,
 		PresencePenalty:   opts.PresencePenalty,
@@ -114,11 +114,4 @@ func (l *LLM) Knobs() map[string]any {
 	}
 	k["store"] = l.Store
 	return k
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

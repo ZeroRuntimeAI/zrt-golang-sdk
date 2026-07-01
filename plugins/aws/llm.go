@@ -87,7 +87,7 @@ func NewLLM(opts LLMOptions) *LLM {
 		SecretAccessKey:         zrt.APIKeyOr(opts.AWSSecretAccessKey, "AWS_SECRET_ACCESS_KEY"),
 		SessionToken:            zrt.APIKeyOr(opts.AWSSessionToken, "AWS_SESSION_TOKEN"),
 		Temperature:             zrt.FloatOr(opts.Temperature, 0.7),
-		MaxOutputTokens:         orInt(opts.MaxOutputTokens, 1024),
+		MaxOutputTokens:         zrt.IntZeroOr(opts.MaxOutputTokens, 1024),
 		TopP:                    opts.TopP,
 		TopK:                    opts.TopK,
 		StopSequences:           opts.StopSequences,
@@ -151,10 +151,3 @@ func (l *LLM) AWSSecretAccessKey() string { return l.SecretAccessKey }
 
 // AWSSessionToken reports the resolved AWS session token.
 func (l *LLM) AWSSessionToken() string { return l.SessionToken }
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
-}

@@ -34,7 +34,7 @@ func NewSTT(opts STTOptions) *STT {
 		Model:            "",
 		Language:         zrt.StrOr(opts.Language, "en-US"),
 		SpeechRegion:     zrt.StrOr(opts.SpeechRegion, zrt.EnvOr("AZURE_REGION", "eastus")),
-		SampleRate:       orInt(opts.SampleRate, 16000),
+		SampleRate:       zrt.IntZeroOr(opts.SampleRate, 16000),
 		EnablePhraseList: zrt.BoolOr(opts.EnablePhraseList, false),
 		PhraseList:       opts.PhraseList,
 	}
