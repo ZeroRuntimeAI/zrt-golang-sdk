@@ -37,6 +37,13 @@ type ServeOptions struct {
 	RtcBaseURL string
 	// LogLevel is the worker log level (default "INFO").
 	LogLevel string
+	// Host is the network interface the debug endpoint binds (default "0.0.0.0").
+	Host string
+	// Debug toggles the local HTTP debug endpoint (/health, /worker, /stats, …).
+	// It defaults to enabled; pass a pointer to false to turn it off.
+	Debug *bool
+	// DebugPort is the port the debug endpoint listens on (default 8081).
+	DebugPort int
 	// SessionOptions configures each served AgentSession — e.g. a DTMFHandler, a
 	// VoiceMailDetector, a background-audio bed, or wake-up. The same options are
 	// shared by every concurrent session this worker serves.
@@ -152,6 +159,13 @@ func Serve(agent Agent, opts ServeOptions) error {
 	}
 	if opts.LogLevel != "" {
 		workerOpts.LogLevel = opts.LogLevel
+	}
+	if opts.Host != "" {
+		workerOpts.Host = opts.Host
+	}
+	workerOpts.DebugEnabled = BoolOr(opts.Debug, true)
+	if opts.DebugPort > 0 {
+		workerOpts.Port = opts.DebugPort
 	}
 	if opts.OnReady != nil {
 		workerOpts.OnReady = opts.OnReady

@@ -144,6 +144,10 @@ type WorkerOptions struct {
 	Port              int
 	LogLevel          string
 
+	// DebugEnabled starts a local HTTP debug endpoint (health/worker/stats) on
+	// Host:Port while the worker runs. Off by default; Serve turns it on.
+	DebugEnabled bool
+
 	// OnReady, when set, is called once registration is confirmed (registered/serve
 	// mode). It may block / call zrt.Invoke; it runs on its own goroutine and panics
 	// are recovered and logged.
@@ -347,6 +351,63 @@ func (w *WorkerJob) unregisterRunner(s *AgentSession) {
 	w.mu.Unlock()
 }
 
+func (w *WorkerJob) getStats() map[string]any {
+	w.mu.Lock()
+	currentJobs := len(w.currentJobs)
+	legacy := w.legacyReg
+	w.mu.Unlock()
+
+	maxProc := max(1, w.options.MaxProcesses)
+	workerID := "unregistered"
+	connected := false
+	draining := false
+	if legacy != nil {
+		wid, conn, drain, active := legacy.stats()
+		if wid != "" {
+			workerID = wid
+		}
+		connected = conn
+		draining = drain
+		if active > currentJobs {
+			currentJobs = active
+		}
+	}
+	return map[string]any{
+		"agent_id":          cmp.Or(w.options.AgentID, "ZeroRuntimeAgent"),
+		"worker_id":         workerID,
+		"current_jobs":      currentJobs,
+		"active_jobs":       currentJobs,
+		"max_processes":     maxProc,
+		"worker_load":       float64(currentJobs) / float64(maxProc),
+		"load_threshold":    w.options.LoadThreshold,
+		"backend_connected": connected,
+		"connected":         connected,
+		"draining":          draining,
+		"register":          w.options.Register,
+		"log_level":         w.options.LogLevel,
+	}
+}
+
+// runnersSnapshot lists the worker's active sessions for the debug endpoint.
+func (w *WorkerJob) runnersSnapshot() []map[string]any {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	runners := make([]map[string]any, 0, len(w.currentJobs))
+	for id, info := range w.currentJobs {
+		room := "unknown"
+		if info.roomOpts != nil && info.roomOpts.RoomID != "" {
+			room = info.roomOpts.RoomID
+		}
+		runners = append(runners, map[string]any{
+			"id": id, "room": room, "status": "running", "task_id": id, "session_id": info.sessionID,
+		})
+	}
+	if len(runners) == 0 {
+		runners = append(runners, map[string]any{"id": "worker_main", "room": "main_worker", "status": "idle", "task_id": "worker_main"})
+	}
+	return runners
+}
+
 // Start runs the worker until interrupted. Blocks.
 func (w *WorkerJob) Start() error {
 	if w.options.Logger != nil {
@@ -375,6 +436,8 @@ func (w *WorkerJob) run() error {
 	ctx := w.buildJobContext()
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	defer w.stopDebugServer(w.startDebugServer())
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -411,6 +474,8 @@ func (w *WorkerJob) runRegistered() error {
 	w.mu.Lock()
 	w.legacyReg = legacy
 	w.mu.Unlock()
+
+	defer w.stopDebugServer(w.startDebugServer())
 
 	shutdownCh := make(chan struct{})
 	var shutdownOnce sync.Once

@@ -82,6 +82,13 @@ func (l *legacyBackendRegistration) WorkerID() string {
 	return l.workerID
 }
 
+// stats returns a snapshot of registration state for the debug endpoints.
+func (l *legacyBackendRegistration) stats() (workerID string, connected, draining bool, activeJobs int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.workerID, l.conn != nil && !l.closed, l.draining, len(l.activeJobs)
+}
+
 func (l *legacyBackendRegistration) start() bool {
 	go l.supervisor()
 	select {

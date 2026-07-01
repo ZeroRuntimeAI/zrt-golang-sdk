@@ -55,10 +55,14 @@ type InvokeOptions struct {
 	Labels map[string]string
 	// Metadata is arbitrary key/value dispatch metadata (stringified).
 	Metadata map[string]string
+	// Recording, when set, overrides the recording config for this session and
+	// forces recording on (equivalent to Room.Recording=true plus custom output
+	// settings). It maps onto the dispatch RecordingOverride.
+	Recording *RecordingConfig
 	// SessionID is an optional caller-chosen session id (runtime mints one if empty).
 	SessionID string
 	// RuntimeAddress is the runtime host:port (defaults to $ZRT_RUNTIME_ADDRESS,
-	// then "localhost:50051").
+	// then "us1.rt.zeroruntime.ai:443").
 	RuntimeAddress string
 	// Timeout is the RPC timeout (defaults to 30s).
 	Timeout time.Duration
@@ -91,7 +95,7 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 	if room == nil {
 		room = &Room{}
 	}
-	addr := cmp.Or(opts.RuntimeAddress, os.Getenv("ZRT_RUNTIME_ADDRESS"), "localhost:50051")
+	addr := cmp.Or(opts.RuntimeAddress, os.Getenv("ZRT_RUNTIME_ADDRESS"), "us1.rt.zeroruntime.ai:443")
 	timeout := cmp.Or(opts.Timeout, 30*time.Second)
 
 	// Resolve the room: explicit > env > auto-create.
@@ -141,7 +145,7 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 		AuthToken:              token,
 		AgentName:              cmp.Or(room.AgentName, agentID),
 		Vision:                 room.Vision,
-		RecordingEnabled:       room.Recording,
+		RecordingEnabled:       room.Recording || opts.Recording != nil,
 		BackgroundAudioEnabled: room.BackgroundAudio,
 		AudioListenerEnabled:   room.AudioListenerEnabled,
 		AutoEndSession:         BoolOr(room.AutoEndSession, true),
@@ -166,6 +170,9 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 		LabelSelector:    copyAnyMap(opts.Labels),
 		SessionId:        opts.SessionID,
 	}
+	if opts.Recording != nil {
+		req.RecordingOverride = buildRecordingConfig(opts.Recording)
+	}
 
 	conn, err := openGRPCChannel(addr, token)
 	if err != nil {
@@ -184,7 +191,7 @@ func Invoke(agentID string, opts InvokeOptions) (*InvokeResult, error) {
 	if acc := resp.GetAccepted(); acc != nil {
 		result := &InvokeResult{SessionID: acc.GetSessionId(), WorkerID: acc.GetWorkerId(), RoomID: roomID}
 		if BoolOr(room.Playground, true) && roomID != "" && token != "" {
-			base := strings.TrimRight(cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai//cli"), "/")
+			base := strings.TrimRight(cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai/cli"), "/")
 			result.PlaygroundURL = fmt.Sprintf("%s?token=%s&meetingId=%s", base, token, roomID)
 		}
 		return result, nil
