@@ -252,5 +252,5 @@ func (a *BaseAgent) CaptureFrames(numFrames int) []map[string]any {
 	if a.session == nil || a.session.pipeline == nil {
 		return nil
 	}
-	return a.session.pipeline.GetLatestFrames(numFrames)
+	return a.session.pipeline.LatestFrames(numFrames)
 }

@@ -408,6 +408,7 @@ func asInferenceLLM(l LLMLike) inferenceMarked {
 	}
 	return nil
 }
+
 type bedrockCredentials interface {
 	AWSRegion() string
 	AWSAccessKeyID() string
@@ -425,7 +426,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 		}
 	}
 	// Provider API keys.
-	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS), as[Provider](p.Avatar)} {
+	for _, prov := range []Provider{as[Provider](p.stt), as[Provider](p.llm), as[Provider](p.tts), as[Provider](p.avatar)} {
 		if prov == nil {
 			continue
 		}
@@ -468,7 +469,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 		}
 	}
 	// General KNOB_MAP over stt, llm, tts, vad.
-	for _, prov := range []Provider{as[Provider](p.STT), as[Provider](p.LLM), as[Provider](p.TTS), as[Provider](p.VAD)} {
+	for _, prov := range []Provider{as[Provider](p.stt), as[Provider](p.llm), as[Provider](p.tts), as[Provider](p.vad)} {
 		if prov == nil {
 			continue
 		}
@@ -483,7 +484,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 		}
 	}
 	// AWS Bedrock LLM credentials travel as dedicated keys.
-	if bc, ok := p.LLM.(bedrockCredentials); ok {
+	if bc, ok := p.llm.(bedrockCredentials); ok {
 		for k, v := range map[string]string{
 			"aws_region":            bc.AWSRegion(),
 			"aws_access_key_id":     bc.AWSAccessKeyID(),
@@ -496,9 +497,9 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 		}
 	}
 	// STT_KNOB_MAP.
-	if p.STT != nil {
-		name := p.STT.ProviderName()
-		knobs := p.STT.Knobs()
+	if p.stt != nil {
+		name := p.stt.ProviderName()
+		knobs := p.stt.Knobs()
 		sttBase := strings.TrimSuffix(name, "_stt")
 		for _, knob := range sttKnobMap[name] {
 			if v, ok := knobs[knob]; ok {
@@ -509,27 +510,27 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 		}
 	}
 	// Denoise credentials.
-	if p.Denoise != nil {
-		denoiseProvider := p.Denoise.ProviderName()
+	if p.denoise != nil {
+		denoiseProvider := p.denoise.ProviderName()
 		if denoiseProvider != "" {
-			token := p.Denoise.GatewayToken
+			token := p.denoise.GatewayToken
 			if token == "" {
 				token = os.Getenv("ZRT_AUTH_TOKEN")
 			}
 			if token != "" {
 				creds["denoise_gateway_token"] = token
 			}
-			if p.Denoise.ModelID != "" {
-				creds["denoise_model"] = p.Denoise.ModelID
+			if p.denoise.ModelID != "" {
+				creds["denoise_model"] = p.denoise.ModelID
 			}
-			if p.Denoise.hasModelSampleRate {
-				creds["denoise_model_sample_rate"] = strconv.Itoa(p.Denoise.ModelSampleRate)
+			if p.denoise.hasModelSampleRate {
+				creds["denoise_model_sample_rate"] = strconv.Itoa(p.denoise.ModelSampleRate)
 			}
-			if p.Denoise.hasChunkMS {
-				creds["denoise_chunk_ms"] = strconv.Itoa(p.Denoise.ChunkMS)
+			if p.denoise.hasChunkMS {
+				creds["denoise_chunk_ms"] = strconv.Itoa(p.denoise.ChunkMS)
 			}
-			if p.Denoise.BaseURL != "" {
-				creds["denoise_base_url"] = p.Denoise.BaseURL
+			if p.denoise.BaseURL != "" {
+				creds["denoise_base_url"] = p.denoise.BaseURL
 			}
 		}
 	}
@@ -543,7 +544,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent
 	for _, sc := range []struct {
 		slot string
 		prov inferenceMarked
-	}{{"stt", asInference(p.STT)}, {"llm", asInferenceLLM(p.LLM)}, {"tts", asInference(p.TTS)}} {
+	}{{"stt", asInference(p.stt)}, {"llm", asInferenceLLM(p.llm)}, {"tts", asInference(p.tts)}} {
 		if sc.prov == nil {
 			continue
 		}
@@ -619,8 +620,8 @@ var fillerWords = []string{"okay", "ok", "yeah", "yes", "right", "sure", "hmm", 
 var verbalFillers = []string{"Hmm,", "Let me think.", "Sure,", "Okay,"}
 
 func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
-	sttSlot := p.STT
-	ttsSlot := p.TTS
+	sttSlot := p.stt
+	ttsSlot := p.tts
 	// Custom STT/TTS hook placeholders.
 	var sttCfg *pb.STTProviderConfig
 	if sttSlot == nil && p.Hooks != nil && p.Hooks.hasSTTStreamHook() {
@@ -641,12 +642,12 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 
 	return &pb.CascadeConfig{
 		Stt:       sttCfg,
-		Llm:       buildLLMConfig(as[LLM](p.LLM)),
+		Llm:       buildLLMConfig(as[LLM](p.llm)),
 		Tts:       ttsCfg,
-		Vad:       buildVADConfig(p.VAD),
+		Vad:       buildVADConfig(p.vad),
 		Interrupt: buildInterruptConfig(p.InterruptConfig),
-		Eou:       buildEOUConfig(p.EOUConfig, p.TurnDetector),
-		Denoise:   buildDenoiseConfig(p.Denoise),
+		Eou:       buildEOUConfig(p.EOUConfig, p.turnDetector),
+		Denoise:   buildDenoiseConfig(p.denoise),
 		Voicemail: buildVoicemailConfig(p.VoiceMailDetector),
 		Filler: &pb.FillerConfig{
 			FilterFillerWords:    true,
@@ -667,7 +668,7 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 		OrchestratorTiming:   &pb.OrchestratorTimingConfig{PollIntervalMs: 10, MaxDrainSecs: 10, TtsDrainGraceMs: 500},
 		SttFilterPatterns:    slices.Clone(p.STTFilterPatterns),
 		SttWordSubstitutions: maps.Clone(p.STTWordSubstitutions),
-		Avatar:               buildAvatarConfig(p.Avatar),
+		Avatar:               buildAvatarConfig(p.avatar),
 	}
 }
 
@@ -695,10 +696,10 @@ func detectPipelineMode(p *Pipeline) string {
 	case "llm_only":
 		return "llm_only"
 	}
-	llmRealtime := llmIsRealtime(p.LLM)
-	hasSTT := p.STT != nil
-	hasTTS := p.TTS != nil
-	hasLLM := p.LLM != nil
+	llmRealtime := llmIsRealtime(p.llm)
+	hasSTT := p.stt != nil
+	hasTTS := p.tts != nil
+	hasLLM := p.llm != nil
 	switch {
 	case llmRealtime && hasSTT && hasTTS:
 		return "llm_only"
@@ -732,7 +733,7 @@ func detectPipelineMode(p *Pipeline) string {
 func buildRealtimeProviderConfig(p *Pipeline) *pb.RealtimeProviderConfig {
 	var info RealtimeInfo
 	provider := ""
-	if rm, ok := p.LLM.(RealtimeModel); ok {
+	if rm, ok := p.llm.(RealtimeModel); ok {
 		info = rm.RealtimeInfo()
 		provider = cmp.Or(info.Provider, rm.ProviderName())
 	}
@@ -787,7 +788,7 @@ func buildPipelineConfig(p *Pipeline) *pb.PipelineConfig {
 	case "hybrid_stt":
 		return &pb.PipelineConfig{Mode: "hybrid_stt", Cascade: buildCascadeConfig(p), Realtime: buildRealtimeProviderConfig(p)}
 	case "llm_only":
-		if llmIsRealtime(p.LLM) {
+		if llmIsRealtime(p.llm) {
 			return &pb.PipelineConfig{Mode: "llm_only", Cascade: buildCascadeConfig(p), Realtime: buildRealtimeProviderConfig(p)}
 		}
 		return &pb.PipelineConfig{Mode: "llm_only", Cascade: buildCascadeConfig(p)}
@@ -892,8 +893,8 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	// Hook mode: a real server-side STT/TTS provider is configured AND a
 	// stt/tts hook is registered. The runtime then pauses and
 	// asks the SDK to rewrite the transcript / tts text.
-	sttHookEnabled := p != nil && p.STT != nil && p.Hooks != nil && p.Hooks.sttHook != nil
-	ttsHookEnabled := p != nil && p.TTS != nil && p.Hooks != nil && p.Hooks.ttsHook != nil
+	sttHookEnabled := p != nil && p.stt != nil && p.Hooks != nil && p.Hooks.sttHook != nil
+	ttsHookEnabled := p != nil && p.tts != nil && p.Hooks != nil && p.Hooks.ttsHook != nil
 	return &pb.AgentConfig{
 		AgentId:                  a.id,
 		Instructions:             a.instructions,

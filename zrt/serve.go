@@ -99,7 +99,7 @@ func Serve(agent Agent, opts ServeOptions) error {
 
 	if template.base().pipeline == nil {
 		return fmt.Errorf("zrt.Serve requires the agent to carry a pipeline: " +
-			"use zrt.NewAgent(zrt.AgentOptions{..., Pipeline: pipeline}) " +
+			"use zrt.NewAgent(zrt.AgentOptions{...}) " +
 			"or set AgentOptions.Pipeline when building the embedded BaseAgent")
 	}
 

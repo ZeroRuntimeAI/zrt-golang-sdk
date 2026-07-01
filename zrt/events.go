@@ -84,7 +84,7 @@ func evSynthesisInterrupted(s *AgentSession, si *pb.SynthesisInterruptedEvent) {
 }
 
 func evFirstAudioByte(s *AgentSession, fab *pb.FirstAudioByteEvent) {
-	if obs, ok := s.pipeline.TTS.(firstAudioObservable); ok {
+	if obs, ok := s.pipeline.tts.(firstAudioObservable); ok {
 		if cb := obs.firstAudioByteCallback(); cb != nil {
 			cb(fab.GetTtfbMs(), fab.GetByteCount())
 		}
@@ -152,7 +152,7 @@ func evVADEvent(s *AgentSession, ve *pb.VadEventProto) {
 	}
 	ts := float64(ve.GetTimestampUs()) / 1_000_000.0
 	data := VADData{IsSpeech: isSpeech, Confidence: float64(ve.GetConfidence()), Timestamp: ts, SpeechDuration: float64(ve.GetSpeechDurationS()), SilenceDuration: float64(ve.GetSilenceDurationS())}
-	if obs, ok := s.pipeline.VAD.(vadObservable); ok {
+	if obs, ok := s.pipeline.vad.(vadObservable); ok {
 		if cb := obs.vadCallback(); cb != nil {
 			cb(VADResponse{EventType: et, Data: data})
 		}
@@ -415,7 +415,7 @@ func buildSTTResponse(t *pb.TranscriptEvent) STTResponse {
 
 func transcriptDirect(s *AgentSession, t *pb.TranscriptEvent) {
 	resp := buildSTTResponse(t)
-	if obs, ok := s.pipeline.STT.(transcriptObservable); ok {
+	if obs, ok := s.pipeline.stt.(transcriptObservable); ok {
 		if cb := obs.transcriptCallback(); cb != nil {
 			cb(resp)
 		}

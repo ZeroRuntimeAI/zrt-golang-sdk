@@ -108,7 +108,7 @@ func (b *grpcBridge) createSession(ctx context.Context) (string, error) {
 	cfg := b.buildSessionConfig()
 	resp, err := b.client.CreateSession(ctx, cfg)
 	if err != nil {
-		return "", fmt.Errorf("CreateSession failed: %w", err)
+		return "", fmt.Errorf("create session: %w", err)
 	}
 	if rej := resp.GetRejected(); rej != nil {
 		return "", fmt.Errorf("%w: %s — %s", ErrSessionRejected, rej.GetReason(), rej.GetMessage())

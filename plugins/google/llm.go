@@ -82,7 +82,7 @@ func NewLLM(opts LLMOptions) *LLM {
 	l := &LLM{
 		Model:            zrt.StrOr(opts.Model, "gemini-2.5-flash-lite"),
 		Temperature:      temp,
-		MaxOutputTokens:  orInt(opts.MaxOutputTokens, 8192),
+		MaxOutputTokens:  zrt.IntZeroOr(opts.MaxOutputTokens, 8192),
 		ThinkingBudget:   tb,
 		IncludeThoughts:  opts.IncludeThoughts,
 		SafetySettings:   opts.SafetySettings,
@@ -157,11 +157,4 @@ func (l *LLM) GeminiLLMExtras() *zrt.GeminiLLMExtras {
 		}
 	}
 	return e
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

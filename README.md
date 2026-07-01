@@ -105,18 +105,17 @@ That's it — speech in → your agent → speech out, in real time.
 
 ## How it works
 
-| Piece | What it is |
-|---|---|
-| `zrt.Agent` | Your behavior — instructions, tools, what it says on enter/exit. Embed `zrt.BaseAgent` and implement `OnEnter`/`OnExit`. Carries its `Pipeline`. |
-| `zrt.Pipeline` | The voice stack: STT (hear) → LLM (think) → TTS (speak), plus VAD, turn detection, denoising. |
-| `zrt.Serve(agent, ServeOptions{...})` | Registers the agent and listens for sessions. `SessionOptions` carries per-session features (DTMF, voicemail, wake-up, background audio). |
-| `zrt.Invoke(agentID, InvokeOptions{...})` | Starts a session for a registered agent (returns a `PlaygroundURL`). |
+| Piece                                     | What it is                                                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zrt.Agent`                               | Your behavior — instructions, tools, what it says on enter/exit. Embed `zrt.BaseAgent` and implement `OnEnter`/`OnExit`. Carries its `Pipeline`. |
+| `zrt.Pipeline`                            | The voice stack: STT (hear) → LLM (think) → TTS (speak), plus VAD, turn detection, denoising.                                                    |
+| `zrt.Serve(agent, ServeOptions{...})`     | Registers the agent and listens for sessions. `SessionOptions` carries per-session features (DTMF, voicemail, wake-up, background audio).        |
+| `zrt.Invoke(agentID, InvokeOptions{...})` | Starts a session for a registered agent (returns a `PlaygroundURL`).                                                                             |
 
 Each example serves its agent and self-invokes one playground session on `OnReady`,
 then prints a joinable URL — just run it and open the printed link.
 
 More: https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples
-
 
 ## Give your agent tools
 
@@ -198,7 +197,7 @@ to start one (from anywhere: a script, a CLI, a web handler). Scale out by runni
 more `Serve` workers.
 
 ```go
-// The agent embeds BaseAgent built with AgentOptions{AgentID: "my-agent", Pipeline: pipeline}.
+// The agent embeds BaseAgent built with AgentOptions{AgentID: "my-agent"}.
 agent := NewAssistant(pipeline)
 
 // Serve registers and blocks. OnReady fires once registration is confirmed
@@ -235,14 +234,14 @@ fmt.Println("session:", res.SessionID, "worker:", res.WorkerID)
 
 ## Environment variables
 
-| Var | Purpose |
-|---|---|
-| `ZRT_RUNTIME_ADDRESS` | Runtime gRPC address |
-| `ZRT_AUTH_TOKEN` | Pre-minted auth token |
-| `ZRT_API_KEY` + `ZRT_SECRET_KEY` | Mint a JWT if no token is set |
-| `ZRT_RUNTIME_INSECURE` | `1` to use an insecure (non-TLS) channel |
-| `ZRT_SIGNALING_URL` | Signaling/API base (default `api.videosdk.live`) |
-| `<PROVIDER>_API_KEY` | Provider keys (e.g. `DEEPGRAM_API_KEY`, `CARTESIA_API_KEY`) |
+| Var                              | Purpose                                                     |
+| -------------------------------- | ----------------------------------------------------------- |
+| `ZRT_RUNTIME_ADDRESS`            | Runtime gRPC address                                        |
+| `ZRT_AUTH_TOKEN`                 | Pre-minted auth token                                       |
+| `ZRT_API_KEY` + `ZRT_SECRET_KEY` | Mint a JWT if no token is set                               |
+| `ZRT_RUNTIME_INSECURE`           | `1` to use an insecure (non-TLS) channel                    |
+| `ZRT_SIGNALING_URL`              | Signaling/API base (default `api.videosdk.live`)            |
+| `<PROVIDER>_API_KEY`             | Provider keys (e.g. `DEEPGRAM_API_KEY`, `CARTESIA_API_KEY`) |
 
 ## Contact
 

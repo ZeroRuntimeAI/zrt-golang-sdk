@@ -94,8 +94,8 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 	putInt("vad_prefix_padding_ms", opts.VADPrefixPaddingMS)
 	putInt("vad_silence_duration_ms", opts.VADSilenceDurationMS)
 	putInt("context_compression_trigger_tokens", opts.ContextCompressionTriggerTokens)
-	params["enable_input_transcription"] = boolStr(zrt.BoolOr(opts.EnableInputTranscription, true))
-	params["enable_output_transcription"] = boolStr(zrt.BoolOr(opts.EnableOutputTranscription, true))
+	params["enable_input_transcription"] = zrt.BoolStr(zrt.BoolOr(opts.EnableInputTranscription, true))
+	params["enable_output_transcription"] = zrt.BoolStr(zrt.BoolOr(opts.EnableOutputTranscription, true))
 	if opts.SessionResumptionHandle != nil {
 		params["session_resumption_handle"] = *opts.SessionResumptionHandle
 	}
@@ -131,13 +131,6 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 // RealtimeInfo implements zrt.RealtimeModel.
 func (r *Realtime) RealtimeInfo() zrt.RealtimeInfo {
 	return zrt.RealtimeInfo{Model: r.Model, Voice: r.Voice, Params: r.params, ResponseModalities: r.Modalities, Vertex: r.vertex}
-}
-
-func boolStr(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }
 
 // boolOr returns *p when set, else def. Used for tri-state options whose

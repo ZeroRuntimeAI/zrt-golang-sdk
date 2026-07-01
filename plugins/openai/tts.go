@@ -26,7 +26,7 @@ func NewTTS(opts TTSOptions) *TTS {
 		Speed:  opts.Speed,
 		Stream: zrt.BoolOr(opts.Stream, true),
 	}
-	t.InitTTS("openai", zrt.APIKeyOr(opts.APIKey, "OPENAI_API_KEY"), orInt(opts.SampleRate, 24000))
+	t.InitTTS("openai", zrt.APIKeyOr(opts.APIKey, "OPENAI_API_KEY"), zrt.IntZeroOr(opts.SampleRate, 24000))
 	return t
 }
 

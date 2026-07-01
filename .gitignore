@@ -36,3 +36,4 @@ profile.out
 examples/
 tests/
 .env
+*.log

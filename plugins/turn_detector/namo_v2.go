@@ -1,7 +1,7 @@
 package turn_detector
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
@@ -38,7 +38,7 @@ func NewNamoTurnDetectorV2(opts NamoTurnDetectorV2Options) (*NamoTurnDetectorV2,
 	}
 	modelID := zrt.StrOr(opts.ModelID, "roberta")
 	if modelID == "" {
-		return nil, fmt.Errorf("NamoTurnDetectorV2: model_id is empty")
+		return nil, errors.New("model_id is empty")
 	}
 	d := &NamoTurnDetectorV2{ModelID: modelID, Host: zrt.StrOr(opts.Host, defaultNamoHost()), AuthToken: opts.AuthToken}
 	d.InitEOU("namo_v2", threshold)

@@ -143,7 +143,7 @@ func (s *AgentSession) resolveRoomConfig(jobCtx *JobContext) (roomConfigData, er
 	}
 	opts := jobCtx.RoomOptions
 	if opts.RoomID == "" {
-		if _, err := jobCtx.GetRoomID(); err != nil {
+		if _, err := jobCtx.RoomID(); err != nil {
 			logger.Warnf("Auto room creation skipped: %v", err)
 		}
 	}

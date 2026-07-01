@@ -188,13 +188,13 @@ func (h *PipelineHooks) hasTTSStreamHook() bool { return h.customTTS != nil }
 type Pipeline struct {
 	EventEmitter
 
-	STT          STT
-	LLM          LLMLike
-	TTS          TTS
-	VAD          VAD
-	TurnDetector EOU
-	Denoise      *Denoise
-	Avatar       Avatar
+	stt          STT
+	llm          LLMLike
+	tts          TTS
+	vad          VAD
+	turnDetector EOU
+	denoise      *Denoise
+	avatar       Avatar
 
 	EOUConfig         *EOUConfig
 	InterruptConfig   *InterruptConfig
@@ -259,13 +259,13 @@ func NewPipeline(opts PipelineOptions) *Pipeline {
 	}
 	timeout := cmp.Or(opts.LLMStreamHookTimeoutMS, 100)
 	p := &Pipeline{
-		STT:                      opts.STT,
-		LLM:                      opts.LLM,
-		TTS:                      opts.TTS,
-		VAD:                      opts.VAD,
-		TurnDetector:             opts.TurnDetector,
-		Denoise:                  opts.Denoise,
-		Avatar:                   opts.Avatar,
+		stt:                      opts.STT,
+		llm:                      opts.LLM,
+		tts:                      opts.TTS,
+		vad:                      opts.VAD,
+		turnDetector:             opts.TurnDetector,
+		denoise:                  opts.Denoise,
+		avatar:                   opts.Avatar,
 		EOUConfig:                opts.EOUConfig,
 		InterruptConfig:          opts.InterruptConfig,
 		ContextWindow:            opts.ContextWindow,
@@ -283,6 +283,27 @@ func NewPipeline(opts PipelineOptions) *Pipeline {
 }
 
 func (p *Pipeline) setAgent(a Agent) { p.agent = a }
+
+// STT returns the pipeline's configured speech-to-text provider (nil if unset).
+func (p *Pipeline) STT() STT { return p.stt }
+
+// LLM returns the pipeline's configured language model (nil if unset).
+func (p *Pipeline) LLM() LLMLike { return p.llm }
+
+// TTS returns the pipeline's configured text-to-speech provider (nil if unset).
+func (p *Pipeline) TTS() TTS { return p.tts }
+
+// VAD returns the pipeline's configured voice-activity detector (nil if unset).
+func (p *Pipeline) VAD() VAD { return p.vad }
+
+// TurnDetector returns the pipeline's configured end-of-utterance detector (nil if unset).
+func (p *Pipeline) TurnDetector() EOU { return p.turnDetector }
+
+// Denoise returns the pipeline's configured denoiser (nil if unset).
+func (p *Pipeline) Denoise() *Denoise { return p.denoise }
+
+// Avatar returns the pipeline's configured avatar provider (nil if unset).
+func (p *Pipeline) Avatar() Avatar { return p.avatar }
 
 // ---- hook registration (typed, all on the Pipeline for convenience) ----
 
@@ -486,8 +507,8 @@ func (p *Pipeline) PushAudioFrame(frame map[string]any) {
 	}
 }
 
-// GetLatestFrames returns up to n most-recent buffered vision frames.
-func (p *Pipeline) GetLatestFrames(n int) []map[string]any {
+// LatestFrames returns up to n most-recent buffered vision frames.
+func (p *Pipeline) LatestFrames(n int) []map[string]any {
 	if n <= 0 {
 		return nil
 	}
@@ -509,29 +530,29 @@ func fireFrameHook(h func(map[string]any), frame map[string]any) {
 // Config returns the resolved pipeline topology (mode + active components).
 func (p *Pipeline) Config() PipelineConfigInfo {
 	components := map[PipelineComponent]bool{}
-	if p.STT != nil {
+	if p.stt != nil {
 		components[ComponentSTT] = true
 	}
-	if p.LLM != nil {
+	if p.llm != nil {
 		components[ComponentLLM] = true
 	}
-	if p.TTS != nil {
+	if p.tts != nil {
 		components[ComponentTTS] = true
 	}
-	if p.VAD != nil {
+	if p.vad != nil {
 		components[ComponentVAD] = true
 	}
-	if p.TurnDetector != nil {
+	if p.turnDetector != nil {
 		components[ComponentTurnDetector] = true
 	}
-	if p.Denoise != nil {
+	if p.denoise != nil {
 		components[ComponentDenoise] = true
 	}
-	if p.Avatar != nil {
+	if p.avatar != nil {
 		components[ComponentAvatar] = true
 	}
-	isRealtime := llmIsRealtime(p.LLM) || (p.RealtimeConfig != nil && p.RealtimeConfig.Mode != "")
-	hasSTT, hasLLM, hasTTS := p.STT != nil, p.LLM != nil, p.TTS != nil
+	isRealtime := llmIsRealtime(p.llm) || (p.RealtimeConfig != nil && p.RealtimeConfig.Mode != "")
+	hasSTT, hasLLM, hasTTS := p.stt != nil, p.llm != nil, p.tts != nil
 	if isRealtime {
 		components[ComponentRealtimeModel] = true
 		rtMode := RealtimeModeFullS2S
@@ -590,22 +611,22 @@ func (c PipelineConfigInfo) HasComponent(comp PipelineComponent) bool {
 // the corresponding component unchanged.
 func (p *Pipeline) ChangePipeline(opts PipelineOptions) {
 	if opts.STT != nil {
-		p.STT = opts.STT
+		p.stt = opts.STT
 	}
 	if opts.LLM != nil {
-		p.LLM = opts.LLM
+		p.llm = opts.LLM
 	}
 	if opts.TTS != nil {
-		p.TTS = opts.TTS
+		p.tts = opts.TTS
 	}
 	if opts.VAD != nil {
-		p.VAD = opts.VAD
+		p.vad = opts.VAD
 	}
 	if opts.TurnDetector != nil {
-		p.TurnDetector = opts.TurnDetector
+		p.turnDetector = opts.TurnDetector
 	}
 	if opts.Denoise != nil {
-		p.Denoise = opts.Denoise
+		p.denoise = opts.Denoise
 	}
 }
 

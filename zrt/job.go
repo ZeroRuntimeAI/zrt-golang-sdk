@@ -252,8 +252,8 @@ func (j *JobContext) shutdown(ctx context.Context) {
 	}
 }
 
-// GetRoomID returns the room id, creating a room via the signaling API if unset.
-func (j *JobContext) GetRoomID() (string, error) {
+// RoomID returns the room id, creating a room via the signaling API if unset.
+func (j *JobContext) RoomID() (string, error) {
 	if j.RoomOptions.RoomID != "" {
 		return j.RoomOptions.RoomID, nil
 	}
@@ -460,12 +460,12 @@ func (w *WorkerJob) run() error {
 // sessions, running the entrypoint for each job. It blocks until shutdown.
 func (w *WorkerJob) runRegistered() error {
 	resolvedToken, _ := ResolveAuthToken(w.options.AuthToken)
-	if resolvedToken == "" || w.options.SignalingBaseURL == "" {
+	if resolvedToken == "" {
 		return fmt.Errorf("zrt.Serve registers over the WebSocket registry and needs auth " +
-			"(ZRT_AUTH_TOKEN / ZRT_API_KEY + ZRT_SECRET_KEY) plus a registry base URL " +
-			"(SignalingBaseURL / ZRT_SIGNALING_URL)")
+			"(ZRT_AUTH_TOKEN / ZRT_API_KEY + ZRT_SECRET_KEY)")
 	}
-	base := w.options.SignalingBaseURL
+
+	base := cmp.Or(w.options.SignalingBaseURL, os.Getenv("ZRT_SIGNALING_URL"), "api.videosdk.live")
 	if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
 		base = "https://" + base
 	}

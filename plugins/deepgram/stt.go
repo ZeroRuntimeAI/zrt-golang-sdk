@@ -69,7 +69,7 @@ func NewSTT(opts STTOptions) *STT {
 	s := &STT{
 		Model:           zrt.StrOr(opts.Model, "nova-2"),
 		Language:        zrt.StrOr(opts.Language, "en-US"),
-		SampleRate:      orInt(opts.SampleRate, 48000),
+		SampleRate:      zrt.IntZeroOr(opts.SampleRate, 48000),
 		Endpointing:     zrt.IntOr(opts.Endpointing, 50),
 		InterimResults:  zrt.BoolOr(opts.InterimResults, true),
 		Punctuate:       zrt.BoolOr(opts.Punctuate, true),
@@ -119,11 +119,4 @@ func (s *STT) Knobs() map[string]any {
 		k["redact"] = s.Redact
 	}
 	return k
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

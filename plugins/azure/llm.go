@@ -50,7 +50,7 @@ func NewLLM(opts LLMOptions) *LLM {
 		Endpoint:          zrt.StrOr(opts.AzureEndpoint, os.Getenv("AZURE_OPENAI_ENDPOINT")),
 		APIVersion:        zrt.StrOr(opts.APIVersion, "2024-10-21"),
 		Temperature:       zrt.FloatOr(opts.Temperature, 0.7),
-		MaxOutputTokens:   orInt(opts.MaxOutputTokens, 1024),
+		MaxOutputTokens:   zrt.IntZeroOr(opts.MaxOutputTokens, 1024),
 		TopP:              opts.TopP,
 		FrequencyPenalty:  opts.FrequencyPenalty,
 		PresencePenalty:   opts.PresencePenalty,
@@ -106,11 +106,4 @@ func (l *LLM) Knobs() map[string]any {
 		k["reasoning_effort"] = l.ReasoningEffort
 	}
 	return k
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }

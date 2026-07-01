@@ -176,7 +176,7 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 	agent.base().session = s
 	s.seedHandoffRegistry(agent)
 	pipeline.setAgent(agent)
-	for _, comp := range []any{pipeline.STT, pipeline.LLM, pipeline.TTS, pipeline.VAD, pipeline.TurnDetector} {
+	for _, comp := range []any{pipeline.stt, pipeline.llm, pipeline.tts, pipeline.vad, pipeline.turnDetector} {
 		if ss, ok := comp.(sessionSettable); ok && comp != nil {
 			ss.setSession(s)
 		}

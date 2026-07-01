@@ -45,11 +45,11 @@ func NewSTT(opts STTOptions) *STT {
 		Model:                     zrt.StrOr(opts.Model, "solaria-1"),
 		Language:                  lang,
 		CodeSwitching:             zrt.BoolOr(opts.CodeSwitching, true),
-		InputSampleRate:           orInt(opts.InputSampleRate, 48000),
-		OutputSampleRate:          orInt(opts.OutputSampleRate, 16000),
+		InputSampleRate:           zrt.IntZeroOr(opts.InputSampleRate, 48000),
+		OutputSampleRate:          zrt.IntZeroOr(opts.OutputSampleRate, 16000),
 		Encoding:                  zrt.StrOr(opts.Encoding, "wav/pcm"),
-		BitDepth:                  orInt(opts.BitDepth, 16),
-		Channels:                  orInt(opts.Channels, 1),
+		BitDepth:                  zrt.IntZeroOr(opts.BitDepth, 16),
+		Channels:                  zrt.IntZeroOr(opts.Channels, 1),
 		ReceivePartialTranscripts: zrt.BoolOr(opts.ReceivePartialTranscripts, false),
 	}
 	s.Init("gladia", zrt.APIKeyOr(opts.APIKey, "GLADIA_API_KEY"))
@@ -59,11 +59,4 @@ func NewSTT(opts STTOptions) *STT {
 // STTConfig returns the provider, model, and language for this engine.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "gladia", Model: s.Model, Language: s.Language}
-}
-
-func orInt(v, def int) int {
-	if v == 0 {
-		return def
-	}
-	return v
 }
