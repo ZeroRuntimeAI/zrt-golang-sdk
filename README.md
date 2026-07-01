@@ -163,7 +163,7 @@ Mix and match — bring the best model for each stage, swap any one in a line.
 Each provider lives in `github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/<name>`:
 
 - **Speech-to-text (STT):** `deepgram`, `assemblyai`, `google`, `azure`, `gladia`, `nvidia`, `sarvamai`
-- **LLM:** `openai`, `google` (Gemini), `anthropic` (Claude), `groq`, `cerebras`, `xai` (Grok), `sarvamai`, `cometapi`
+- **LLM:** `openai`, `google` (Gemini), `anthropic` (Claude), `aws` (Bedrock), `groq`, `cerebras`, `xai` (Grok), `sarvamai`, `cometapi`
 - **Text-to-speech (TTS):** `cartesia`, `elevenlabs`, `google`, `aws`, `azure`, `rime`, `lmnt`, `neuphonic`, `humeai`, `inworldai`, `murfai`, `resemble`, `smallestai`, `speechify`, `cambai`, `papla`, `nvidia`, `sarvamai`, `groq`
 - **Realtime speech-to-speech:** `openai_realtime`, `gemini_realtime` (Gemini Live), `ultravox`, `xai` (realtime), `azure` (Voice Live)
 - **Turn detection:** `turn_detector` / `navana` (Namo) · **VAD:** `silero` · **Denoise:** `rnnoise`
@@ -219,6 +219,19 @@ zrt.Serve(agent, zrt.ServeOptions{
             fmt.Println("Join the playground:", res.PlaygroundURL)
         }
     },
+})
+```
+
+**Per-call isolation.** The example above shares one agent across every concurrent
+session. For stateful agents, set `AgentFactory` so each call gets a fresh agent +
+pipeline — per-call state and pipeline hooks then never collide between concurrent
+calls. `Serve` also sets this call's dispatch data on the agent (`Metadata()`,
+`RoomID()`) before `OnEnter`:
+
+```go
+zrt.Serve(nil, zrt.ServeOptions{
+    AgentFactory: func() zrt.Agent { return NewAssistant(buildPipeline()) },
+    OnReady:      func() { zrt.Invoke("my-agent", zrt.InvokeOptions{}) },
 })
 ```
 

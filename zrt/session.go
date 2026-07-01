@@ -2,12 +2,15 @@ package zrt
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
+
+const dtmfPubSubTopic = "DTMF_EVENT"
 
 // roomConfigData holds the resolved room settings for a session.
 type roomConfigData struct {
@@ -210,6 +213,41 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 	s.On("synthesis_interrupted", func(any) { s.autoStopThinkingAudio() })
 	s.On("agent_turn_end", func(any) { s.autoStopThinkingAudio() })
 	return s
+}
+
+func (s *AgentSession) onDTMFPubSub(msg PubSubMessage) {
+	h := s.dtmfHandler
+	if h == nil {
+		return
+	}
+	payload, ok := msg.Payload.(map[string]any)
+	if !ok {
+		return
+	}
+	raw, ok := payload["number"]
+	if !ok || raw == nil {
+		raw = payload["digit"]
+	}
+	digit := dtmfDigitString(raw)
+	if digit == "" {
+		return
+	}
+	h.dispatch(digit)
+}
+
+
+func dtmfDigitString(v any) string {
+	switch n := v.(type) {
+	case string:
+		return strings.TrimSpace(n)
+	case float64:
+		if n == float64(int64(n)) {
+			return strconv.FormatInt(int64(n), 10)
+		}
+		return strings.TrimSpace(strconv.FormatFloat(n, 'f', -1, 64))
+	default:
+		return ""
+	}
 }
 
 func (s *AgentSession) mirrorUserTranscript(payload any) {
@@ -434,7 +472,7 @@ func (s *AgentSession) updateAgentState(state AgentState) {
 	}
 	s.mu.Unlock()
 	if changed && (state == AgentStateListening || state == AgentStateIdle || state == AgentStateSpeaking || state == AgentStateThinking) {
-		s.resetWakeUpTimer()
+		s.restartWakeUpTimer()
 	}
 	s.Emit("agent_state_changed", map[string]any{"state": state})
 }
@@ -481,6 +519,10 @@ func (s *AgentSession) resetWakeUpTimer() {
 	s.mu.Lock()
 	s.wakeUpCount = 0
 	s.mu.Unlock()
+	s.restartWakeUpTimer()
+}
+
+func (s *AgentSession) restartWakeUpTimer() {
 	select {
 	case s.wakeUpReset <- struct{}{}:
 	default:

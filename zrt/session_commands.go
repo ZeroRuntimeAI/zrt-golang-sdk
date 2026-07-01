@@ -92,6 +92,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 	s.transport = bridge
 	sid, err := bridge.createSession(ctx)
 	if err != nil {
+		logger.Errorf("createSession failed — session will not start: %v", err)
 		return err
 	}
 	s.mu.Lock()
@@ -109,6 +110,11 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 	}()
 
 	s.awaitParticipantIfNeeded(ctx)
+	if s.dtmfHandler != nil {
+		if err := s.SubscribePubSub(ctx, dtmfPubSubTopic, s.onDTMFPubSub); err != nil {
+			logger.Errorf("Failed to subscribe to DTMF pub/sub topic: %v", err)
+		}
+	}
 	if err := s.agent.OnEnter(s.bindBus(ctx)); err != nil {
 		logger.Errorf("on_enter error: %v", err)
 	}
@@ -556,9 +562,10 @@ func (s *AgentSession) Close(ctx context.Context, reason string) error {
 // Leave ends the session and disconnects the agent.
 func (s *AgentSession) Leave(ctx context.Context) error { return s.Close(ctx, "sdk_leave") }
 
-// Hangup ends the call and closes the session.
+// Hangup ends the call and closes the session. The reason is recorded on the
+// close (defaults to "manual_hangup" when empty).
 func (s *AgentSession) Hangup(ctx context.Context, reason string) error {
-	return s.Close(ctx, "manual_hangup")
+	return s.Close(ctx, cmp.Or(reason, "manual_hangup"))
 }
 
 // ---- context history ----
@@ -758,7 +765,7 @@ func (s *AgentSession) wakeUpWatcher() {
 			s.mu.Unlock()
 			if maxAttempts > 0 && count > maxAttempts {
 				s.Emit("wake_up_exceeded", map[string]any{"attempts": count})
-				go s.Close(context.Background(), "wake_up_exceeded")
+				go s.Hangup(context.Background(), "wake_up_exceeded")
 				return
 			}
 			func() {

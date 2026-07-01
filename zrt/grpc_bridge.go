@@ -5,7 +5,9 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -68,9 +70,10 @@ type grpcBridge struct {
 	sid      string
 	outbound chan *pb.ClientEvent
 
-	mu      sync.Mutex
-	running bool
-	stream  grpc.BidiStreamingClient[pb.ClientEvent, pb.RuntimeEvent]
+	mu           sync.Mutex
+	running      bool
+	serverClosed bool
+	stream       grpc.BidiStreamingClient[pb.ClientEvent, pb.RuntimeEvent]
 
 	customSTTPump *customSTTPump
 	customTTSPump *customTTSPump
@@ -144,7 +147,10 @@ func (b *grpcBridge) buildSessionConfig() *pb.SessionConfig {
 }
 
 func (b *grpcBridge) destroySession() {
-	if b.client != nil && b.sid != "" {
+	b.mu.Lock()
+	serverClosed := b.serverClosed
+	b.mu.Unlock()
+	if b.client != nil && b.sid != "" && !serverClosed {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		_, err := b.client.DestroySession(ctx, &pb.DestroyRequest{SessionId: b.sid, Reason: "sdk_shutdown"})
 		cancel()
@@ -312,14 +318,17 @@ func (b *grpcBridge) runEventLoop(ctx context.Context) {
 	}()
 
 	shouldClose := true
-	closeReason := "stream_closed_by_runtime"
+	closeReason := "stream_closed"
 	for {
 		ev, err := stream.Recv()
 		if err != nil {
-			if ctx.Err() == nil {
+			switch {
+			case errors.Is(err, io.EOF):
+				closeReason = "stream_closed"
+			case ctx.Err() == nil:
 				logger.Errorf("gRPC stream error: %v", err)
 				closeReason = "grpc_error"
-			} else {
+			default:
 				shouldClose = false
 			}
 			break
@@ -330,6 +339,9 @@ func (b *grpcBridge) runEventLoop(ctx context.Context) {
 	<-sendDone
 	b.mu.Lock()
 	b.running = false
+	if shouldClose {
+		b.serverClosed = true
+	}
 	b.mu.Unlock()
 	if shouldClose {
 		go func() {

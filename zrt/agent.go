@@ -76,6 +76,8 @@ type BaseAgent struct {
 	session                  *AgentSession
 	thinkingBackgroundConfig map[string]any
 	preloadBGAudio           [][2]any
+	metadata                 map[string]any
+	roomID                   string
 
 	beforeLLMHook          bool
 	llmStreamHookEnabled   bool
@@ -102,6 +104,7 @@ func NewBaseAgent(opts AgentOptions) BaseAgent {
 		handoffAgents:             slices.Clone(opts.Agents),
 		cw:                        opts.ContextWindow,
 		llmStreamHookTimeoutMS:    100,
+		metadata:                  map[string]any{},
 	}
 }
 
@@ -144,6 +147,19 @@ func (a *BaseAgent) Name() string { return cmp.Or(a.name, a.id) }
 
 // Pipeline returns the agent's voice pipeline (nil if it has none).
 func (a *BaseAgent) Pipeline() *Pipeline { return a.pipeline }
+
+// Metadata returns this call's dispatch metadata, set by Serve before OnEnter.
+// It is never nil.
+func (a *BaseAgent) Metadata() map[string]any {
+	if a.metadata == nil {
+		a.metadata = map[string]any{}
+	}
+	return a.metadata
+}
+
+// RoomID returns this call's room id, set by Serve before OnEnter (empty when
+// unknown).
+func (a *BaseAgent) RoomID() string { return a.roomID }
 
 // MaxSessionDurationSeconds returns the per-agent session-duration cap (nil if unset).
 func (a *BaseAgent) MaxSessionDurationSeconds() *int { return a.maxSessionDurationSeconds }

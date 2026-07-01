@@ -4,9 +4,11 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"runtime"
 	"strconv"
+	"time"
 )
 
 // ServeOptions configures Serve.
@@ -26,6 +28,10 @@ type ServeOptions struct {
 	// LoadThreshold is the load fraction above which new sessions are rejected
 	// (default 0.75).
 	LoadThreshold float64
+	// InitializeTimeout bounds how long the worker waits for the agent/models to
+	// initialize before it is considered failed. Raise it when model load is
+	// slow. Zero uses the default (10s).
+	InitializeTimeout time.Duration
 	// RtcBaseURL is the registry base URL (defaults to $ZRT_SIGNALING_URL or
 	// api.videosdk.live).
 	RtcBaseURL string
@@ -42,6 +48,11 @@ type ServeOptions struct {
 	// Options, when set, is used as the base worker configuration and tuned for
 	// registered (serve) mode. The fields above win over the matching fields here.
 	Options *WorkerOptions
+	// AgentFactory, when set, builds a fresh Agent (with its own Pipeline) for
+	// each incoming call, giving full per-call isolation for stateful agents. The
+	// agent argument to Serve may then be nil. Without it a single shared agent
+	// serves every call.
+	AgentFactory func() Agent
 }
 
 // maxConcurrentSessions resolves the worker capacity. ZRT_MAX_CONCURRENT_SESSIONS
@@ -62,37 +73,60 @@ func maxConcurrentSessions(capacity int) int {
 // It does not start a session on its own — call Invoke to start one. Serve blocks
 // until the worker shuts down (Ctrl+C / SIGTERM).
 //
-// One agent instance is shared across all concurrent sessions; each call resolves
-// its own session via the SessionBus rather than a shared field. Capacity defaults
-// to a CPU-based value; tune it with opts.Capacity or ZRT_MAX_CONCURRENT_SESSIONS.
+// Without opts.AgentFactory a single agent instance is shared across all
+// concurrent sessions. Set opts.AgentFactory to build a fresh Agent + Pipeline
+// per call for full per-call isolation. Capacity defaults to a CPU-based value;
+// tune it with opts.Capacity or ZRT_MAX_CONCURRENT_SESSIONS.
 func Serve(agent Agent, opts ServeOptions) error {
-	if agent == nil {
-		return fmt.Errorf("zrt.Serve: agent is required")
+	factory := opts.AgentFactory
+	template := agent
+	if template == nil {
+		if factory == nil {
+			return fmt.Errorf("zrt.Serve: agent is required (pass an Agent, or set ServeOptions.AgentFactory)")
+		}
+		template = factory()
+		if template == nil {
+			return fmt.Errorf("zrt.Serve: ServeOptions.AgentFactory returned nil; it must return an Agent")
+		}
 	}
-	pipeline := agent.base().pipeline
-	if pipeline == nil {
+
+	if template.base().pipeline == nil {
 		return fmt.Errorf("zrt.Serve requires the agent to carry a pipeline: " +
 			"use zrt.NewAgent(zrt.AgentOptions{..., Pipeline: pipeline}) " +
 			"or set AgentOptions.Pipeline when building the embedded BaseAgent")
 	}
 
-	// Registration handle: the agent's id, overridable via opts.AgentID.
-	registeredID := cmp.Or(opts.AgentID, agent.base().id)
+	registeredID := cmp.Or(opts.AgentID, template.base().id)
 	if registeredID == "" {
 		return fmt.Errorf("zrt.Serve requires the agent to have an id: " +
 			"set AgentOptions.AgentID (the handle the registry routes to)")
 	}
-	displayName := cmp.Or(agent.base().name, registeredID)
+	displayName := cmp.Or(template.base().name, registeredID)
 
 	entrypoint := func(ctx context.Context, jobCtx *JobContext) error {
-		session := NewAgentSession(agent, pipeline, opts.SessionOptions)
+		callAgent := template
+		if factory != nil {
+			callAgent = factory()
+			if callAgent == nil {
+				return fmt.Errorf("zrt.Serve: ServeOptions.AgentFactory returned nil")
+			}
+		}
+		callPipeline := callAgent.base().pipeline
+		md := maps.Clone(jobCtx.Metadata)
+		if md == nil {
+			md = map[string]any{}
+		}
+		callAgent.base().metadata = md
+		if jobCtx.RoomOptions != nil {
+			callAgent.base().roomID = jobCtx.RoomOptions.RoomID
+		}
+		session := NewAgentSession(callAgent, callPipeline, opts.SessionOptions)
 		return session.Start(ctx, jobCtx, StartOptions{
 			WaitForParticipant: true,
 			RunUntilShutdown:   true,
 		})
 	}
 
-	// Base worker options, forced into registered (serve) mode.
 	workerOpts := opts.Options
 	usingDefaults := workerOpts == nil
 	if workerOpts == nil {
@@ -110,6 +144,9 @@ func Serve(agent Agent, opts ServeOptions) error {
 	if opts.LoadThreshold > 0 {
 		workerOpts.LoadThreshold = opts.LoadThreshold
 	}
+	if opts.InitializeTimeout > 0 {
+		workerOpts.InitializeTimeout = opts.InitializeTimeout
+	}
 	if opts.RtcBaseURL != "" {
 		workerOpts.SignalingBaseURL = opts.RtcBaseURL
 	}
@@ -123,7 +160,7 @@ func Serve(agent Agent, opts ServeOptions) error {
 	jobctxFactory := func() *JobContext {
 		ro := &RoomOptions{Name: displayName}
 		if opts.RoomOptions != nil {
-			clone := *opts.RoomOptions 
+			clone := *opts.RoomOptions
 			ro = &clone
 			if ro.Name == "" {
 				ro.Name = displayName
