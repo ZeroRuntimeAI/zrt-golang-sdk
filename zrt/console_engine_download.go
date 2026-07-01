@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const defaultEngineCDN = "https://cdn.videosdk.live/agent/zrt-console"
+const defaultEngineCDN = "https://cdn.zeroruntime.ai/zrt/cli"
 
 // engineCDNBase returns the CDN base URL, overridable via ZRT_ENGINE_CDN.
 func engineCDNBase() string {

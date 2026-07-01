@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// requiredEngineVersion is the zrt-console engine version the SDK expects.
-const requiredEngineVersion = "2"
+// requiredEngineVersion is the zrt-console engine channel the SDK expects.
+const requiredEngineVersion = "latest"
 
 // errConsoleRoomRequired is returned when console mode is started without a room.
 var errConsoleRoomRequired = errors.New(
