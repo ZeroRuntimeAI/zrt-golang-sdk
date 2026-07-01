@@ -98,6 +98,15 @@ func (b *grpcBridge) createSession(ctx context.Context) (string, error) {
 	b.conn = conn
 	b.client = pb.NewAgentRuntimeClient(conn)
 
+	success := false
+	defer func() {
+		if !success && b.conn != nil {
+			b.conn.Close()
+			b.conn = nil
+			b.client = nil
+		}
+	}()
+
 	if b.room.SendLogsToDashboard && b.room.AuthToken == "" {
 		logger.Warnf("send_logs_to_dashboard=true but auth_token is empty — dashboard analytics will be skipped. Set room auth_token (or ZRT_AUTH_TOKEN).")
 	}
@@ -110,6 +119,7 @@ func (b *grpcBridge) createSession(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("%w: %s — %s", ErrSessionRejected, rej.GetReason(), rej.GetMessage())
 	}
 	b.sid = resp.GetSession().GetSessionId()
+	success = true
 	return b.sid, nil
 }
 
@@ -298,7 +308,7 @@ func (b *grpcBridge) runEventLoop(ctx context.Context) {
 			}
 			break
 		}
-		b.handleRuntimeEvent(ctx, ev)
+		b.handleRuntimeEvent(streamCtx, ev)
 	}
 	cancel()
 	<-sendDone
