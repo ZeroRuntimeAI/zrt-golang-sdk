@@ -65,8 +65,6 @@ func NamoTurnDetectorV1(o TurnOptions) zrt.EOU { return newHTTPTurn("namo-turn-d
 
 func TurnDetector(o TurnOptions) zrt.EOU { return newHTTPTurn("turnsense", o) }
 
-func VideoSDKTurnDetector(o TurnOptions) zrt.EOU { return newHTTPTurn("videosdk-turn-detector-v1", o) }
-
 type TurnV2Options struct {
 	Threshold float64
 	Host      string
