@@ -109,6 +109,10 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		bridge.runEventLoop(ctx)
 	}()
 
+	if isConsoleMode() {
+		return driveConsoleEngine(ctx, s, room)
+	}
+
 	s.awaitParticipantIfNeeded(ctx)
 	if s.dtmfHandler != nil {
 		if err := s.SubscribePubSub(ctx, dtmfPubSubTopic, s.onDTMFPubSub); err != nil {
