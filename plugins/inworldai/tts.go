@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the Inworld AI text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Inworld AI voice.
 	Voice string
+	// Model is the Inworld AI model.
 	Model string
 }
 

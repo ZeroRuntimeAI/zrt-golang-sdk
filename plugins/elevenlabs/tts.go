@@ -6,18 +6,30 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the ElevenLabs text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice                  string
-	Model                  string
-	Stability              float64
-	SimilarityBoost        float64
-	Style                  float64
-	UseSpeakerBoost        bool
+	// Voice is the ElevenLabs voice id.
+	Voice string
+	// Model is the ElevenLabs model id.
+	Model string
+	// Stability controls voice consistency versus expressiveness. Range 0-1.
+	Stability float64
+	// SimilarityBoost controls how closely the output matches the original voice. Range 0-1.
+	SimilarityBoost float64
+	// Style controls stylistic exaggeration. Range 0-1.
+	Style float64
+	// UseSpeakerBoost enhances similarity to the original speaker.
+	UseSpeakerBoost bool
+	// ApplyTextNormalization is the text normalization mode (e.g. "auto", "on", "off"). Empty uses the provider default.
 	ApplyTextNormalization string
-	EnableWordTimestamps   bool
-	Speed                  *float64
-	Language               string
-	EnableSSMLParsing      *bool
-	Stream                 bool
+	// EnableWordTimestamps requests per-word timing information alongside the audio.
+	EnableWordTimestamps bool
+	// Speed is the speaking rate multiplier. nil = provider default.
+	Speed *float64
+	// Language is the language code hint for synthesis (e.g. "en"). Empty = auto.
+	Language string
+	// EnableSSMLParsing controls whether SSML markup in the input text is parsed. nil = provider default.
+	EnableSSMLParsing *bool
+	// Stream enables streaming synthesis.
+	Stream bool
 }
 
 // TTSOptions configures an ElevenLabs TTS instance. Nil pointer fields fall back
@@ -41,10 +53,14 @@ type TTSOptions struct {
 	ApplyTextNormalization string
 	// EnableWordTimestamps requests per-word timing information.
 	EnableWordTimestamps bool
-	Speed                *float64
-	Language             string
-	EnableSSMLParsing    *bool
-	Stream               *bool
+	// Speed is the speaking rate multiplier. nil = provider default.
+	Speed *float64
+	// Language is the language code hint for synthesis (e.g. "en"). Empty = auto.
+	Language string
+	// EnableSSMLParsing controls whether SSML markup in the input text is parsed. nil = provider default.
+	EnableSSMLParsing *bool
+	// Stream enables streaming synthesis. Defaults to true.
+	Stream *bool
 }
 
 // NewTTS returns an ElevenLabs TTS configured from opts.

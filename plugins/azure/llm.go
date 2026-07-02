@@ -6,44 +6,78 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
+// LLM is the Azure OpenAI large-language-model provider.
 type LLM struct {
 	zrt.BaseLLM
-	Model             string
-	Endpoint          string
-	APIVersion        string
-	Temperature       float64
-	MaxOutputTokens   int
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	Stop              string
-	User              string
-	ToolChoice        string
+	// Model is the Azure OpenAI deployment name used for completions.
+	Model string
+	// Endpoint is the Azure OpenAI endpoint URL.
+	Endpoint string
+	// APIVersion is the Azure OpenAI REST API version.
+	APIVersion string
+	// Temperature is the sampling temperature.
+	Temperature float64
+	// MaxOutputTokens caps the number of tokens generated per response.
+	MaxOutputTokens int
+	// TopP is the nucleus-sampling probability mass. nil omits the knob.
+	TopP *float64
+	// FrequencyPenalty penalizes tokens by frequency. nil omits the knob.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens by prior presence. nil omits the knob.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic. nil omits the knob.
+	Seed *int
+	// Stop is the stop sequence that ends generation.
+	Stop string
+	// User is an end-user identifier forwarded for abuse monitoring.
+	User string
+	// ToolChoice controls how the model selects tools.
+	ToolChoice string
+	// ParallelToolCalls enables parallel tool calls. nil omits the knob.
 	ParallelToolCalls *bool
-	ResponseFormat    string
-	ReasoningEffort   string
+	// ResponseFormat requests a specific response format (e.g. "json_object").
+	ResponseFormat string
+	// ReasoningEffort sets the reasoning effort for reasoning-capable models.
+	ReasoningEffort string
 }
 
+// LLMOptions configures NewLLM.
 type LLMOptions struct {
-	APIKey            string
-	AzureEndpoint     string
-	Deployment        string
-	APIVersion        string
-	Temperature       *float64
-	MaxOutputTokens   int
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	Stop              string
-	User              string
-	ToolChoice        string
+	// APIKey authenticates with Azure OpenAI. Falls back to AZURE_OPENAI_API_KEY.
+	APIKey string
+	// AzureEndpoint is the Azure OpenAI endpoint. Falls back to AZURE_OPENAI_ENDPOINT.
+	AzureEndpoint string
+	// Deployment is the Azure OpenAI deployment name.
+	Deployment string
+	// APIVersion is the Azure OpenAI REST API version. Defaults to "2024-10-21".
+	APIVersion string
+	// Temperature is the sampling temperature. Defaults to 0.7.
+	Temperature *float64
+	// MaxOutputTokens caps tokens generated per response. Defaults to 1024.
+	MaxOutputTokens int
+	// TopP is the nucleus-sampling probability mass. nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes tokens by frequency. nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens by prior presence. nil = provider default.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic. nil = provider default.
+	Seed *int
+	// Stop is the stop sequence that ends generation.
+	Stop string
+	// User is an end-user identifier forwarded for abuse monitoring.
+	User string
+	// ToolChoice controls how the model selects tools.
+	ToolChoice string
+	// ParallelToolCalls enables parallel tool calls. nil = provider default.
 	ParallelToolCalls *bool
-	ResponseFormat    string
-	ReasoningEffort   string
+	// ResponseFormat requests a specific response format (e.g. "json_object").
+	ResponseFormat string
+	// ReasoningEffort sets the reasoning effort for reasoning-capable models.
+	ReasoningEffort string
 }
 
+// NewLLM returns an Azure OpenAI LLM configured from opts, applying defaults.
 func NewLLM(opts LLMOptions) *LLM {
 	l := &LLM{
 		Model:             opts.Deployment,
@@ -66,10 +100,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
+// LLMConfig returns the runtime provider, model, and generation limits.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "azure_openai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
+// Knobs returns the extra provider parameters, omitting unset optional fields.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{"api_version": l.APIVersion}
 	if l.Endpoint != "" {

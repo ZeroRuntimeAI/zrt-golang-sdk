@@ -4,9 +4,12 @@ import "cmp"
 
 // Fallback default timing knobs.
 const (
-	DefaultTemporaryDisableSec           = 60
+	// DefaultTemporaryDisableSec is the default seconds a failed provider is temporarily disabled.
+	DefaultTemporaryDisableSec = 60
+	// DefaultPermanentDisableAfterAttempts is the default failure count after which a provider is permanently disabled.
 	DefaultPermanentDisableAfterAttempts = 3
-	DefaultRecoveryCheckIntervalSec      = 300
+	// DefaultRecoveryCheckIntervalSec is the default seconds between recovery checks of a disabled provider.
+	DefaultRecoveryCheckIntervalSec = 300
 )
 
 // FallbackSTT wraps an ordered list of STT providers and falls back to the next
@@ -16,6 +19,7 @@ const (
 // variables.
 type FallbackSTT struct {
 	BaseSTT
+	// Providers is the ordered STT provider chain; the first is primary, the rest are fallbacks.
 	Providers []STT
 }
 
@@ -49,6 +53,7 @@ func (f *FallbackSTT) STTConfig() STTRuntimeConfig {
 // FallbackLLM wraps an ordered list of LLM providers.
 type FallbackLLM struct {
 	BaseLLM
+	// Providers is the ordered LLM provider chain; the first is primary, the rest are fallbacks.
 	Providers []LLM
 }
 
@@ -87,6 +92,7 @@ func (f *FallbackLLM) LLMConfig() LLMRuntimeConfig {
 // FallbackTTS wraps an ordered list of TTS providers.
 type FallbackTTS struct {
 	BaseTTS
+	// Providers is the ordered TTS provider chain; the first is primary, the rest are fallbacks.
 	Providers []TTS
 }
 

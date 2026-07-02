@@ -6,6 +6,7 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is a Neuphonic text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Neuphonic voice.
 	Voice string
 }
 

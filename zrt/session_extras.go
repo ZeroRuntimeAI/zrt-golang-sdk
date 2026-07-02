@@ -37,12 +37,18 @@ func (s *AgentSession) boundJobCtx() *JobContext { return s.jobCtx }
 // UpdateInterruptConfigOptions configures UpdateInterruptConfig. nil fields are
 // left unchanged.
 type UpdateInterruptConfigOptions struct {
-	Mode                          *string
-	InterruptMinDuration          *float64
-	InterruptMinWords             *int
-	CooldownMS                    *int
+	// Mode is the interruption mode: "VAD_ONLY", "STT_ONLY", or "HYBRID" (case-insensitive).
+	Mode *string
+	// InterruptMinDuration is the minimum speech duration, in seconds, before an interruption is honored.
+	InterruptMinDuration *float64
+	// InterruptMinWords is the minimum number of words before an interruption is honored.
+	InterruptMinWords *int
+	// CooldownMS is the cooldown between interruptions, in milliseconds.
+	CooldownMS *int
+	// FalseInterruptPauseDurationMS is the pause length treated as a false interrupt, in milliseconds.
 	FalseInterruptPauseDurationMS *int
-	ResumeOnFalseInterrupt        *bool
+	// ResumeOnFalseInterrupt resumes the agent's turn after a false interrupt.
+	ResumeOnFalseInterrupt *bool
 }
 
 // UpdateInterruptConfig updates interruption behavior at runtime.

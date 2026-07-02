@@ -7,6 +7,7 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // the model id is used as the voice.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the model id, which also serves as the voice.
 	Voice string
 }
 
@@ -15,7 +16,8 @@ type TTSOptions struct {
 	// APIKey is the Papla API key. If empty, the PAPLA_API_KEY environment variable is used.
 	APIKey string
 	// ModelID selects the model, which also serves as the voice. Defaults to "papla_p1".
-	ModelID    string
+	ModelID string
+	// SampleRate is the output sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 

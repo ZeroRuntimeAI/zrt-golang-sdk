@@ -6,22 +6,39 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // STT is a Sarvam AI speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
-	Model                    string
-	Language                 string
-	InputSampleRate          int
-	OutputSampleRate         int
-	Mode                     string
-	HighVADSensitivity       *bool
-	FlushSignals             *bool
-	Translation              bool
-	Prompt                   string
-	InputAudioCodec          string
-	VadSignals               bool
-	PositiveSpeechThreshold  *float64
-	NegativeSpeechThreshold  *float64
-	MinSpeechFrames          *int
+	// Model selects the recognition model. Defaults to "saaras:v3".
+	Model string
+	// Language is the recognition language. Defaults to "en-IN".
+	Language string
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// OutputSampleRate is the output audio sample rate in Hz. Defaults to 16000.
+	OutputSampleRate int
+	// Mode selects the transcription mode.
+	Mode string
+	// HighVADSensitivity raises voice-activity detection sensitivity. nil = provider default.
+	HighVADSensitivity *bool
+	// FlushSignals emits flush markers in the transcript stream. nil = provider default.
+	FlushSignals *bool
+	// Translation translates recognized speech into the target language.
+	Translation bool
+	// Prompt biases recognition toward the given context.
+	Prompt string
+	// InputAudioCodec is the input audio codec. Defaults to "pcm_s16le".
+	InputAudioCodec string
+	// VadSignals emits voice-activity markers in the transcript stream. Defaults to true.
+	VadSignals bool
+	// PositiveSpeechThreshold is the VAD probability above which a frame is speech. nil = provider default.
+	PositiveSpeechThreshold *float64
+	// NegativeSpeechThreshold is the VAD probability below which a frame is non-speech. nil = provider default.
+	NegativeSpeechThreshold *float64
+	// MinSpeechFrames is the minimum frames required to start a speech segment. nil = provider default.
+	MinSpeechFrames *int
+	// FirstTurnMinSpeechFrames is the minimum speech frames for the first turn. nil = provider default.
 	FirstTurnMinSpeechFrames *int
-	PreSpeechPadFrames       *int
+	// PreSpeechPadFrames is the number of frames of audio kept before speech onset. nil = provider default.
+	PreSpeechPadFrames *int
+	// InterruptMinSpeechFrames is the minimum speech frames required to trigger an interruption. nil = provider default.
 	InterruptMinSpeechFrames *int
 }
 
@@ -46,14 +63,22 @@ type STTOptions struct {
 	// Translation translates recognized speech into the target language.
 	Translation bool
 	// Prompt biases recognition toward the given context.
-	Prompt                   string
-	InputAudioCodec          string
-	VadSignals               *bool
-	PositiveSpeechThreshold  *float64
-	NegativeSpeechThreshold  *float64
-	MinSpeechFrames          *int
+	Prompt string
+	// InputAudioCodec is the input audio codec. Defaults to "pcm_s16le".
+	InputAudioCodec string
+	// VadSignals emits voice-activity markers in the transcript stream. Defaults to true.
+	VadSignals *bool
+	// PositiveSpeechThreshold is the VAD probability above which a frame is speech. nil = provider default.
+	PositiveSpeechThreshold *float64
+	// NegativeSpeechThreshold is the VAD probability below which a frame is non-speech. nil = provider default.
+	NegativeSpeechThreshold *float64
+	// MinSpeechFrames is the minimum frames required to start a speech segment. nil = provider default.
+	MinSpeechFrames *int
+	// FirstTurnMinSpeechFrames is the minimum speech frames for the first turn. nil = provider default.
 	FirstTurnMinSpeechFrames *int
-	PreSpeechPadFrames       *int
+	// PreSpeechPadFrames is the number of frames of audio kept before speech onset. nil = provider default.
+	PreSpeechPadFrames *int
+	// InterruptMinSpeechFrames is the minimum speech frames required to trigger an interruption. nil = provider default.
 	InterruptMinSpeechFrames *int
 }
 

@@ -8,22 +8,38 @@ import (
 // STT is a Deepgram speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
-	Model           string
-	Language        string
-	SampleRate      int
-	Endpointing     int
-	InterimResults  bool
-	Punctuate       bool
-	SmartFormat     bool
-	FillerWords     bool
-	Keywords        []string
-	Keyterm         []string
+	// Model is the resolved recognition model.
+	Model string
+	// Language is the resolved recognition language.
+	Language string
+	// SampleRate is the audio sample rate in Hz.
+	SampleRate int
+	// Endpointing is the silence (in ms) that ends an utterance.
+	Endpointing int
+	// InterimResults enables partial transcripts before an utterance is final.
+	InterimResults bool
+	// Punctuate adds punctuation to transcripts.
+	Punctuate bool
+	// SmartFormat formats entities such as dates, times, and currency.
+	SmartFormat bool
+	// FillerWords keeps fillers such as "uh" and "um" in transcripts.
+	FillerWords bool
+	// Keywords boosts recognition of the given words.
+	Keywords []string
+	// Keyterm boosts recognition of the given key terms.
+	Keyterm []string
+	// ProfanityFilter masks profanity in transcripts.
 	ProfanityFilter bool
-	Numerals        bool
-	Tag             []string
-	Diarize         bool
-	Redact          []string
-	BaseURL         string
+	// Numerals renders spoken numbers as digits.
+	Numerals bool
+	// Tag attaches arbitrary tags to the request.
+	Tag []string
+	// Diarize labels transcripts by speaker.
+	Diarize bool
+	// Redact removes the given categories of sensitive content from transcripts.
+	Redact []string
+	// BaseURL is the resolved Deepgram streaming endpoint.
+	BaseURL string
 }
 
 // STTOptions configures a Deepgram STT. Nil pointer fields fall back to their defaults.

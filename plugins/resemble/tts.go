@@ -6,6 +6,7 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is a Resemble AI text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Resemble AI voice UUID.
 	Voice string
 }
 

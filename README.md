@@ -39,57 +39,59 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
 
-	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/cartesia"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/deepgram"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/google"
-	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/rnnoise"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/silero"
-	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/turn_detector"
+	td "github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/turn_detector"
+	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// Assistant is your agent. Embed zrt.BaseAgent and implement OnEnter/OnExit.
+const agentID = "my-ai-agent"
+
+// Assistant is the agent. Embed zrt.BaseAgent and implement OnEnter/OnExit.
 type Assistant struct{ zrt.BaseAgent }
 
 func (a *Assistant) OnEnter(ctx context.Context) error {
-	_, err := a.Session().Say(ctx, "Hi! How can I help?")
+	_, err := a.Session(ctx).Say(ctx, "Hi! I'm your assistant. Ask me about the weather in any city.")
 	return err
 }
-func (a *Assistant) OnExit(ctx context.Context) error { return nil }
 
-func entrypoint(ctx context.Context, jobCtx *zrt.JobContext) error {
-	agent := &Assistant{BaseAgent: zrt.NewBaseAgent(zrt.AgentOptions{
-		Instructions: "You are a friendly voice assistant. Keep replies short.",
-	})}
+func (a *Assistant) OnExit(ctx context.Context) error {
+	_, err := a.Session(ctx).Say(ctx, "Thanks for calling. Goodbye!")
+	return err
+}
 
+func newAgent() zrt.Agent {
 	pipeline := zrt.NewPipeline(zrt.PipelineOptions{
-		STT: deepgram.NewSTT(deepgram.STTOptions{}),
-		LLM: google.NewLLM(google.LLMOptions{
-			Model: "gemini-2.5-flash", MaxOutputTokens: 8192,
-		}),
-		TTS:          cartesia.NewTTS(cartesia.TTSOptions{}),
-		VAD:          silero.NewVAD(silero.VADOptions{Threshold: zrt.Float64(0.4)}),
-		TurnDetector: turn_detector.NewTurnDetector(turn_detector.TurnDetectorOptions{Model: turn_detector.ModelNamo, Threshold: 0.8}),
-		Denoise:      rnnoise.New(),
-		EOUConfig:    &zrt.EOUConfig{Mode: "ADAPTIVE", MinMaxSpeechWaitTimeout: []float64{0.1, 0.3}},
-		InterruptConfig: &zrt.InterruptConfig{
-			InterruptMinDuration: 0.5, InterruptMinWords: 2, ResumeOnFalseInterrupt: true,
-		},
+		STT:          deepgram.NewSTT(deepgram.STTOptions{Model: "nova-2-conversationalai"}),
+		LLM:          google.NewLLM(google.LLMOptions{Model: "gemini-3-flash-preview", ThinkingBudget: zrt.Int(0)}),
+		TTS:          cartesia.NewTTS(cartesia.TTSOptions{Model: "sonic-3.5"}),
+		VAD:          silero.NewVAD(silero.VADOptions{}),
+		TurnDetector: td.NewTurnDetector(td.TurnDetectorOptions{Model: td.ModelNamo, Language: "en", Threshold: 0.8}),
 	})
+	return &Assistant{BaseAgent: zrt.NewBaseAgent(zrt.AgentOptions{
+		Name:    "Assistant",
+		AgentID: agentID,
+		Instructions: "You are a friendly voice assistant. Keep replies short and natural."
+		Pipeline: pipeline
+	})}
+}
 
-	session := zrt.NewAgentSession(agent, pipeline, zrt.AgentSessionOptions{})
-	return session.Start(ctx, jobCtx, zrt.StartOptions{
-		WaitForParticipant: true,
-		RunUntilShutdown:   true,
-	})
+func startSession() {
+	res, err := zrt.Invoke(agentID, zrt.InvokeOptions{Room: &zrt.Room{Playground: zrt.Bool(true)}})
+	if err != nil {
+		log.Printf("invoke failed: %v", err)
+		return
+	}
 }
 
 func main() {
-	jobctx := func() *zrt.JobContext {
-		return zrt.NewJobContext(&zrt.RoomOptions{Name: "Assistant", Playground: true}, nil)
-	}
-	if err := zrt.NewWorkerJob(entrypoint, jobctx, nil).Start(); err != nil {
+
+	if err := zrt.Serve(newAgent(), zrt.ServeOptions{OnReady: startSession}); err != nil {
 		panic(err)
 	}
 }

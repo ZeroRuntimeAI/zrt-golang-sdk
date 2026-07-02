@@ -6,38 +6,66 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
+// OpenAISTT is the Azure OpenAI speech-to-text provider.
 type OpenAISTT struct {
 	zrt.BaseSTT
-	Model            string
-	Deployment       string
-	Endpoint         string
-	APIVersion       string
-	Language         string
-	Stream           bool
-	InputSampleRate  int
+	// Model is the Azure OpenAI transcription model name.
+	Model string
+	// Deployment is the Azure OpenAI deployment name; used in preference to Model.
+	Deployment string
+	// Endpoint is the Azure OpenAI endpoint URL.
+	Endpoint string
+	// APIVersion is the Azure OpenAI REST API version.
+	APIVersion string
+	// Language is the recognition language.
+	Language string
+	// Stream enables streaming transcription.
+	Stream bool
+	// InputSampleRate is the input audio sample rate in Hz.
+	InputSampleRate int
+	// OutputSampleRate is the output audio sample rate in Hz.
 	OutputSampleRate int
-	Prompt           string
-	Temperature      *float64
-	ResponseFormat   string
-	TurnDetection    string
+	// Prompt is an optional transcription prompt for biasing recognition.
+	Prompt string
+	// Temperature is the sampling temperature. nil omits the knob.
+	Temperature *float64
+	// ResponseFormat is the transcription response format (e.g. "json").
+	ResponseFormat string
+	// TurnDetection is the turn-detection mode (e.g. "server_vad").
+	TurnDetection string
 }
 
+// OpenAISTTOptions configures NewOpenAISTT.
 type OpenAISTTOptions struct {
-	APIKey           string
-	AzureEndpoint    string
-	Deployment       string
-	APIVersion       string
-	Model            string
-	Language         string
-	Stream           *bool
-	InputSampleRate  int
+	// APIKey authenticates with Azure OpenAI. Falls back to AZURE_API_KEY, then AZURE_OPENAI_API_KEY.
+	APIKey string
+	// AzureEndpoint is the Azure OpenAI endpoint. Falls back to AZURE_OPENAI_ENDPOINT.
+	AzureEndpoint string
+	// Deployment is the Azure OpenAI deployment name. Falls back to AZURE_OPENAI_STT_DEPLOYMENT.
+	Deployment string
+	// APIVersion is the Azure OpenAI REST API version. Defaults to "2025-03-01-preview".
+	APIVersion string
+	// Model is the Azure OpenAI transcription model name.
+	Model string
+	// Language is the recognition language. Defaults to "en".
+	Language string
+	// Stream enables streaming transcription. Defaults to false.
+	Stream *bool
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// OutputSampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	OutputSampleRate int
-	Prompt           string
-	Temperature      *float64
-	ResponseFormat   string
-	TurnDetection    string
+	// Prompt is an optional transcription prompt for biasing recognition.
+	Prompt string
+	// Temperature is the sampling temperature. nil = provider default.
+	Temperature *float64
+	// ResponseFormat is the transcription response format. Defaults to "json".
+	ResponseFormat string
+	// TurnDetection is the turn-detection mode. Defaults to "server_vad".
+	TurnDetection string
 }
 
+// NewOpenAISTT returns an Azure OpenAI STT configured from opts, applying defaults.
 func NewOpenAISTT(opts OpenAISTTOptions) *OpenAISTT {
 	key := opts.APIKey
 	if key == "" {
@@ -68,10 +96,12 @@ func (s *OpenAISTT) modelOrDeployment() string {
 	return s.Model
 }
 
+// STTConfig returns the runtime provider, model (or deployment), and language.
 func (s *OpenAISTT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "azure_openai_stt", Model: s.modelOrDeployment(), Language: s.Language}
 }
 
+// Knobs returns the extra provider parameters, omitting unset optional fields.
 func (s *OpenAISTT) Knobs() map[string]any {
 	k := map[string]any{
 		"api_version":        s.APIVersion,

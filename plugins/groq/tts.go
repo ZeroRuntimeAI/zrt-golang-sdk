@@ -5,9 +5,13 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the Groq text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice          string
-	Model          string
-	Speed          float64
+	// Voice is the Groq voice id.
+	Voice string
+	// Model is the Groq model id.
+	Model string
+	// Speed is the speech rate multiplier.
+	Speed float64
+	// ResponseFormat is the audio container format (e.g. "wav").
 	ResponseFormat string
 }
 
@@ -18,8 +22,10 @@ type TTSOptions struct {
 	// Model is the Groq model. Defaults to "canopylabs/orpheus-v1-english".
 	Model string
 	// Voice is the Groq voice. Defaults to "hannah".
-	Voice          string
-	Speed          float64
+	Voice string
+	// Speed is the speech rate multiplier. Defaults to 1.0.
+	Speed float64
+	// ResponseFormat is the audio container format. Defaults to "wav".
 	ResponseFormat string
 }
 
@@ -44,6 +50,7 @@ func (t *TTS) TTSConfig() zrt.TTSRuntimeConfig {
 	return zrt.TTSRuntimeConfig{Provider: "groq", Model: t.Model, Voice: t.Voice}
 }
 
+// Knobs returns the provider-specific parameters set on t.
 func (t *TTS) Knobs() map[string]any {
 	return map[string]any{
 		"response_format": t.ResponseFormat,

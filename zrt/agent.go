@@ -23,25 +23,40 @@ type Agent interface {
 
 // NamedAgent is an alternate agent definition usable for in-call handoff.
 type NamedAgent struct {
-	AgentID      string
+	// AgentID is the handle used to select this agent during handoff.
+	AgentID string
+	// Instructions are the system instructions for this alternate agent.
 	Instructions string
-	Tools        []*FunctionTool
-	Greeting     string
+	// Tools are the function tools available to this alternate agent.
+	Tools []*FunctionTool
+	// Greeting is this alternate agent's opening line, if any.
+	Greeting string
 }
 
 // AgentOptions configures a BaseAgent.
 type AgentOptions struct {
-	Instructions              string
-	Name                      string
-	Pipeline                  *Pipeline
+	// Instructions are the agent's system instructions.
+	Instructions string
+	// Name is the agent's display name; also used as the id fallback.
+	Name string
+	// Pipeline is the agent's voice pipeline.
+	Pipeline *Pipeline
+	// MaxSessionDurationSeconds caps the session length. nil means no cap.
 	MaxSessionDurationSeconds *int
-	Tools                     []*FunctionTool
-	AgentID                   string
-	MCPServers                []MCPServer
-	InheritContext            bool
-	KnowledgeBase             *KnowledgeBase
-	Greeting                  string
-	GreetingNonInterruptible  bool
+	// Tools are the function tools available to the agent.
+	Tools []*FunctionTool
+	// AgentID is the agent's registration handle. Defaults to Name, then "Agent".
+	AgentID string
+	// MCPServers are the MCP servers the agent can reach for tools.
+	MCPServers []MCPServer
+	// InheritContext, when true, carries the conversation context into this agent on handoff.
+	InheritContext bool
+	// KnowledgeBase is the retrieval knowledge base for the agent, if any.
+	KnowledgeBase *KnowledgeBase
+	// Greeting is the agent's opening line, if any.
+	Greeting string
+	// GreetingNonInterruptible, when true, plays the greeting without allowing barge-in.
+	GreetingNonInterruptible bool
 	// VoiceSuffix overrides the spoken-style suffix. nil means "not set", which
 	// (with AppendVoiceSuffix) appends the default voice suffix.
 	VoiceSuffix *string
@@ -49,7 +64,8 @@ type AgentOptions struct {
 	AppendVoiceSuffix *bool
 	// Alternates are additional named agents for in-call handoff.
 	Alternates []*NamedAgent
-	Agents     []Agent
+	// Agents are the agents reachable from this agent via handoff.
+	Agents []Agent
 	// ContextWindow configures context management for this agent.
 	ContextWindow *ContextWindow
 }
@@ -118,8 +134,11 @@ func NewAgent(opts AgentOptions) *BaseAgent {
 	a := NewBaseAgent(opts)
 	return &a
 }
+
+// OnEnter is the default no-op lifecycle hook; override it by embedding BaseAgent.
 func (a *BaseAgent) OnEnter(ctx context.Context) error { return nil }
 
+// OnExit is the default no-op lifecycle hook; override it by embedding BaseAgent.
 func (a *BaseAgent) OnExit(ctx context.Context) error { return nil }
 
 //lint:ignore U1000 base is called on Agent values throughout the SDK and is satisfied by external types that embed BaseAgent, which staticcheck cannot see in-package.

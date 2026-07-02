@@ -5,19 +5,32 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is a Sarvam AI text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
-	Voice            string
-	Model            string
-	Language         string
-	Streaming        bool
-	Pitch            float64
-	Pace             float64
-	Loudness         float64
-	Temperature      float64
-	Preprocessing    bool
-	Bitrate          string
+	// Voice selects the speaker. Defaults to "shubh".
+	Voice string
+	// Model selects the model. Defaults to "bulbul:v3".
+	Model string
+	// Language is the language code. Defaults to "en-IN".
+	Language string
+	// Streaming enables streaming synthesis. Defaults to true.
+	Streaming bool
+	// Pitch adjusts the voice pitch. Defaults to 0.0.
+	Pitch float64
+	// Pace adjusts the speaking rate. Defaults to 1.0.
+	Pace float64
+	// Loudness adjusts the output loudness. Defaults to 1.0.
+	Loudness float64
+	// Temperature controls synthesis variability. Defaults to 0.6.
+	Temperature float64
+	// Preprocessing enables text preprocessing. Defaults to false.
+	Preprocessing bool
+	// Bitrate is the output bitrate. Defaults to "128k".
+	Bitrate string
+	// OutputAudioCodec is the output audio codec. Defaults to "linear16".
 	OutputAudioCodec string
-	MinBufferSize    int
-	MaxChunkLength   int
+	// MinBufferSize is the minimum buffer size before synthesis begins. Defaults to 50.
+	MinBufferSize int
+	// MaxChunkLength is the maximum text chunk length per synthesis request. Defaults to 150.
+	MaxChunkLength int
 }
 
 // TTSOptions configures a Sarvam AI TTS engine. Pointer fields left nil
@@ -44,10 +57,13 @@ type TTSOptions struct {
 	// Preprocessing enables text preprocessing. Defaults to false.
 	Preprocessing *bool
 	// Bitrate is the output bitrate. Defaults to "128k".
-	Bitrate          string
+	Bitrate string
+	// OutputAudioCodec is the output audio codec. Defaults to "linear16".
 	OutputAudioCodec string
-	MinBufferSize    int
-	MaxChunkLength   int
+	// MinBufferSize is the minimum buffer size before synthesis begins. Defaults to 50.
+	MinBufferSize int
+	// MaxChunkLength is the maximum text chunk length per synthesis request. Defaults to 150.
+	MaxChunkLength int
 }
 
 // NewTTS creates a Sarvam AI TTS engine from the given options.

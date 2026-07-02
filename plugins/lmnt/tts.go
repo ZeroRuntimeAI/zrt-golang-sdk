@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the LMNT text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the LMNT voice.
 	Voice string
+	// Model is the LMNT model.
 	Model string
 }
 

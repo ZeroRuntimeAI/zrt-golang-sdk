@@ -9,8 +9,11 @@ const defaultFaceID = "afdb6a3e-3939-40aa-92df-01604c23101c"
 // Avatar is the Simli video-avatar descriptor.
 type Avatar struct {
 	zrt.BaseAvatar
-	FaceID    string
-	Model     string
+	// FaceID is the Simli face identifier.
+	FaceID string
+	// Model is the Simli avatar model.
+	Model string
+	// IsTrinity enables the Simli Trinity avatar mode.
 	IsTrinity bool
 }
 
@@ -19,8 +22,10 @@ type AvatarOptions struct {
 	// APIKey overrides the SIMLI_API_KEY environment variable.
 	APIKey string
 	// FaceID falls back to SIMLI_FACE_ID, then the default face.
-	FaceID    string
-	Model     string
+	FaceID string
+	// Model is the Simli avatar model.
+	Model string
+	// IsTrinity enables the Simli Trinity avatar mode.
 	IsTrinity bool
 }
 

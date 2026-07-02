@@ -7,10 +7,15 @@ import "context"
 // ParametersSchema is a JSON Schema object (e.g.
 // {"type":"object","properties":{...},"required":[...]}).
 type FunctionToolInfo struct {
-	Name              string
-	Description       string
-	ParametersSchema  map[string]any
-	Filler            string
+	// Name is the tool name the LLM uses to call it.
+	Name string
+	// Description tells the LLM what the tool does and when to call it.
+	Description string
+	// ParametersSchema is the tool's JSON Schema argument definition.
+	ParametersSchema map[string]any
+	// Filler is a short line spoken while the tool runs (see WithFiller); empty disables it.
+	Filler string
+	// FillerGracePeriod is the wait in milliseconds before the filler is spoken; 0 uses the default (300ms).
 	FillerGracePeriod int
 }
 
@@ -24,7 +29,9 @@ type ToolHandler func(ctx context.Context, args map[string]any) (any, error)
 // The tool's name, description and JSON schema are provided explicitly when the
 // tool is constructed, and its handler is invoked when the LLM calls the tool.
 type FunctionTool struct {
-	Info    FunctionToolInfo
+	// Info is the tool metadata exposed to the LLM.
+	Info FunctionToolInfo
+	// Handler is invoked when the LLM calls the tool.
 	Handler ToolHandler
 }
 

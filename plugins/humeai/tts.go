@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the Hume AI text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Hume AI voice.
 	Voice string
+	// Speed scales the speaking rate.
 	Speed float64
 }
 

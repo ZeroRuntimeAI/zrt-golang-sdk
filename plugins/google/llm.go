@@ -10,17 +10,28 @@ import (
 // LLM is a Google Gemini language model configured for use as an agent's LLM.
 type LLM struct {
 	zrt.BaseLLM
-	Model            string
-	Temperature      float64
-	MaxOutputTokens  int
-	ThinkingBudget   *int
-	IncludeThoughts  bool
-	SafetySettings   []zrt.SafetySetting
-	TopP             *float64
-	TopK             *int
-	PresencePenalty  *float64
+	// Model is the Gemini model to use.
+	Model string
+	// Temperature controls randomness.
+	Temperature float64
+	// MaxOutputTokens caps the response length.
+	MaxOutputTokens int
+	// ThinkingBudget is the token budget for the model's reasoning.
+	ThinkingBudget *int
+	// IncludeThoughts includes the model's reasoning in the response.
+	IncludeThoughts bool
+	// SafetySettings configures content-safety thresholds.
+	SafetySettings []zrt.SafetySetting
+	// TopP is the nucleus-sampling probability mass. nil uses the provider default.
+	TopP *float64
+	// TopK limits sampling to the K most likely tokens. nil uses the provider default.
+	TopK *int
+	// PresencePenalty penalizes tokens that have already appeared. nil uses the provider default.
+	PresencePenalty *float64
+	// FrequencyPenalty penalizes tokens in proportion to their frequency. nil uses the provider default.
 	FrequencyPenalty *float64
-	Seed             *int
+	// Seed makes sampling deterministic for a given prompt. nil uses the provider default.
+	Seed *int
 
 	vertexProjectID          string
 	vertexLocation           string

@@ -5,6 +5,7 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // NamoTurnDetectorV1 is the Namo v1 turn detector (provider "namo").
 type NamoTurnDetectorV1 struct {
 	zrt.BaseEOU
+	// Language is the BCP-47 language hint passed to the detector.
 	Language string
 }
 

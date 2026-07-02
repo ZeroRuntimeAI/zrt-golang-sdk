@@ -7,12 +7,17 @@ import (
 
 // Denoise is a noise-reduction descriptor.
 type Denoise struct {
-	providerName    string
-	ModelID         string
+	providerName string
+	// ModelID is the provider model identifier.
+	ModelID string
+	// ModelSampleRate is the sample rate (Hz) the model expects.
 	ModelSampleRate int
-	ChunkMS         int
-	GatewayToken    string
-	BaseURL         string
+	// ChunkMS is the audio chunk size in milliseconds.
+	ChunkMS int
+	// GatewayToken is the auth token for the denoise gateway.
+	GatewayToken string
+	// BaseURL overrides the denoise gateway base URL.
+	BaseURL string
 
 	hasModelSampleRate bool
 	hasChunkMS         bool
@@ -20,12 +25,19 @@ type Denoise struct {
 
 // DenoiseOptions configures a Denoise descriptor.
 type DenoiseOptions struct {
-	Provider        string
-	ModelID         string
+	// Provider is the denoise provider name (e.g. "rnnoise", "sanas", "aicoustics").
+	Provider string
+	// ModelID is the provider model identifier.
+	ModelID string
+	// ModelSampleRate is the sample rate (Hz) the model expects; nil leaves it unset.
 	ModelSampleRate *int
-	ChunkMS         *int
-	GatewayToken    string
-	BaseURL         string
+	// ChunkMS is the audio chunk size in milliseconds; nil leaves it unset.
+	ChunkMS *int
+	// GatewayToken is the auth token for the denoise gateway. Defaults to the
+	// ZRT_AUTH_TOKEN environment variable.
+	GatewayToken string
+	// BaseURL overrides the denoise gateway base URL.
+	BaseURL string
 }
 
 // NewDenoise builds a Denoise descriptor.

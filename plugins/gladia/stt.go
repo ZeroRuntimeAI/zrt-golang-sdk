@@ -6,14 +6,23 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // STT is a Gladia speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
-	Model                     string
-	Language                  string
-	CodeSwitching             bool
-	InputSampleRate           int
-	OutputSampleRate          int
-	Encoding                  string
-	BitDepth                  int
-	Channels                  int
+	// Model is the Gladia recognition model.
+	Model string
+	// Language is the recognition language hint.
+	Language string
+	// CodeSwitching re-detects the language on every utterance when true; otherwise the language is detected once and held for the session.
+	CodeSwitching bool
+	// InputSampleRate is the sample rate (Hz) of the incoming audio before any resampling.
+	InputSampleRate int
+	// OutputSampleRate is the sample rate (Hz) forwarded to the Gladia WebSocket session.
+	OutputSampleRate int
+	// Encoding is the PCM encoding format sent over the WebSocket (e.g. "wav/pcm", "wav/alaw", "wav/ulaw").
+	Encoding string
+	// BitDepth is the bit depth of the PCM samples (8, 16, 24, or 32).
+	BitDepth int
+	// Channels is the number of audio channels.
+	Channels int
+	// ReceivePartialTranscripts emits partial (non-final) transcripts before an utterance is complete when true.
 	ReceivePartialTranscripts bool
 }
 
@@ -25,13 +34,20 @@ type STTOptions struct {
 	Model string
 	// Languages lists the recognition languages; the first entry is used.
 	// Defaults to "english".
-	Languages                 []string
-	CodeSwitching             *bool
-	InputSampleRate           int
-	OutputSampleRate          int
-	Encoding                  string
-	BitDepth                  int
-	Channels                  int
+	Languages []string
+	// CodeSwitching re-detects the language on every utterance when true; otherwise the language is detected once and held. nil = provider default (true).
+	CodeSwitching *bool
+	// InputSampleRate is the sample rate (Hz) of the incoming audio before any resampling. Defaults to 48000.
+	InputSampleRate int
+	// OutputSampleRate is the sample rate (Hz) forwarded to the Gladia session. Defaults to 16000.
+	OutputSampleRate int
+	// Encoding is the PCM encoding format sent over the WebSocket. Defaults to "wav/pcm".
+	Encoding string
+	// BitDepth is the bit depth of the PCM samples. Defaults to 16.
+	BitDepth int
+	// Channels is the number of audio channels. Defaults to 1 (mono).
+	Channels int
+	// ReceivePartialTranscripts emits partial (non-final) transcripts before an utterance is complete. nil = provider default (false).
 	ReceivePartialTranscripts *bool
 }
 

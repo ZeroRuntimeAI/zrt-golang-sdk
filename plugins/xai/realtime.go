@@ -9,11 +9,16 @@ import (
 // TurnDetectionConfig controls how the model decides the user has stopped
 // speaking.
 type TurnDetectionConfig struct {
-	Type              string // default "server_vad"
-	Threshold         float64
-	PrefixPaddingMS   int
+	Type string // default "server_vad"
+	// Threshold is the server-VAD activation threshold. Defaults to 0.5.
+	Threshold float64
+	// PrefixPaddingMS is audio (in ms) kept before detected speech. Defaults to 300.
+	PrefixPaddingMS int
+	// SilenceDurationMS is the trailing silence (in ms) that ends a turn. Defaults to 200.
 	SilenceDurationMS int
-	CreateResponse    bool
+	// CreateResponse starts a model response when a turn ends. Defaults to true.
+	CreateResponse bool
+	// InterruptResponse lets new user speech interrupt an in-progress response. Defaults to true.
 	InterruptResponse bool
 }
 
@@ -40,17 +45,23 @@ type RealtimeOptions struct {
 	Modalities              []string // default ["text","audio"]
 	Temperature             *float64 // default 0.8
 	MaxResponseOutputTokens string   // default "inf"
-	TurnDetection           *TurnDetectionConfig
+	// TurnDetection configures end-of-turn detection. nil uses DefaultTurnDetectionConfig.
+	TurnDetection *TurnDetectionConfig
+	// InputAudioTranscription configures user-speech transcription. nil uses the default model.
 	InputAudioTranscription *InputAudioTranscriptionConfig
 	ToolChoice              string // default "auto"
-	BaseURL                 string
+	// BaseURL overrides the xAI Realtime endpoint.
+	BaseURL string
 }
 
 // Realtime is a configured xAI speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
-	Model      string
-	Voice      string
+	// Model is the resolved xAI realtime model.
+	Model string
+	// Voice is the resolved output voice.
+	Voice string
+	// Modalities are the enabled response modalities (e.g. "text", "audio").
 	Modalities []string
 	params     map[string]string
 }

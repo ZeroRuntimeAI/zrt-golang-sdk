@@ -10,11 +10,15 @@ import (
 // VoiceLiveTurnDetectionConfig controls how Azure Voice Live decides the user
 // has stopped speaking.
 type VoiceLiveTurnDetectionConfig struct {
-	Type              string // default "server_vad"
-	Threshold         float64
+	Type string // default "server_vad"
+	// Threshold is the VAD activation threshold.
+	Threshold float64
+	// PrefixPaddingMS is the audio padding kept before detected speech, in ms.
 	PrefixPaddingMS   int
 	SilenceDurationMS int // default 500
-	CreateResponse    bool
+	// CreateResponse triggers a model response when a turn ends.
+	CreateResponse bool
+	// InterruptResponse lets user speech interrupt an in-progress response.
 	InterruptResponse bool
 }
 
@@ -27,6 +31,7 @@ func DefaultVoiceLiveTurnDetectionConfig() *VoiceLiveTurnDetectionConfig {
 // VoiceLiveInputAudioTranscriptionConfig selects the model used to transcribe
 // the user's speech.
 type VoiceLiveInputAudioTranscriptionConfig struct {
+	// Model is the transcription model for user speech. default "gpt-4o-mini-transcribe"
 	Model string // default "gpt-4o-mini-transcribe"
 }
 
@@ -40,11 +45,15 @@ type VoiceLiveOptions struct {
 	Voice  string // default "en-US-AvaNeural"
 	// Endpoint is the Azure Voice Live endpoint. Falls back to the
 	// AZURE_VOICE_LIVE_ENDPOINT environment variable.
-	Endpoint                string
-	Modalities              []string // default ["text","audio"]
-	Temperature             *float64
+	Endpoint   string
+	Modalities []string // default ["text","audio"]
+	// Temperature is the sampling temperature. nil = provider default.
+	Temperature *float64
+	// MaxResponseOutputTokens caps tokens per response; empty leaves it unset.
 	MaxResponseOutputTokens string
-	TurnDetection           *VoiceLiveTurnDetectionConfig
+	// TurnDetection configures end-of-turn detection. nil uses the server-VAD defaults.
+	TurnDetection *VoiceLiveTurnDetectionConfig
+	// InputAudioTranscription selects the user-speech transcription model. nil uses the default.
 	InputAudioTranscription *VoiceLiveInputAudioTranscriptionConfig
 	ToolChoice              string // default "auto"
 }
@@ -52,9 +61,13 @@ type VoiceLiveOptions struct {
 // VoiceLive is a configured Azure Voice Live speech-to-speech model.
 type VoiceLive struct {
 	zrt.BaseRealtime
-	Model      string
-	Voice      string
-	Endpoint   string
+	// Model is the Azure Voice Live model name.
+	Model string
+	// Voice is the Azure voice name used for audio output.
+	Voice string
+	// Endpoint is the resolved Azure Voice Live endpoint URL.
+	Endpoint string
+	// Modalities are the response modalities the model may produce.
 	Modalities []string
 	params     map[string]string
 }

@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is a Murf AI text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Murf AI voice.
 	Voice string
+	// Model is the Murf AI model.
 	Model string
 }
 
@@ -17,7 +19,8 @@ type TTSOptions struct {
 	// Voice selects the voice. Defaults to "en-US-natalie".
 	Voice string
 	// Model selects the model. Defaults to "Falcon".
-	Model      string
+	Model string
+	// SampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 

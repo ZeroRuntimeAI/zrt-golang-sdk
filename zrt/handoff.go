@@ -8,11 +8,14 @@ const AgentSwitchKey = "__agent_switch__"
 
 // AgentSwitchOptions configures an agent_switch payload.
 type AgentSwitchOptions struct {
-	From   string
+	// From is the name of the agent handing off, included in the payload when non-empty.
+	From string
+	// Reason describes why the handoff occurs, included in the payload when non-empty.
 	Reason string
 	// InheritContext defaults to true when nil.
 	InheritContext *bool
-	Extra          map[string]any
+	// Extra holds additional keys merged into the returned tool result.
+	Extra map[string]any
 }
 
 // AgentSwitch builds the value a tool returns to hand off the call to another

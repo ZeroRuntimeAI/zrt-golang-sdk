@@ -2,42 +2,74 @@ package sarvamai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
+// LLM is a Sarvam AI large-language-model engine.
 type LLM struct {
 	zrt.BaseLLM
-	Model             string
-	Temperature       float64
-	MaxOutputTokens   int
-	ToolChoice        string
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	Stop              string
-	User              string
+	// Model is the model id. Defaults to "sarvam-30b".
+	Model string
+	// Temperature controls sampling randomness. Defaults to 0.7.
+	Temperature float64
+	// MaxOutputTokens caps the number of generated tokens. Defaults to 1024.
+	MaxOutputTokens int
+	// ToolChoice controls tool selection. Defaults to "auto".
+	ToolChoice string
+	// TopP is the nucleus-sampling probability mass. nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes repeated tokens. nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens already present. nil = provider default.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic. nil = provider default.
+	Seed *int
+	// Stop is the stop sequence that ends generation.
+	Stop string
+	// User is an opaque end-user identifier.
+	User string
+	// ParallelToolCalls enables concurrent tool calls. nil = provider default.
 	ParallelToolCalls *bool
-	ResponseFormat    string
-	ReasoningEffort   string
-	WikiGrounding     bool
+	// ResponseFormat requests a structured response format.
+	ResponseFormat string
+	// ReasoningEffort sets the reasoning effort level.
+	ReasoningEffort string
+	// WikiGrounding grounds responses in wiki knowledge. Defaults to false.
+	WikiGrounding bool
 }
 
+// LLMOptions configures NewLLM.
 type LLMOptions struct {
-	APIKey              string
-	Model               string
-	Temperature         *float64
+	// APIKey is the Sarvam AI API key. If empty, the SARVAM_API_KEY environment variable is used.
+	APIKey string
+	// Model is the model id. Defaults to "sarvam-30b".
+	Model string
+	// Temperature controls sampling randomness. Defaults to 0.7.
+	Temperature *float64
+	// MaxCompletionTokens caps the number of generated tokens. Defaults to 1024.
 	MaxCompletionTokens *int
-	ToolChoice          string
-	TopP                *float64
-	FrequencyPenalty    *float64
-	PresencePenalty     *float64
-	Seed                *int
-	Stop                string
-	User                string
-	ParallelToolCalls   *bool
-	ResponseFormat      string
-	ReasoningEffort     string
-	WikiGrounding       *bool
+	// ToolChoice controls tool selection. Defaults to "auto".
+	ToolChoice string
+	// TopP is the nucleus-sampling probability mass. nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes repeated tokens. nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens already present. nil = provider default.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic. nil = provider default.
+	Seed *int
+	// Stop is the stop sequence that ends generation.
+	Stop string
+	// User is an opaque end-user identifier.
+	User string
+	// ParallelToolCalls enables concurrent tool calls. nil = provider default.
+	ParallelToolCalls *bool
+	// ResponseFormat requests a structured response format.
+	ResponseFormat string
+	// ReasoningEffort sets the reasoning effort level.
+	ReasoningEffort string
+	// WikiGrounding grounds responses in wiki knowledge. Defaults to false.
+	WikiGrounding *bool
 }
 
+// NewLLM returns a Sarvam AI LLM configured from opts.
 func NewLLM(opts LLMOptions) *LLM {
 	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
@@ -60,10 +92,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
+// LLMConfig returns the provider, model, temperature, and max output tokens for this engine.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "sarvamai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
+// Knobs returns the Sarvam AI-specific options as a key/value map.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{"model": l.Model}
 	k["tool_choice"] = l.ToolChoice

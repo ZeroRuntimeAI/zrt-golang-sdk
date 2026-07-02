@@ -75,18 +75,35 @@ func boolPtrOr(p *bool, def bool) bool {
 	return *p
 }
 
+// DeepgramSTTOptions configures a Deepgram STT routed through the ZRT
+// inference gateway.
 type DeepgramSTTOptions struct {
-	BaseURL           string
-	Model             string
-	Language          string
-	InputSampleRate   int
-	Endpointing       int
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Deepgram STT model id. Defaults to "nova-2".
+	Model string
+	// Language is the recognition language. Defaults to "en-US".
+	Language string
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// Endpointing is the silence duration in ms used to detect end of speech.
+	// Defaults to 50.
+	Endpointing int
+	// EagerEOTThreshold is the confidence threshold for eager end-of-turn
+	// detection. Optional; nil defaults to 0.6.
 	EagerEOTThreshold *float64
-	EOTThreshold      *float64
-	EOTTimeoutMs      *int
-	Keyterm           []string
+	// EOTThreshold is the confidence threshold for end-of-turn detection.
+	// Optional; nil defaults to 0.8.
+	EOTThreshold *float64
+	// EOTTimeoutMs is the end-of-turn timeout in ms. Optional; nil defaults to 7000.
+	EOTTimeoutMs *int
+	// Keyterm is a list of key terms to boost during recognition.
+	Keyterm []string
 }
 
+// DeepgramSTT builds a Deepgram STT configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func DeepgramSTT(o DeepgramSTTOptions) *deepgram.STT {
 	model := strOr(o.Model, "nova-2")
 	language := strOr(o.Language, "en-US")
@@ -112,16 +129,28 @@ func DeepgramSTT(o DeepgramSTTOptions) *deepgram.STT {
 	return s
 }
 
+// GoogleSTTOptions configures a Google STT routed through the ZRT
+// inference gateway.
 type GoogleSTTOptions struct {
-	BaseURL          string
-	Model            string
-	Language         string
-	Languages        []string
-	Location         string
-	InputSampleRate  int
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Google STT model id. Defaults to "chirp_3".
+	Model string
+	// Language is the primary recognition language. Defaults to "en-US".
+	Language string
+	// Languages is the set of recognition languages. Defaults to [Language].
+	Languages []string
+	// Location is the Google Cloud region. Defaults to "us-central1".
+	Location string
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// OutputSampleRate is the output audio sample rate in Hz. Defaults to 16000.
 	OutputSampleRate int
 }
 
+// GoogleSTT builds a Google STT configured to run through the ZRT inference
+// gateway, applying defaults for any unset options.
 func GoogleSTT(o GoogleSTTOptions) *google.STT {
 	model := strOr(o.Model, "chirp_3")
 	language := strOr(o.Language, "en-US")
@@ -146,14 +175,24 @@ func GoogleSTT(o GoogleSTTOptions) *google.STT {
 	return s
 }
 
+// SarvamAISTTOptions configures a SarvamAI STT routed through the ZRT
+// inference gateway.
 type SarvamAISTTOptions struct {
-	BaseURL          string
-	Model            string
-	Language         string
-	InputSampleRate  int
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the SarvamAI STT model id. Defaults to "saaras:v3".
+	Model string
+	// Language is the recognition language. Defaults to "en-IN".
+	Language string
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// OutputSampleRate is the output audio sample rate in Hz. Defaults to 16000.
 	OutputSampleRate int
 }
 
+// SarvamAISTT builds a SarvamAI STT configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func SarvamAISTT(o SarvamAISTTOptions) *sarvamai.STT {
 	model := strOr(o.Model, "saaras:v3")
 	language := strOr(o.Language, "en-IN")
@@ -169,20 +208,41 @@ func SarvamAISTT(o SarvamAISTTOptions) *sarvamai.STT {
 	return s
 }
 
+// AssemblyAISTTOptions configures an AssemblyAI STT routed through the ZRT
+// inference gateway.
 type AssemblyAISTTOptions struct {
-	BaseURL                          string
-	SpeechModel                      string
-	Region                           string
-	InputSampleRate                  int
-	TargetSampleRate                 int
-	FormatTurns                      *bool
-	KeytermsPrompt                   []string
-	EndOfTurnConfidenceThreshold     *float64
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// SpeechModel is the AssemblyAI speech model id.
+	// Defaults to "universal-streaming-english".
+	SpeechModel string
+	// Region is the AssemblyAI service region. Defaults to "US".
+	Region string
+	// InputSampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	InputSampleRate int
+	// TargetSampleRate is the target output sample rate in Hz. Defaults to 16000.
+	TargetSampleRate int
+	// FormatTurns enables formatted turn output. Optional; nil defaults to true.
+	FormatTurns *bool
+	// KeytermsPrompt is a list of key terms to boost during recognition.
+	KeytermsPrompt []string
+	// EndOfTurnConfidenceThreshold is the confidence threshold for end-of-turn
+	// detection. Optional; nil defaults to 0.5.
+	EndOfTurnConfidenceThreshold *float64
+	// MinEndOfTurnSilenceWhenConfident is the minimum end-of-turn silence in ms
+	// when confident. Optional; nil defaults to 800.
 	MinEndOfTurnSilenceWhenConfident *int
-	MaxTurnSilence                   *int
-	LanguageDetection                *bool
+	// MaxTurnSilence is the maximum silence in ms within a turn. Optional; nil
+	// defaults to 2000.
+	MaxTurnSilence *int
+	// LanguageDetection enables automatic language detection. Optional; nil
+	// defaults to true.
+	LanguageDetection *bool
 }
 
+// AssemblyAISTT builds an AssemblyAI STT configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func AssemblyAISTT(o AssemblyAISTTOptions) *assemblyai.STT {
 	model := strOr(o.SpeechModel, "universal-streaming-english")
 	region := strOr(o.Region, "US")
@@ -208,12 +268,20 @@ func AssemblyAISTT(o AssemblyAISTTOptions) *assemblyai.STT {
 	return s
 }
 
+// CartesiaSTTOptions configures a Cartesia STT routed through the ZRT
+// inference gateway.
 type CartesiaSTTOptions struct {
-	BaseURL  string
-	Model    string
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Cartesia STT model id. Defaults to "ink-2".
+	Model string
+	// Language is the recognition language. Defaults to "en".
 	Language string
 }
 
+// CartesiaSTT builds a Cartesia STT configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func CartesiaSTT(o CartesiaSTTOptions) *cartesia.STT {
 	model := strOr(o.Model, "ink-2")
 	language := strOr(o.Language, "en")
@@ -227,13 +295,22 @@ func CartesiaSTT(o CartesiaSTTOptions) *cartesia.STT {
 	return s
 }
 
+// GoogleLLMOptions configures a Google LLM routed through the ZRT inference
+// gateway.
 type GoogleLLMOptions struct {
-	BaseURL         string
-	Model           string
-	Temperature     *float64
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Google LLM model id.
+	Model string
+	// Temperature is the sampling temperature. Optional; nil uses the model default.
+	Temperature *float64
+	// MaxOutputTokens caps the number of generated tokens.
 	MaxOutputTokens int
 }
 
+// GoogleLLM builds a Google LLM configured to run through the ZRT inference
+// gateway.
 func GoogleLLM(o GoogleLLMOptions) *google.LLM {
 	l := google.NewLLM(google.LLMOptions{Model: o.Model, Temperature: o.Temperature, MaxOutputTokens: o.MaxOutputTokens})
 	mark(l, o.BaseURL, map[string]any{
@@ -244,13 +321,23 @@ func GoogleLLM(o GoogleLLMOptions) *google.LLM {
 	return l
 }
 
+// SarvamAILLMOptions configures a SarvamAI LLM routed through the ZRT
+// inference gateway.
 type SarvamAILLMOptions struct {
-	BaseURL             string
-	Model               string
-	Temperature         *float64
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the SarvamAI LLM model id.
+	Model string
+	// Temperature is the sampling temperature. Optional; nil uses the model default.
+	Temperature *float64
+	// MaxCompletionTokens caps the number of generated tokens. Optional; nil
+	// uses the model default.
 	MaxCompletionTokens *int
 }
 
+// SarvamAILLM builds a SarvamAI LLM configured to run through the ZRT
+// inference gateway.
 func SarvamAILLM(o SarvamAILLMOptions) *sarvamai.LLM {
 	l := sarvamai.NewLLM(sarvamai.LLMOptions{Model: o.Model, Temperature: o.Temperature, MaxCompletionTokens: o.MaxCompletionTokens})
 	mark(l, o.BaseURL, map[string]any{
@@ -261,14 +348,24 @@ func SarvamAILLM(o SarvamAILLMOptions) *sarvamai.LLM {
 	return l
 }
 
+// CartesiaTTSOptions configures a Cartesia TTS routed through the ZRT
+// inference gateway.
 type CartesiaTTSOptions struct {
-	BaseURL    string
-	Model      string
-	Language   string
-	Voice      string
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Cartesia TTS model id. Defaults to "sonic-2".
+	Model string
+	// Language is the synthesis language. Defaults to "en".
+	Language string
+	// Voice is the voice id. Defaults to the Cartesia gateway default voice.
+	Voice string
+	// SampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 
+// CartesiaTTS builds a Cartesia TTS configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func CartesiaTTS(o CartesiaTTSOptions) *cartesia.TTS {
 	model := strOr(o.Model, "sonic-2")
 	language := strOr(o.Language, "en")
@@ -284,14 +381,24 @@ func CartesiaTTS(o CartesiaTTSOptions) *cartesia.TTS {
 	return t
 }
 
+// GoogleTTSOptions configures a Google TTS routed through the ZRT inference
+// gateway.
 type GoogleTTSOptions struct {
-	BaseURL    string
-	Model      string
-	Voice      string
-	Language   string
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Google TTS model id. Defaults to "Chirp3-HD".
+	Model string
+	// Voice is the voice name. Defaults to "Achernar".
+	Voice string
+	// Language is the synthesis language code. Defaults to "en-US".
+	Language string
+	// SampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 
+// GoogleTTS builds a Google TTS configured to run through the ZRT inference
+// gateway, applying defaults for any unset options.
 func GoogleTTS(o GoogleTTSOptions) *google.TTS {
 	model := strOr(o.Model, "Chirp3-HD")
 	voice := strOr(o.Voice, "Achernar")
@@ -308,14 +415,24 @@ func GoogleTTS(o GoogleTTSOptions) *google.TTS {
 	return t
 }
 
+// SarvamAITTSOptions configures a SarvamAI TTS routed through the ZRT
+// inference gateway.
 type SarvamAITTSOptions struct {
-	BaseURL    string
-	Model      string
-	Speaker    string
-	Language   string
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the SarvamAI TTS model id. Defaults to "bulbul:v3".
+	Model string
+	// Speaker is the speaker id. Defaults to "shubh".
+	Speaker string
+	// Language is the synthesis language. Defaults to "en-IN".
+	Language string
+	// SampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 
+// SarvamAITTS builds a SarvamAI TTS configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func SarvamAITTS(o SarvamAITTSOptions) *sarvamai.TTS {
 	model := strOr(o.Model, "bulbul:v3")
 	speaker := strOr(o.Speaker, "shubh")
@@ -331,14 +448,24 @@ func SarvamAITTS(o SarvamAITTSOptions) *sarvamai.TTS {
 	return t
 }
 
+// DeepgramTTSOptions configures a Deepgram TTS routed through the ZRT
+// inference gateway.
 type DeepgramTTSOptions struct {
-	BaseURL    string
-	Model      string
-	Voice      string
-	Language   string
+	// BaseURL is the inference gateway base URL. Empty falls back to the
+	// ZRT_INFERENCE_BASE_URL environment variable.
+	BaseURL string
+	// Model is the Deepgram TTS model id. Defaults to "aura-2".
+	Model string
+	// Voice is the voice id. Defaults to "asteria".
+	Voice string
+	// Language is the synthesis language. Defaults to "en".
+	Language string
+	// SampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 
+// DeepgramTTS builds a Deepgram TTS configured to run through the ZRT
+// inference gateway, applying defaults for any unset options.
 func DeepgramTTS(o DeepgramTTSOptions) *deepgram.TTS {
 	model := strOr(o.Model, "aura-2")
 	voice := strOr(o.Voice, "asteria")

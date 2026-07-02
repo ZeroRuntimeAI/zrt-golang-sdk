@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the CambAI text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the CambAI voice.
 	Voice string
+	// Model is the CambAI model.
 	Model string
 }
 
@@ -17,7 +19,8 @@ type TTSOptions struct {
 	// Voice is the CambAI voice. Defaults to "147320".
 	Voice string
 	// Model is the CambAI model. Defaults to "mars-pro".
-	Model      string
+	Model string
+	// SampleRate is the output audio sample rate in Hz. Defaults to 24000.
 	SampleRate int
 }
 

@@ -6,13 +6,21 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // STT is an NVIDIA Riva speech-to-text engine.
 type STT struct {
 	zrt.BaseSTT
-	Model                string
-	Language             string
-	Server               string
-	FunctionID           string
-	SampleRate           int
-	UseSSL               bool
-	ProfanityFilter      bool
+	// Model is the Riva/NIM ASR model identifier.
+	Model string
+	// Language is the recognition language as a BCP-47 tag.
+	Language string
+	// Server is the Riva gRPC endpoint.
+	Server string
+	// FunctionID is the NVCF function id for the hosted model.
+	FunctionID string
+	// SampleRate is the input audio sample rate in Hz.
+	SampleRate int
+	// UseSSL selects a TLS/SSL gRPC channel. Accepted for compatibility; currently has no effect.
+	UseSSL bool
+	// ProfanityFilter masks profanity in transcripts. Accepted for compatibility; currently has no effect.
+	ProfanityFilter bool
+	// AutomaticPunctuation adds punctuation to the transcript. Accepted for compatibility; currently has no effect.
 	AutomaticPunctuation bool
 }
 
@@ -24,12 +32,18 @@ type STTOptions struct {
 	// Defaults to "parakeet-1.1b-en-US-asr-streaming-silero-vad-sortformer".
 	Model string
 	// LanguageCode is the recognition language. Defaults to "en-US".
-	LanguageCode         string
-	Server               string
-	FunctionID           string
-	SampleRate           int
-	UseSSL               *bool
-	ProfanityFilter      *bool
+	LanguageCode string
+	// Server is the Riva gRPC endpoint. Defaults to "grpc.nvcf.nvidia.com:443".
+	Server string
+	// FunctionID is the NVCF function id for the hosted model.
+	FunctionID string
+	// SampleRate is the input audio sample rate in Hz. Defaults to 16000.
+	SampleRate int
+	// UseSSL selects a TLS/SSL gRPC channel; nil defaults to true. Accepted for compatibility; currently has no effect.
+	UseSSL *bool
+	// ProfanityFilter masks profanity in transcripts; nil defaults to false. Accepted for compatibility; currently has no effect.
+	ProfanityFilter *bool
+	// AutomaticPunctuation adds punctuation to the transcript; nil defaults to true. Accepted for compatibility; currently has no effect.
 	AutomaticPunctuation *bool
 }
 

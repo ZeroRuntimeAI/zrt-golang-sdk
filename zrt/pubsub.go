@@ -8,12 +8,18 @@ import (
 
 // PubSubMessage is a message received on a subscribed room pub/sub topic.
 type PubSubMessage struct {
-	Topic      string
-	Message    string
-	SenderID   string
+	// Topic is the pub/sub topic the message was received on.
+	Topic string
+	// Message is the message body.
+	Message string
+	// SenderID is the id of the participant that published the message.
+	SenderID string
+	// SenderName is the name of the participant that published the message.
 	SenderName string
-	Timestamp  string
-	Payload    any
+	// Timestamp is when the message was published.
+	Timestamp string
+	// Payload is the optional structured payload attached to the message.
+	Payload any
 }
 
 // PublishMessage publishes a message to a room pub/sub topic. Persistence is

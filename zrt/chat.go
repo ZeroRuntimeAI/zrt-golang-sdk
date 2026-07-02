@@ -11,36 +11,51 @@ import (
 
 // ChatContent is a text content block.
 type ChatContent struct {
+	// Type is the content block type; defaults to "text".
 	Type string // default "text"
+	// Text is the block's text content.
 	Text string
 }
 
 // ImageContent is an image content block.
 type ImageContent struct {
-	Type   string // default "image"
-	URL    string
+	// Type is the content block type; defaults to "image".
+	Type string // default "image"
+	// URL is the image URL or data URI.
+	URL string
+	// Detail is the image detail level; defaults to "auto".
 	Detail string // default "auto"
 }
 
 // FunctionCall represents a tool/function call.
 type FunctionCall struct {
-	Name      string
+	// Name is the called function's name.
+	Name string
+	// Arguments is the call arguments as a JSON string.
 	Arguments string
-	CallID    string
+	// CallID uniquely identifies this call, linking it to its output.
+	CallID string
 }
 
 // FunctionCallOutput represents the output of a tool/function call.
 type FunctionCallOutput struct {
-	Name    string
-	Output  string
-	CallID  string
+	// Name is the called function's name.
+	Name string
+	// Output is the function's result.
+	Output string
+	// CallID is the FunctionCall.CallID this output answers.
+	CallID string
+	// IsError reports whether the call failed.
 	IsError bool
 }
 
 // ChatMessage is a single message in a chat context.
 type ChatMessage struct {
-	Role      ChatRole
-	Content   string
+	// Role is the message author's role.
+	Role ChatRole
+	// Content is the message text.
+	Content string
+	// MessageID uniquely identifies the message.
 	MessageID string
 	// ToolCalls the assistant requested on this message.
 	ToolCalls []FunctionCall
@@ -57,10 +72,14 @@ type ChatMessage struct {
 // item: kept in the ChatContext for inspection but never sent to the LLM as a
 // message.
 type AgentHandoff struct {
-	ID        string
+	// ID uniquely identifies the handoff marker.
+	ID string
+	// FromAgent is the id of the agent transferring control.
 	FromAgent string
-	ToAgent   string
-	Reason    string
+	// ToAgent is the id of the agent receiving control.
+	ToAgent string
+	// Reason describes why the handoff occurred.
+	Reason string
 }
 
 // ChatContext holds an ordered list of chat messages plus structural items
@@ -152,11 +171,16 @@ func (c *ChatContext) Copy() *ChatContext {
 	return &ChatContext{messages: slices.Clone(c.messages), handoffs: slices.Clone(c.handoffs)}
 }
 
+// TruncateOptions bounds a ChatContext by item count and/or token estimate.
 type TruncateOptions struct {
-	MaxItems  int
+	// MaxItems caps the number of messages kept (most recent). 0 means no cap.
+	MaxItems int
+	// MaxTokens caps the estimated token count, dropping oldest messages. 0 means no cap.
 	MaxTokens int
 }
 
+// Truncate returns a copy of the context bounded by opts, keeping the most
+// recent messages within the item and token limits (always at least one).
 func (c *ChatContext) Truncate(opts TruncateOptions) *ChatContext {
 	out := c.Copy()
 	if opts.MaxItems > 0 && len(out.messages) > opts.MaxItems {
@@ -186,6 +210,8 @@ func (c *ChatContext) ToOpenAIMessages() []map[string]string {
 	return out
 }
 
+// ToContextMessages returns the messages as runtime context-message protos,
+// including images and tool calls.
 func (c *ChatContext) ToContextMessages() []*pb.ContextMessageProto {
 	out := make([]*pb.ContextMessageProto, 0, len(c.messages))
 	for _, m := range c.messages {

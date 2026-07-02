@@ -9,9 +9,12 @@ const defaultAvatarID = "960f614f-ea88-47c3-9883-f02094f70874"
 // Avatar is the Anam video-avatar descriptor.
 type Avatar struct {
 	zrt.BaseAvatar
-	AvatarID    string
+	// AvatarID is the Anam avatar identifier.
+	AvatarID string
+	// PersonaName is the Anam persona name.
 	PersonaName string
-	VoiceID     string
+	// VoiceID is the Anam voice identifier.
+	VoiceID string
 }
 
 // AvatarOptions configures an Anam Avatar.
@@ -19,9 +22,11 @@ type AvatarOptions struct {
 	// APIKey overrides the ANAM_API_KEY environment variable.
 	APIKey string
 	// AvatarID falls back to ANAM_AVATAR_ID, then the default avatar.
-	AvatarID    string
+	AvatarID string
+	// PersonaName is the Anam persona name.
 	PersonaName string
-	VoiceID     string
+	// VoiceID is the Anam voice identifier.
+	VoiceID string
 }
 
 // NewAvatar builds an Anam Avatar.

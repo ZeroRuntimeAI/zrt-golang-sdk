@@ -22,7 +22,9 @@ type EntrypointFunc func(ctx context.Context, jobCtx *JobContext) error
 
 // RecordingOptions toggles per-track recording.
 type RecordingOptions struct {
-	Video       bool
+	// Video records the participant's camera track.
+	Video bool
+	// ScreenShare records the participant's screen-share track.
 	ScreenShare bool
 }
 
@@ -34,44 +36,59 @@ type WebSocketConfig struct {
 
 // WebRTCConfig configures a WebRTC transport.
 type WebRTCConfig struct {
+	// SignalingURL is the signaling server URL.
 	SignalingURL  string
 	SignalingType string // default "websocket"
-	ICEServers    []any
+	// ICEServers lists the ICE (STUN/TURN) servers used for connectivity.
+	ICEServers []any
 }
 
 // TracesOptions configures trace export.
 type TracesOptions struct {
-	Enabled       bool
-	ExportURL     string
+	// Enabled turns trace export on.
+	Enabled bool
+	// ExportURL is the endpoint traces are exported to.
+	ExportURL string
+	// ExportHeaders are extra HTTP headers sent with each export request.
 	ExportHeaders map[string]string
 }
 
 // MetricsOptions configures metric export.
 type MetricsOptions struct {
-	Enabled       bool
-	ExportURL     string
+	// Enabled turns metric export on.
+	Enabled bool
+	// ExportURL is the endpoint metrics are exported to.
+	ExportURL string
+	// ExportHeaders are extra HTTP headers sent with each export request.
 	ExportHeaders map[string]string
 }
 
 // LoggingOptions configures log export.
 type LoggingOptions struct {
-	Enabled       bool
-	Level         string // default "INFO"
-	ExportURL     string
+	// Enabled turns log export on.
+	Enabled bool
+	Level   string // default "INFO"
+	// ExportURL is the endpoint logs are exported to.
+	ExportURL string
+	// ExportHeaders are extra HTTP headers sent with each export request.
 	ExportHeaders map[string]string
 }
 
 // ObservabilityOptions groups traces/metrics/logs.
 type ObservabilityOptions struct {
-	Traces  *TracesOptions
+	// Traces configures trace export; nil leaves traces unconfigured.
+	Traces *TracesOptions
+	// Metrics configures metric export; nil leaves metrics unconfigured.
 	Metrics *MetricsOptions
-	Logs    *LoggingOptions
+	// Logs configures log export; nil leaves logs unconfigured.
+	Logs *LoggingOptions
 }
 
 // PubSubPublishConfig configures publishing a message on a room pubsub topic.
 // Persistence is requested through Options (e.g. {"persist": true}).
 type PubSubPublishConfig struct {
-	Topic   string // e.g. "CHAT", "AGENT_EVENT"
+	Topic string // e.g. "CHAT", "AGENT_EVENT"
+	// Message is the text payload published on the topic.
 	Message string
 	// Options are publish options forwarded to the room (e.g. {"persist": true}).
 	Options map[string]any
@@ -86,31 +103,61 @@ func NewPubSubPublishConfig(topic string) *PubSubPublishConfig {
 
 // RoomOptions configures the room/session the agent joins.
 type RoomOptions struct {
-	RoomID                      string
-	AuthToken                   string
-	Name                        string
-	AgentParticipantID          string
-	Playground                  bool
-	Vision                      bool
-	Recording                   bool
-	RecordingOptions            *RecordingOptions
-	JoinMeeting                 bool
-	OnRoomError                 func(any)
-	OnSessionEnd                func(any)
-	AutoEndSession              bool
-	SessionTimeoutSeconds       int
+	// RoomID is the room to join. When empty, a room is created on demand
+	// (see JobContext.RoomID) from ZRT_ROOM_ID or the signaling API.
+	RoomID string
+	// AuthToken authorizes joining/creating the room; falls back to the
+	// ambient ZRT auth when empty.
+	AuthToken string
+	// Name is the agent's display name in the room. Defaults to "Agent".
+	Name string
+	// AgentParticipantID is a fixed participant id to publish the agent under.
+	AgentParticipantID string
+	// Playground allows playground sessions. Defaults to true.
+	Playground bool
+	// Vision enables camera-frame capture for the session.
+	Vision bool
+	// Recording enables session recording.
+	Recording bool
+	// RecordingOptions selects which tracks are recorded when Recording is on.
+	RecordingOptions *RecordingOptions
+	// JoinMeeting makes the agent join the meeting. Defaults to true.
+	JoinMeeting bool
+	// OnRoomError is called with room-level errors.
+	OnRoomError func(any)
+	// OnSessionEnd is called when the session ends.
+	OnSessionEnd func(any)
+	// AutoEndSession ends the session automatically when the caller leaves.
+	// Defaults to true.
+	AutoEndSession bool
+	// SessionTimeoutSeconds is a hard cap on session duration. Defaults to 60.
+	SessionTimeoutSeconds int
+	// NoParticipantTimeoutSeconds ends the session if no participant joins
+	// within this many seconds. Defaults to 180.
 	NoParticipantTimeoutSeconds int
-	SignalingBaseURL            string
-	BackgroundAudio             bool
-	AudioListenerEnabled        bool
-	SendLogsToDashboard         bool
-	DashboardLogLevel           string
-	Traces                      *TracesOptions
-	Metrics                     *MetricsOptions
-	Logs                        *LoggingOptions
-	WebSocket                   *WebSocketConfig
-	WebRTC                      *WebRTCConfig
-	Observability               *ObservabilityOptions
+	// SignalingBaseURL overrides the signaling base URL. Defaults to
+	// ZRT_SIGNALING_URL or "api.videosdk.live".
+	SignalingBaseURL string
+	// BackgroundAudio enables background-audio playback.
+	BackgroundAudio bool
+	// AudioListenerEnabled delivers raw input audio to listeners.
+	AudioListenerEnabled bool
+	// SendLogsToDashboard forwards SDK logs to the dashboard. Defaults to true.
+	SendLogsToDashboard bool
+	// DashboardLogLevel sets the level for dashboard logs. Defaults to "INFO".
+	DashboardLogLevel string
+	// Traces configures trace export for the session.
+	Traces *TracesOptions
+	// Metrics configures metric export for the session.
+	Metrics *MetricsOptions
+	// Logs configures log export for the session.
+	Logs *LoggingOptions
+	// WebSocket configures a WebSocket transport.
+	WebSocket *WebSocketConfig
+	// WebRTC configures a WebRTC transport.
+	WebRTC *WebRTCConfig
+	// Observability groups traces/metrics/logs configuration.
+	Observability *ObservabilityOptions
 }
 
 // NewRoomOptions returns RoomOptions with the default values.
@@ -130,19 +177,37 @@ func NewRoomOptions() *RoomOptions {
 
 // WorkerOptions configures the worker.
 type WorkerOptions struct {
-	NumIdleProcesses  int
+	// NumIdleProcesses is the number of idle processes kept warm. Defaults to 1.
+	NumIdleProcesses int
+	// InitializeTimeout bounds agent/model initialization. Defaults to 10s.
 	InitializeTimeout time.Duration
-	CloseTimeout      time.Duration
-	MaxProcesses      int
-	AgentID           string
-	AuthToken         string
-	MaxRetry          int
-	LoadThreshold     float64
-	Register          bool
-	SignalingBaseURL  string
-	Host              string
-	Port              int
-	LogLevel          string
+	// CloseTimeout bounds session shutdown. Defaults to 60s.
+	CloseTimeout time.Duration
+	// MaxProcesses is the maximum concurrent sessions this worker accepts.
+	// Defaults to 1.
+	MaxProcesses int
+	// AgentID is the id the agent registers under. Defaults to "ZeroRuntimeAgent".
+	AgentID string
+	// AuthToken authorizes registration; falls back to the ambient ZRT auth
+	// when empty.
+	AuthToken string
+	// MaxRetry is the maximum registration retry attempts. Defaults to 16.
+	MaxRetry int
+	// LoadThreshold is the fraction of MaxProcesses (0–1) above which the
+	// worker reports itself busy. Defaults to 0.75.
+	LoadThreshold float64
+	// Register makes Start register with the ZRT registry and serve dispatched
+	// jobs instead of running a single local job.
+	Register bool
+	// SignalingBaseURL overrides the signaling base URL. Defaults to
+	// ZRT_SIGNALING_URL or "api.videosdk.live".
+	SignalingBaseURL string
+	// Host is the interface the debug endpoint binds. Defaults to "0.0.0.0".
+	Host string
+	// Port is the port the debug endpoint binds. Defaults to 8081.
+	Port int
+	// LogLevel sets the built-in logger verbosity. Defaults to "INFO".
+	LogLevel string
 
 	// DebugEnabled starts a local HTTP debug endpoint (health/worker/stats) on
 	// Host:Port while the worker runs. Off by default; Serve turns it on.
@@ -178,8 +243,10 @@ func NewWorkerOptions() *WorkerOptions {
 
 // JobContext carries per-job configuration and session state.
 type JobContext struct {
+	// RoomOptions configures the room/session for this job.
 	RoomOptions *RoomOptions
-	Metadata    map[string]any
+	// Metadata carries the job's dispatch metadata.
+	Metadata map[string]any
 
 	mu                sync.Mutex
 	shutdownCallbacks []func()

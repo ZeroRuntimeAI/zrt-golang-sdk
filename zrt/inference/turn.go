@@ -36,11 +36,17 @@ func (t *httpTurn) TurnConfig() zrt.TurnRuntimeConfig {
 	}
 }
 
+// TurnOptions configures an HTTP-gateway end-of-utterance turn detector.
 type TurnOptions struct {
+	// Threshold is the end-of-utterance decision threshold. Defaults to 0.7.
 	Threshold float64
-	BaseURL   string
+	// BaseURL overrides the inference gateway endpoint. Falls back to
+	// $ZRT_INFERENCE_BASE_URL, then the default gateway.
+	BaseURL string
+	// AuthToken authenticates against the gateway. Falls back to $ZRT_AUTH_TOKEN.
 	AuthToken string
-	Language  string
+	// Language is the target language hint for turn detection. Optional.
+	Language string
 }
 
 func newHTTPTurn(modelID string, o TurnOptions) *httpTurn {
@@ -61,13 +67,19 @@ func newHTTPTurn(modelID string, o TurnOptions) *httpTurn {
 	return t
 }
 
+// NamoTurnDetectorV1 builds an EOU turn detector using the "namo-turn-detector-v1" model.
 func NamoTurnDetectorV1(o TurnOptions) zrt.EOU { return newHTTPTurn("namo-turn-detector-v1", o) }
 
+// TurnDetector builds an EOU turn detector using the "turnsense" model.
 func TurnDetector(o TurnOptions) zrt.EOU { return newHTTPTurn("turnsense", o) }
 
+// TurnV2Options configures a Namo v2 (Echo) end-of-utterance turn detector.
 type TurnV2Options struct {
+	// Threshold is the end-of-utterance decision threshold.
 	Threshold float64
-	Host      string
+	// Host overrides the inference gateway endpoint.
+	Host string
+	// AuthToken authenticates against the gateway. Falls back to $ZRT_AUTH_TOKEN.
 	AuthToken string
 }
 
@@ -87,8 +99,11 @@ func newTurnV2(modelID string, o TurnV2Options) zrt.EOU {
 
 type turnV2NS struct{}
 
+// TurnV2 is the namespace for Namo v2 (Echo) turn detector constructors.
 var TurnV2 turnV2NS
 
+// EchoSmall builds a Namo v2 turn detector using the "echo_small" model.
 func (turnV2NS) EchoSmall(o TurnV2Options) zrt.EOU { return newTurnV2("echo_small", o) }
 
+// EchoLarge builds a Namo v2 turn detector using the "echo_large" model.
 func (turnV2NS) EchoLarge(o TurnV2Options) zrt.EOU { return newTurnV2("echo_large", o) }

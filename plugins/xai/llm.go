@@ -2,46 +2,82 @@ package xai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
+// LLM is the xAI (Grok) chat-completion provider.
 type LLM struct {
 	zrt.BaseLLM
-	Model             string
-	Temperature       float64
-	MaxOutputTokens   int
-	BaseURL           string
-	ToolChoice        string
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	Stop              string
-	User              string
+	// Model is the model id.
+	Model string
+	// Temperature is the sampling temperature.
+	Temperature float64
+	// MaxOutputTokens caps the number of tokens generated per response.
+	MaxOutputTokens int
+	// BaseURL is the xAI API endpoint.
+	BaseURL string
+	// ToolChoice controls tool selection ("auto", "none", "required", or a tool name).
+	ToolChoice string
+	// TopP is the nucleus sampling probability mass. nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes tokens by their existing frequency. nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens that already appeared. nil = provider default.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic for a given input. nil = provider default.
+	Seed *int
+	// Stop is a stop sequence that ends generation.
+	Stop string
+	// User is an end-user identifier passed to the API.
+	User string
+	// ParallelToolCalls enables parallel tool calls. nil = provider default.
 	ParallelToolCalls *bool
-	ResponseFormat    string
-	ReasoningEffort   string
-	PromptCacheKey    string
-	ServiceTier       string
+	// ResponseFormat requests a response format (e.g. "json_object").
+	ResponseFormat string
+	// ReasoningEffort sets the reasoning effort level for reasoning models.
+	ReasoningEffort string
+	// PromptCacheKey is a key used to route requests to prompt caches.
+	PromptCacheKey string
+	// ServiceTier selects the API service tier.
+	ServiceTier string
 }
 
+// LLMOptions configures NewLLM.
 type LLMOptions struct {
-	APIKey              string
-	Model               string
-	BaseURL             string
-	Temperature         *float64
+	// APIKey authenticates with xAI. Falls back to the XAI_API_KEY environment variable.
+	APIKey string
+	// Model is the model id. Defaults to "grok-4-1-fast-non-reasoning".
+	Model string
+	// BaseURL is the xAI API endpoint. Defaults to "https://api.x.ai/v1".
+	BaseURL string
+	// Temperature is the sampling temperature. nil defaults to 0.7.
+	Temperature *float64
+	// MaxCompletionTokens caps the number of tokens generated per response. nil defaults to 1024.
 	MaxCompletionTokens *int
-	ToolChoice          string
-	TopP                *float64
-	FrequencyPenalty    *float64
-	PresencePenalty     *float64
-	Seed                *int
-	Stop                string
-	User                string
-	ParallelToolCalls   *bool
-	ResponseFormat      string
-	ReasoningEffort     string
-	PromptCacheKey      string
-	ServiceTier         string
+	// ToolChoice controls tool selection. Defaults to "auto".
+	ToolChoice string
+	// TopP is the nucleus sampling probability mass. nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes tokens by their existing frequency. nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes tokens that already appeared. nil = provider default.
+	PresencePenalty *float64
+	// Seed makes sampling deterministic for a given input. nil = provider default.
+	Seed *int
+	// Stop is a stop sequence that ends generation.
+	Stop string
+	// User is an end-user identifier passed to the API.
+	User string
+	// ParallelToolCalls enables parallel tool calls. nil = provider default.
+	ParallelToolCalls *bool
+	// ResponseFormat requests a response format (e.g. "json_object").
+	ResponseFormat string
+	// ReasoningEffort sets the reasoning effort level for reasoning models.
+	ReasoningEffort string
+	// PromptCacheKey is a key used to route requests to prompt caches.
+	PromptCacheKey string
+	// ServiceTier selects the API service tier.
+	ServiceTier string
 }
 
+// NewLLM builds an LLM from opts, applying defaults.
 func NewLLM(opts LLMOptions) *LLM {
 	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
@@ -66,10 +102,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
+// LLMConfig returns the runtime configuration for this LLM.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "xai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
+// Knobs returns the provider-specific tuning parameters set on this LLM.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{}
 	k["tool_choice"] = l.ToolChoice

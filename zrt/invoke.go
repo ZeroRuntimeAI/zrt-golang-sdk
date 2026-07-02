@@ -15,34 +15,51 @@ import (
 // RoomID empty to auto-create a playground room (requires ZRT auth via AuthToken /
 // ZRT_AUTH_TOKEN / ZRT_API_KEY+ZRT_SECRET_KEY).
 type Room struct {
-	RoomID    string
+	// RoomID is the target room/meeting id. Empty auto-creates a playground room.
+	RoomID string
+	// AuthToken is the ZRT auth token; empty falls back to ZRT_AUTH_TOKEN or ZRT_API_KEY+ZRT_SECRET_KEY.
 	AuthToken string
+	// AgentName is the display name for the agent participant. Defaults to the agentID.
 	AgentName string
 	// Playground (defaults true) governs whether Invoke returns a clickable
 	// PlaygroundURL. It is NOT sent on the wire — the runtime reserves this field.
-	Playground                  *bool
-	Vision                      bool
-	Recording                   bool
-	BackgroundAudio             bool
-	AudioListenerEnabled        bool
-	AutoEndSession              *bool // defaults true
-	SessionTimeoutSeconds       *int
+	Playground *bool
+	// Vision enables camera/video input for the session.
+	Vision bool
+	// Recording enables session recording.
+	Recording bool
+	// BackgroundAudio enables background audio playback for the session.
+	BackgroundAudio bool
+	// AudioListenerEnabled enables the raw audio listener stream.
+	AudioListenerEnabled bool
+	AutoEndSession       *bool // defaults true
+	// SessionTimeoutSeconds is the max session lifetime in seconds; nil = runtime default.
+	SessionTimeoutSeconds *int
+	// NoParticipantTimeoutSeconds ends the session after this many seconds with no participant; nil = runtime default.
 	NoParticipantTimeoutSeconds *int
-	AgentParticipantID          string
-	SignalingBaseURL            string
-	SendLogsToDashboard         *bool  // defaults true
-	DashboardLogLevel           string // defaults "INFO"
+	// AgentParticipantID is an optional fixed participant id for the agent.
+	AgentParticipantID string
+	// SignalingBaseURL overrides the signaling server base URL used for room creation.
+	SignalingBaseURL    string
+	SendLogsToDashboard *bool  // defaults true
+	DashboardLogLevel   string // defaults "INFO"
 }
 
 // Sip carries SIP connection details for a telephony session, mapped onto the
 // dispatch metadata (first-class keys win over Extra).
 type Sip struct {
-	CallTo     string
-	CallFrom   string
-	CallType   string
-	CallID     string
+	// CallTo is the destination phone number/SIP URI (sipCallTo).
+	CallTo string
+	// CallFrom is the originating phone number/SIP URI (sipCallFrom).
+	CallFrom string
+	// CallType is the call type (e.g. "sip"); maps to callType.
+	CallType string
+	// CallID is the telephony call id (callId).
+	CallID string
+	// WebhookURL is the callback URL for call events (webhook_url).
 	WebhookURL string
-	Extra      map[string]string
+	// Extra holds additional dispatch metadata keys; first-class fields above win on conflict.
+	Extra map[string]string
 }
 
 // InvokeOptions configures Invoke.
@@ -70,9 +87,12 @@ type InvokeOptions struct {
 
 // InvokeResult is returned when an invocation is accepted.
 type InvokeResult struct {
+	// SessionID is the id of the started session.
 	SessionID string
-	WorkerID  string
-	RoomID    string
+	// WorkerID is the id of the worker that accepted the invocation.
+	WorkerID string
+	// RoomID is the room the session joined (resolved or auto-created).
+	RoomID string
 	// PlaygroundURL is a clickable link to join the session, present when
 	// Room.Playground is set (the default) and auth is available.
 	PlaygroundURL string

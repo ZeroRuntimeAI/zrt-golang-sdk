@@ -5,7 +5,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the Azure text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice        string
+	// Voice is the Azure voice name.
+	Voice string
+	// SpeechRegion is the Azure service region.
 	SpeechRegion string
 }
 

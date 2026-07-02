@@ -5,15 +5,24 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is the Google text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice              string
-	LanguageCode       string
-	Model              string
-	SpeakingRate       *float64
-	Pitch              *float64
-	CredentialsJSON    string
+	// Voice is the Google voice name.
+	Voice string
+	// LanguageCode is the BCP-47 language code.
+	LanguageCode string
+	// Model is the Google TTS model.
+	Model string
+	// SpeakingRate scales the speaking rate. nil uses the provider default.
+	SpeakingRate *float64
+	// Pitch shifts the voice pitch. nil uses the provider default.
+	Pitch *float64
+	// CredentialsJSON holds service-account credentials as a raw JSON string.
+	CredentialsJSON string
+	// ServiceAccountPath is the path to a service-account JSON key file.
 	ServiceAccountPath string
+	// ServiceAccountJSON holds the resolved service-account credentials as a JSON string.
 	ServiceAccountJSON string
-	Stream             bool
+	// Stream synthesizes audio over a low-latency streaming connection when true.
+	Stream bool
 }
 
 // TTSOptions configures a Google TTS instance.
@@ -29,10 +38,13 @@ type TTSOptions struct {
 	// SpeakingRate scales the speaking rate.
 	SpeakingRate *float64
 	// Pitch shifts the voice pitch.
-	Pitch              *float64
-	CredentialsJSON    string
+	Pitch *float64
+	// CredentialsJSON holds service-account credentials as a raw JSON string.
+	CredentialsJSON string
+	// ServiceAccountPath is the path to a service-account JSON key file.
 	ServiceAccountPath string
-	Stream             *bool
+	// Stream synthesizes audio over a low-latency streaming connection. nil defaults to true.
+	Stream *bool
 }
 
 // NewTTS returns a Google TTS configured from opts.

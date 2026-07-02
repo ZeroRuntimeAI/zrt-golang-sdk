@@ -5,7 +5,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is an NVIDIA text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
-	Voice  string
+	// Voice is the Riva synthesis voice name.
+	Voice string
+	// Server is the Riva endpoint host. Accepted for compatibility; currently has no effect.
 	Server string
 }
 
@@ -19,7 +21,8 @@ type TTSOptions struct {
 	LanguageCode string
 	// SampleRate is the output sample rate in Hz. Defaults to 22050.
 	SampleRate int
-	Server     string
+	// Server is the Riva endpoint host. Accepted for compatibility; currently has no effect.
+	Server string
 }
 
 // NewTTS creates an NVIDIA TTS engine from the given options.

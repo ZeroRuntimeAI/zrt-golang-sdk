@@ -2,48 +2,86 @@ package openai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
+// LLM is the OpenAI large-language-model provider.
 type LLM struct {
 	zrt.BaseLLM
-	Model             string
-	Temperature       float64
-	MaxOutputTokens   int
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	ResponseFormat    string
-	ToolChoice        string
+	// Model is the model id. Defaults to "gpt-5.4-nano".
+	Model string
+	// Temperature is the sampling temperature. Defaults to 0.7.
+	Temperature float64
+	// MaxOutputTokens caps generated tokens. Defaults to 1024.
+	MaxOutputTokens int
+	// TopP is the nucleus sampling probability mass; nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes token frequency; nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes token presence; nil = provider default.
+	PresencePenalty *float64
+	// Seed forces deterministic sampling; nil = provider default.
+	Seed *int
+	// ResponseFormat requests a response format (e.g. "json_object"); empty = provider default.
+	ResponseFormat string
+	// ToolChoice controls tool selection (e.g. "auto", "none"); empty = provider default.
+	ToolChoice string
+	// ParallelToolCalls enables parallel tool calls; nil = provider default.
 	ParallelToolCalls *bool
-	Stop              string
-	User              string
-	ReasoningEffort   string
-	Verbosity         string
-	Streaming         bool
-	WssURL            string
-	Store             bool
+	// Stop is a stop sequence; empty = none.
+	Stop string
+	// User is an end-user identifier passed to OpenAI; empty = none.
+	User string
+	// ReasoningEffort sets reasoning effort for reasoning models; empty = provider default.
+	ReasoningEffort string
+	// Verbosity controls response verbosity; empty = provider default.
+	Verbosity string
+	// Streaming enables streamed responses. Defaults to false.
+	Streaming bool
+	// WssURL overrides the WebSocket endpoint; empty = default.
+	WssURL string
+	// Store enables server-side response storage. Defaults to true.
+	Store bool
 }
 
+// LLMOptions configures NewLLM.
 type LLMOptions struct {
-	APIKey            string
-	Model             string
-	Temperature       *float64
-	MaxOutputTokens   int
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	ResponseFormat    string
-	ToolChoice        string
+	// APIKey is the OpenAI API key; falls back to OPENAI_API_KEY.
+	APIKey string
+	// Model is the model id. Defaults to "gpt-5.4-nano".
+	Model string
+	// Temperature is the sampling temperature; nil applies 0.7.
+	Temperature *float64
+	// MaxOutputTokens caps generated tokens. Defaults to 1024.
+	MaxOutputTokens int
+	// TopP is the nucleus sampling probability mass; nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes token frequency; nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes token presence; nil = provider default.
+	PresencePenalty *float64
+	// Seed forces deterministic sampling; nil = provider default.
+	Seed *int
+	// ResponseFormat requests a response format (e.g. "json_object"); empty = provider default.
+	ResponseFormat string
+	// ToolChoice controls tool selection (e.g. "auto", "none"); empty = provider default.
+	ToolChoice string
+	// ParallelToolCalls enables parallel tool calls; nil = provider default.
 	ParallelToolCalls *bool
-	Stop              string
-	User              string
-	ReasoningEffort   string
-	Verbosity         string
-	Streaming         *bool
-	WssURL            string
-	Store             *bool
+	// Stop is a stop sequence; empty = none.
+	Stop string
+	// User is an end-user identifier passed to OpenAI; empty = none.
+	User string
+	// ReasoningEffort sets reasoning effort for reasoning models; empty = provider default.
+	ReasoningEffort string
+	// Verbosity controls response verbosity; empty = provider default.
+	Verbosity string
+	// Streaming enables streamed responses; nil applies false.
+	Streaming *bool
+	// WssURL overrides the WebSocket endpoint; empty = default.
+	WssURL string
+	// Store enables server-side response storage; nil applies true.
+	Store *bool
 }
 
+// NewLLM builds an LLM from opts, applying defaults and resolving the API key.
 func NewLLM(opts LLMOptions) *LLM {
 	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
@@ -69,10 +107,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
+// LLMConfig returns the runtime configuration for this provider.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "openai", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
+// Knobs returns the set of non-default provider parameters to pass to the runtime.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{}
 	if l.TopP != nil {

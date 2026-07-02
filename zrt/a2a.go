@@ -99,17 +99,26 @@ func (s *AgentSession) SubscribeA2A(ctx context.Context) error {
 
 // AgentCard describes an agent for agent-to-agent (A2A) discovery.
 type AgentCard struct {
-	AgentID      string
-	Name         string
-	Description  string
+	// AgentID is the unique identifier of the agent.
+	AgentID string
+	// Name is the human-readable agent name.
+	Name string
+	// Description summarizes what the agent does.
+	Description string
+	// Capabilities lists the capabilities the agent advertises.
 	Capabilities []string
-	Metadata     map[string]any
+	// Metadata holds arbitrary additional descriptor fields.
+	Metadata map[string]any
 }
 
 // A2AMessage is an agent-to-agent message.
 type A2AMessage struct {
+	// SourceAgentID is the id of the sending agent.
 	SourceAgentID string
+	// TargetAgentID is the id of the receiving agent.
 	TargetAgentID string
-	MessageType   string // default "text"
-	Payload       map[string]any
+	// MessageType is the message kind. Defaults to "text".
+	MessageType string // default "text"
+	// Payload is the message body.
+	Payload map[string]any
 }

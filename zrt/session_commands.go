@@ -13,13 +13,19 @@ import (
 
 // StartOptions configures AgentSession.Start.
 type StartOptions struct {
-	WaitForParticipant          bool
-	RunUntilShutdown            bool
+	// WaitForParticipant holds OnEnter until a participant joins.
+	WaitForParticipant bool
+	// RunUntilShutdown makes Start block until the session closes.
+	RunUntilShutdown bool
+	// SIPHangupOnShutdown hangs up the SIP call when the session shuts down.
 	SIPHangupOnShutdown         bool
 	WaitForParticipantTimeoutMS int // default 60000
-	WaitForAudioStream          bool
-	RuntimeOptions              map[string]string
-	SessionID                   string
+	// WaitForAudioStream additionally waits for the participant's audio stream before OnEnter.
+	WaitForAudioStream bool
+	// RuntimeOptions passes extra key/value options to the runtime.
+	RuntimeOptions map[string]string
+	// SessionID is an optional caller-chosen session id.
+	SessionID string
 	// RuntimeAddress overrides ZRT_RUNTIME_ADDRESS.
 	RuntimeAddress string
 }
@@ -199,8 +205,10 @@ func (s *AgentSession) Say(ctx context.Context, message string) (*UtteranceHandl
 
 // SayOptions configures Say.
 type SayOptions struct {
+	// Interruptible allows the caller to interrupt the utterance.
 	Interruptible bool
-	Voice         string
+	// Voice overrides the TTS voice for this utterance; empty uses the pipeline default.
+	Voice string
 }
 
 // SayWith speaks message via TTS using opts to control voice and
@@ -447,8 +455,10 @@ func (s *AgentSession) SendImage(ctx context.Context, data []byte, mimeType stri
 
 // MessageFrame is an image frame for SendMessageWithFrames.
 type MessageFrame struct {
+	// MimeType is the image MIME type; defaults to image/jpeg when empty.
 	MimeType string
-	Data     []byte
+	// Data is the encoded image bytes (JPEG/PNG).
+	Data []byte
 }
 
 // MessageFramesFromCaptured converts frames returned by Agent.CaptureFrames into

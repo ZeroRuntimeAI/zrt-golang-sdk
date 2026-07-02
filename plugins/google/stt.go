@@ -8,60 +8,115 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
+// STT is the Google Cloud Speech-to-Text provider.
 type STT struct {
 	zrt.BaseSTT
-	Model                     string
-	Language                  string
-	ServiceAccountJSON        string
-	ProjectID                 string
-	Stream                    bool
-	Location                  string
-	AudioChannelCount         int
-	InterimResults            bool
-	Punctuate                 bool
-	ProfanityFilter           bool
-	EnableSpokenPunctuation   bool
-	EnableSpokenEmojis        bool
-	EnableWordTimeOffsets     bool
-	EnableWordConfidence      bool
-	MaxAlternatives           int
+	// Model is the recognition model ID, e.g. "latest_long".
+	Model string
+	// Language is the BCP-47 recognition language, e.g. "en-US". Multiple codes are comma-separated.
+	Language string
+	// ServiceAccountJSON holds the resolved service-account credentials as a JSON string.
+	ServiceAccountJSON string
+	// ProjectID is the Google Cloud project ID.
+	ProjectID string
+	// Stream transcribes audio over a low-latency streaming connection when true.
+	Stream bool
+	// Location is the Cloud Speech-to-Text regional endpoint, e.g. "us" or "eu".
+	Location string
+	// AudioChannelCount is the number of audio channels in the input.
+	AudioChannelCount int
+	// InterimResults emits partial transcripts before an utterance is finalized when true.
+	InterimResults bool
+	// Punctuate adds automatic punctuation to transcripts when true.
+	Punctuate bool
+	// ProfanityFilter replaces profane words with placeholder characters when true.
+	ProfanityFilter bool
+	// EnableSpokenPunctuation transcribes spoken punctuation cues as punctuation marks when true.
+	EnableSpokenPunctuation bool
+	// EnableSpokenEmojis transcribes spoken emoji names as emoji characters when true.
+	EnableSpokenEmojis bool
+	// EnableWordTimeOffsets returns start and end timestamps for each recognized word when true.
+	EnableWordTimeOffsets bool
+	// EnableWordConfidence includes per-word confidence scores in results when true.
+	EnableWordConfidence bool
+	// MaxAlternatives is the maximum number of alternative transcriptions to return.
+	MaxAlternatives int
+	// EnableVoiceActivityEvents emits speech-start and speech-end events independently of transcripts when true.
 	EnableVoiceActivityEvents bool
-	SpeechStartTimeout        *float64
-	SpeechEndTimeout          *float64
-	MinSpeakerCount           *int
-	MaxSpeakerCount           *int
-	MinConfidenceThreshold    float64
-	SampleRate                int
+	// SpeechStartTimeout is the seconds to wait for speech to begin before a voice-activity timeout. nil uses the API default.
+	SpeechStartTimeout *float64
+	// SpeechEndTimeout is the seconds of silence after speech before an end-of-speech event fires. nil uses the API default.
+	SpeechEndTimeout *float64
+	// MinSpeakerCount is the minimum expected number of speakers for diarization. nil disables diarization.
+	MinSpeakerCount *int
+	// MaxSpeakerCount is the maximum expected number of speakers for diarization. nil disables diarization.
+	MaxSpeakerCount *int
+	// MinConfidenceThreshold is a client-side filter dropping transcripts below this confidence.
+	MinConfidenceThreshold float64
+	// SampleRate is the input audio sample rate in Hz.
+	SampleRate int
 }
 
+// STTOptions configures a Google Speech-to-Text instance. Credentials are
+// resolved in priority order: CredentialsJSON, ServiceAccountPath, APIKey, the
+// GOOGLE_APPLICATION_CREDENTIALS env var, then a credentials.json file in the
+// working directory.
 type STTOptions struct {
-	APIKey                    string
-	CredentialsJSON           string
-	ServiceAccountPath        string
-	ProjectID                 string
-	Languages                 []string
-	Language                  string
-	Model                     string
-	Stream                    *bool
-	Location                  string
-	AudioChannelCount         int
-	InterimResults            *bool
-	Punctuate                 *bool
-	ProfanityFilter           *bool
-	EnableSpokenPunctuation   *bool
-	EnableSpokenEmojis        *bool
-	EnableWordTimeOffsets     *bool
-	EnableWordConfidence      *bool
-	MaxAlternatives           int
+	// APIKey is the Google API key, used as a fallback credential source. If empty, the GOOGLE_API_KEY environment variable is used.
+	APIKey string
+	// CredentialsJSON holds service-account credentials as a raw JSON string.
+	CredentialsJSON string
+	// ServiceAccountPath is the path to a service-account JSON key file.
+	ServiceAccountPath string
+	// ProjectID is the Google Cloud project ID. Extracted from the service-account JSON when unset.
+	ProjectID string
+	// Languages is one or more BCP-47 recognition language codes; multiple codes enable multi-language detection.
+	Languages []string
+	// Language is a single BCP-47 recognition language code. Defaults to "en-US".
+	Language string
+	// Model is the recognition model ID. Defaults to "latest_long".
+	Model string
+	// Stream transcribes over a low-latency streaming connection. nil defaults to true.
+	Stream *bool
+	// Location is the Cloud Speech-to-Text regional endpoint. Defaults to "us".
+	Location string
+	// AudioChannelCount is the number of audio channels in the input. Defaults to 1.
+	AudioChannelCount int
+	// InterimResults emits partial transcripts before finalization. nil defaults to true.
+	InterimResults *bool
+	// Punctuate adds automatic punctuation to transcripts. nil defaults to true.
+	Punctuate *bool
+	// ProfanityFilter replaces profane words with placeholder characters. nil defaults to false.
+	ProfanityFilter *bool
+	// EnableSpokenPunctuation transcribes spoken punctuation cues as marks. nil defaults to false.
+	EnableSpokenPunctuation *bool
+	// EnableSpokenEmojis transcribes spoken emoji names as emoji. nil defaults to false.
+	EnableSpokenEmojis *bool
+	// EnableWordTimeOffsets returns per-word timestamps. nil defaults to false.
+	EnableWordTimeOffsets *bool
+	// EnableWordConfidence includes per-word confidence scores. nil defaults to false.
+	EnableWordConfidence *bool
+	// MaxAlternatives is the maximum number of alternative transcriptions. Defaults to 1.
+	MaxAlternatives int
+	// EnableVoiceActivityEvents emits speech-start/end events. nil defaults to false.
 	EnableVoiceActivityEvents *bool
-	SpeechStartTimeout        *float64
-	SpeechEndTimeout          *float64
-	MinSpeakerCount           *int
-	MaxSpeakerCount           *int
-	MinConfidenceThreshold    *float64
-	SampleRate                int
+	// SpeechStartTimeout is the seconds to wait for speech to begin. nil uses the API default.
+	SpeechStartTimeout *float64
+	// SpeechEndTimeout is the seconds of silence after speech before end-of-speech. nil uses the API default.
+	SpeechEndTimeout *float64
+	// MinSpeakerCount is the minimum expected number of speakers for diarization. nil disables diarization.
+	MinSpeakerCount *int
+	// MaxSpeakerCount is the maximum expected number of speakers for diarization. nil disables diarization.
+	MaxSpeakerCount *int
+	// MinConfidenceThreshold is a client-side filter dropping transcripts below this confidence. nil defaults to 0.0.
+	MinConfidenceThreshold *float64
+	// SampleRate is the input audio sample rate in Hz. Defaults to 48000.
+	SampleRate int
 }
 
+// NewSTT creates a Google Speech-to-Text provider from opts, applying defaults
+// for any unset fields and resolving service-account credentials and the project
+// ID.
 func NewSTT(opts STTOptions) *STT {
 	lang := opts.Language
 	if len(opts.Languages) > 0 {
@@ -100,10 +155,12 @@ func NewSTT(opts STTOptions) *STT {
 	return s
 }
 
+// STTConfig implements zrt.STT and reports the model configuration.
 func (s *STT) STTConfig() zrt.STTRuntimeConfig {
 	return zrt.STTRuntimeConfig{Provider: "google_stt", Model: s.Model, Language: s.Language}
 }
 
+// Knobs returns the provider-specific STT settings that are set.
 func (s *STT) Knobs() map[string]any {
 	k := map[string]any{
 		"location":                     s.Location,

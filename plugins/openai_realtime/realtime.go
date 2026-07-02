@@ -10,11 +10,16 @@ import (
 // TurnDetectionConfig controls how the model decides the user has stopped
 // speaking.
 type TurnDetectionConfig struct {
-	Type              string // default "server_vad"
-	Threshold         float64
-	PrefixPaddingMS   int
+	Type string // default "server_vad"
+	// Threshold is the VAD activation threshold. Defaults to 0.5.
+	Threshold float64
+	// PrefixPaddingMS is the audio retained before detected speech, in ms. Defaults to 300.
+	PrefixPaddingMS int
+	// SilenceDurationMS is the trailing silence that ends a turn, in ms. Defaults to 200.
 	SilenceDurationMS int
-	CreateResponse    bool
+	// CreateResponse triggers a model response when a turn ends. Defaults to true.
+	CreateResponse bool
+	// InterruptResponse lets new user speech interrupt an in-progress response. Defaults to true.
 	InterruptResponse bool
 }
 
@@ -41,7 +46,9 @@ type RealtimeOptions struct {
 	Modalities              []string // default ["text","audio"]
 	Temperature             *float64 // default 0.8
 	MaxResponseOutputTokens string   // default "inf"
-	TurnDetection           *TurnDetectionConfig
+	// TurnDetection configures end-of-turn detection. nil = DefaultTurnDetectionConfig.
+	TurnDetection *TurnDetectionConfig
+	// InputAudioTranscription configures user-speech transcription. nil = default "gpt-4o-mini-transcribe".
 	InputAudioTranscription *InputAudioTranscriptionConfig
 	ToolChoice              string // default "auto"
 }
@@ -49,8 +56,11 @@ type RealtimeOptions struct {
 // Realtime is a configured OpenAI Realtime speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
-	Model      string
-	Voice      string
+	// Model is the resolved OpenAI Realtime model id.
+	Model string
+	// Voice is the resolved output voice name.
+	Voice string
+	// Modalities is the resolved list of response modalities.
 	Modalities []string
 	params     map[string]string
 }

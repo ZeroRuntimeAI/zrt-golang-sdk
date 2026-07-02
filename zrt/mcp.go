@@ -9,9 +9,12 @@ type MCPServer interface {
 
 // MCPServerStdio is a stdio-transport MCP server.
 type MCPServerStdio struct {
+	// Command is the executable to launch the MCP server.
 	Command string
-	Args    []string
-	Env     map[string]string
+	// Args are the command-line arguments passed to Command.
+	Args []string
+	// Env holds extra environment variables for the server process.
+	Env map[string]string
 }
 
 func (m *MCPServerStdio) mcpType() string { return "stdio" }
@@ -22,7 +25,9 @@ func (m *MCPServerStdio) mcpHTTP() (string, map[string]string) { return "", nil 
 
 // MCPServerHTTP is an HTTP-transport MCP server.
 type MCPServerHTTP struct {
-	URL     string
+	// URL is the MCP server endpoint.
+	URL string
+	// Headers holds extra HTTP headers sent with each request.
 	Headers map[string]string
 }
 

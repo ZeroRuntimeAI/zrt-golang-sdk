@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is a Speechify text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Speechify voice.
 	Voice string
+	// Model is the Speechify model.
 	Model string
 }
 

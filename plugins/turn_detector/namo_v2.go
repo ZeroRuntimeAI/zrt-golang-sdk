@@ -13,8 +13,11 @@ func defaultNamoHost() string {
 // NamoTurnDetectorV2 is a Namo v2 end-of-utterance turn detector.
 type NamoTurnDetectorV2 struct {
 	zrt.BaseEOU
-	ModelID   string
-	Host      string
+	// ModelID selects the model.
+	ModelID string
+	// Host is the hosted-inference service endpoint.
+	Host string
+	// AuthToken authenticates requests to Host.
 	AuthToken string
 }
 

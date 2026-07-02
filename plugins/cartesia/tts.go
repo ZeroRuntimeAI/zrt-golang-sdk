@@ -8,15 +8,24 @@ const defaultVoice = "f8f5f1b2-f02d-4d8e-a40d-fd850a487b3d"
 // TTS is the Cartesia text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice                string
-	voiceEmbedding       []float64
-	Model                string
-	Language             string
-	Speed                *float64
-	Volume               *float64
-	Emotion              string
-	PronunciationDictID  string
-	MaxBufferDelayMS     *int
+	// Voice is the resolved Cartesia voice id ("" when a voice embedding is used).
+	Voice          string
+	voiceEmbedding []float64
+	// Model is the resolved Cartesia model.
+	Model string
+	// Language is the resolved spoken language.
+	Language string
+	// Speed scales the speaking rate; nil leaves it unset.
+	Speed *float64
+	// Volume scales the output volume; nil leaves it unset.
+	Volume *float64
+	// Emotion sets the emotional style.
+	Emotion string
+	// PronunciationDictID selects a custom pronunciation dictionary.
+	PronunciationDictID string
+	// MaxBufferDelayMS caps the synthesis buffering delay, in milliseconds; nil leaves it unset.
+	MaxBufferDelayMS *int
+	// EnableWordTimestamps requests per-word timing information.
 	EnableWordTimestamps bool
 }
 

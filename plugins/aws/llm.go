@@ -13,22 +13,38 @@ const DefaultBedrockModel = "amazon.nova-lite-v1:0"
 // AWS credential chain (IAM role / shared profile) when left empty.
 type LLM struct {
 	zrt.BaseLLM
-	Model           string
-	Region          string
-	AccessKeyID     string
+	// Model is the resolved Bedrock model id or inference-profile ARN.
+	Model string
+	// Region is the resolved AWS region for Bedrock Runtime.
+	Region string
+	// AccessKeyID is the resolved AWS access key id ("" for the default chain).
+	AccessKeyID string
+	// SecretAccessKey is the resolved AWS secret access key.
 	SecretAccessKey string
-	SessionToken    string
-	Temperature     float64
+	// SessionToken is the resolved AWS session token.
+	SessionToken string
+	// Temperature is the sampling temperature.
+	Temperature float64
+	// MaxOutputTokens caps tokens generated per response.
 	MaxOutputTokens int
-	TopP            *float64
-	TopK            *int
-	StopSequences   []string
-	ToolChoice      string
-	CacheSystem     *bool
-	CacheTools      *bool
-	StripThinking   *bool
-	TextToolCalls   *bool
+	// TopP is the nucleus-sampling probability mass; nil leaves it unset.
+	TopP *float64
+	// TopK limits sampling to the K most likely tokens; nil leaves it unset.
+	TopK *int
+	// StopSequences are sequences that stop generation.
+	StopSequences []string
+	// ToolChoice is "auto", "required", "none", or a tool name.
+	ToolChoice string
+	// CacheSystem adds a prompt-cache checkpoint after the system prompt; nil leaves it unset.
+	CacheSystem *bool
+	// CacheTools adds a prompt-cache checkpoint after the tool definitions; nil leaves it unset.
+	CacheTools *bool
+	// StripThinking removes <thinking>...</thinking> spans from streamed text; nil leaves it unset.
+	StripThinking *bool
+	// TextToolCalls parses function calls printed as plain text; nil leaves it unset.
+	TextToolCalls *bool
 
+	// AdditionalRequestFields are extra additionalModelRequestFields merged into the Converse request.
 	AdditionalRequestFields map[string]any
 }
 

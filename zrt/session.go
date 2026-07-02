@@ -60,13 +60,20 @@ type sessionTransport interface {
 
 // AgentSessionOptions configures an AgentSession.
 type AgentSessionOptions struct {
-	WakeUp            int
+	// WakeUp is the seconds of caller silence before a wake-up prompt fires; 0 disables it.
+	WakeUp int
+	// WakeUpMaxAttempts is the maximum number of wake-up prompts before giving up.
 	WakeUpMaxAttempts int
-	OnWakeUp          func()
-	BackgroundAudio   any
-	DTMFHandler       *DTMFHandler
+	// OnWakeUp is called when a wake-up fires.
+	OnWakeUp func()
+	// BackgroundAudio configures ambient audio played during the session.
+	BackgroundAudio any
+	// DTMFHandler dispatches received DTMF digits.
+	DTMFHandler *DTMFHandler
+	// VoiceMailDetector detects and reacts to voicemail systems on the call.
 	VoiceMailDetector *VoiceMailDetector
-	Recording         *RecordingConfig
+	// Recording configures call recording for the session.
+	Recording *RecordingConfig
 }
 
 // AgentSession runs an agent with its pipeline and exposes the commands and
@@ -234,7 +241,6 @@ func (s *AgentSession) onDTMFPubSub(msg PubSubMessage) {
 	}
 	h.dispatch(digit)
 }
-
 
 func dtmfDigitString(v any) string {
 	switch n := v.(type) {

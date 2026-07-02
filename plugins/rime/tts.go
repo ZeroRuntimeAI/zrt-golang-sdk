@@ -6,7 +6,9 @@ import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 // TTS is a Rime text-to-speech engine.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Rime speaker.
 	Voice string
+	// Model is the Rime model.
 	Model string
 }
 

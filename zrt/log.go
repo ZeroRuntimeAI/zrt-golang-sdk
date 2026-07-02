@@ -14,10 +14,15 @@ import (
 type LogLevel int32
 
 const (
+	// LevelDebug logs everything, including debug detail.
 	LevelDebug LogLevel = iota
+	// LevelInfo logs informational messages and above.
 	LevelInfo
+	// LevelWarning logs warnings and above.
 	LevelWarning
+	// LevelError logs errors and above.
 	LevelError
+	// LevelCritical logs only critical messages.
 	LevelCritical
 )
 

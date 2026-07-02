@@ -6,40 +6,70 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
+// LLM is the CometAPI large-language-model provider.
 type LLM struct {
 	zrt.BaseLLM
-	Model             string
-	Temperature       float64
-	MaxOutputTokens   int
-	BaseURL           string
-	ToolChoice        string
-	TopP              *float64
-	FrequencyPenalty  *float64
-	PresencePenalty   *float64
-	Seed              *int
-	Stop              string
-	User              string
+	// Model is the model id. Defaults to "gpt-4o-mini".
+	Model string
+	// Temperature is the sampling temperature. Defaults to 0.7.
+	Temperature float64
+	// MaxOutputTokens caps generated tokens. Defaults to 1024.
+	MaxOutputTokens int
+	// BaseURL overrides the API endpoint; defaults to COMETAPI_BASE_URL.
+	BaseURL string
+	// ToolChoice controls tool selection (e.g. "auto", "none"). Defaults to "auto".
+	ToolChoice string
+	// TopP is the nucleus sampling probability mass; nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes token frequency; nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes token presence; nil = provider default.
+	PresencePenalty *float64
+	// Seed forces deterministic sampling; nil = provider default.
+	Seed *int
+	// Stop is a stop sequence; empty = none.
+	Stop string
+	// User is an end-user identifier passed to the provider; empty = none.
+	User string
+	// ParallelToolCalls enables parallel tool calls; nil = provider default.
 	ParallelToolCalls *bool
-	ResponseFormat    string
+	// ResponseFormat requests a response format (e.g. "json_object"); empty = provider default.
+	ResponseFormat string
 }
 
+// LLMOptions configures NewLLM.
 type LLMOptions struct {
-	APIKey              string
-	Model               string
-	Temperature         *float64
+	// APIKey is the CometAPI API key; falls back to COMETAPI_API_KEY.
+	APIKey string
+	// Model is the model id. Defaults to "gpt-4o-mini".
+	Model string
+	// Temperature is the sampling temperature; nil applies 0.7.
+	Temperature *float64
+	// MaxCompletionTokens caps generated tokens; nil applies 1024.
 	MaxCompletionTokens *int
-	BaseURL             string
-	ToolChoice          string
-	TopP                *float64
-	FrequencyPenalty    *float64
-	PresencePenalty     *float64
-	Seed                *int
-	Stop                string
-	User                string
-	ParallelToolCalls   *bool
-	ResponseFormat      string
+	// BaseURL overrides the API endpoint; empty applies COMETAPI_BASE_URL.
+	BaseURL string
+	// ToolChoice controls tool selection (e.g. "auto", "none"); empty applies "auto".
+	ToolChoice string
+	// TopP is the nucleus sampling probability mass; nil = provider default.
+	TopP *float64
+	// FrequencyPenalty penalizes token frequency; nil = provider default.
+	FrequencyPenalty *float64
+	// PresencePenalty penalizes token presence; nil = provider default.
+	PresencePenalty *float64
+	// Seed forces deterministic sampling; nil = provider default.
+	Seed *int
+	// Stop is a stop sequence; empty = none.
+	Stop string
+	// User is an end-user identifier passed to the provider; empty = none.
+	User string
+	// ParallelToolCalls enables parallel tool calls; nil = provider default.
+	ParallelToolCalls *bool
+	// ResponseFormat requests a response format (e.g. "json_object"); empty = provider default.
+	ResponseFormat string
 }
 
+// NewLLM builds an LLM from opts, applying defaults and resolving the API key.
 func NewLLM(opts LLMOptions) *LLM {
 	temp := zrt.FloatOr(opts.Temperature, 0.7)
 	l := &LLM{
@@ -61,10 +91,12 @@ func NewLLM(opts LLMOptions) *LLM {
 	return l
 }
 
+// LLMConfig returns the runtime configuration for this provider.
 func (l *LLM) LLMConfig() zrt.LLMRuntimeConfig {
 	return zrt.LLMRuntimeConfig{Provider: "cometapi", Model: l.Model, Temperature: float32(l.Temperature), MaxOutputTokens: uint32(l.MaxOutputTokens)}
 }
 
+// Knobs returns the set of non-default provider parameters to pass to the runtime.
 func (l *LLM) Knobs() map[string]any {
 	k := map[string]any{}
 	if l.BaseURL != "" {
