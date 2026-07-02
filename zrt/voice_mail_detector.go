@@ -5,13 +5,20 @@ import "sync"
 // VoiceMailDetectorDefaultPrompt is the default classifier prompt.
 const VoiceMailDetectorDefaultPrompt = "You are a voicemail detection classifier for an OUTBOUND calling system. A bot has called a phone number and you need to determine if a human answered or if the call went to voicemail based on the provided text. Answer in one word yes or no."
 
-// VoiceMailDetector configures runtime voicemail detection and receives events.
+// VoiceMailDetector configures voicemail detection and receives its events.
 type VoiceMailDetector struct {
-	Callback           func(map[string]any)
-	Duration           float64 // seconds
-	CustomPrompt       string
-	AutoHangup         bool
+	// Callback is invoked with the detection event payload when voicemail is detected.
+	Callback func(map[string]any)
+	// Duration is the detection window in seconds. Defaults to 2.0.
+	Duration float64 // seconds
+	// CustomPrompt overrides the default classifier prompt when non-empty.
+	CustomPrompt string
+	// AutoHangup ends the call automatically when voicemail is detected.
+	AutoHangup bool
+	// DetectionThreshold is the confidence threshold for detection. Defaults to 1.0.
 	DetectionThreshold float64
+	// LLM is the model used to classify the transcript as human or voicemail.
+	LLM LLMLike
 
 	mu        sync.Mutex
 	detected  bool
@@ -20,12 +27,20 @@ type VoiceMailDetector struct {
 
 // VoiceMailDetectorOptions configures a VoiceMailDetector.
 type VoiceMailDetectorOptions struct {
-	Callback            func(map[string]any)
-	Duration            *float64 // default 2.0
-	CustomPrompt        string
-	AutoHangup          bool
-	DetectionThreshold  *float64 // default 1.0
-	MaxDetectionSeconds *int     // overrides Duration if set
+	// Callback is invoked with the detection event payload when voicemail is detected.
+	Callback func(map[string]any)
+	// Duration is the detection window in seconds; nil defaults to 2.0.
+	Duration *float64 // default 2.0
+	// CustomPrompt overrides the default classifier prompt when non-empty.
+	CustomPrompt string
+	// AutoHangup ends the call automatically when voicemail is detected.
+	AutoHangup bool
+	// DetectionThreshold is the confidence threshold for detection; nil defaults to 1.0.
+	DetectionThreshold *float64 // default 1.0
+	// MaxDetectionSeconds overrides Duration when set.
+	MaxDetectionSeconds *int // overrides Duration if set
+	// LLM is the model used to classify the transcript as human or voicemail.
+	LLM LLMLike
 }
 
 // NewVoiceMailDetector builds a VoiceMailDetector from the given options.
@@ -47,6 +62,7 @@ func NewVoiceMailDetector(opts VoiceMailDetectorOptions) *VoiceMailDetector {
 		CustomPrompt:       opts.CustomPrompt,
 		AutoHangup:         opts.AutoHangup,
 		DetectionThreshold: threshold,
+		LLM:                opts.LLM,
 	}
 }
 

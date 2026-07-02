@@ -7,37 +7,57 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// RealtimeOptions configures Realtime.
+// RealtimeOptions configures an Ultravox Realtime model. The zero value is
+// valid; empty and nil fields fall back to the defaults noted below.
 type RealtimeOptions struct {
-	// APIKey overrides the ULTRAVOX_API_KEY environment variable.
-	APIKey                           string
-	Model                            string // default "fixie-ai/ultravox"
-	Voice                            string
-	LanguageHint                     string // default "en"
-	Temperature                      *float64
-	MaxDuration                      string
-	TimeExceededMessage              string
-	InputSampleRate                  int  // default 48000
-	OutputSampleRate                 int  // default 24000
-	ClientBufferSizeMS               int  // default 30000
-	VADTurnEndpointDelayMS           *int // default 800
-	VADMinimumTurnDurationMS         *int // default 600
+	// APIKey authenticates with Ultravox. Overrides the ULTRAVOX_API_KEY
+	// environment variable.
+	APIKey string
+	// Model is the Ultravox model id.
+	Model string // default "fixie-ai/ultravox"
+	// Voice is the voice used for synthesized speech.
+	Voice string
+	// LanguageHint is a BCP-47 hint for the expected input language.
+	LanguageHint string // default "en"
+	// Temperature controls sampling randomness; nil applies the provider default.
+	Temperature *float64
+	// MaxDuration caps the session length (e.g. "600s"); empty means no cap.
+	MaxDuration string
+	// TimeExceededMessage is spoken when MaxDuration is reached.
+	TimeExceededMessage string
+	// InputSampleRate is the input audio sample rate in Hz.
+	InputSampleRate int // default 48000
+	// OutputSampleRate is the output audio sample rate in Hz.
+	OutputSampleRate int // default 24000
+	// ClientBufferSizeMS is the client-side audio buffer size in milliseconds.
+	ClientBufferSizeMS int // default 30000
+	// VADTurnEndpointDelayMS is the silence delay before end-of-turn is detected, in milliseconds; nil applies the default.
+	VADTurnEndpointDelayMS *int // default 800
+	// VADMinimumTurnDurationMS is the minimum user turn duration in milliseconds; nil applies the default.
+	VADMinimumTurnDurationMS *int // default 600
+	// VADMinimumInterruptionDurationMS is the minimum speech duration required to interrupt, in milliseconds; nil omits the setting.
 	VADMinimumInterruptionDurationMS *int
-	VADFrameActivationThreshold      *float64 // default 0.4
-	FirstSpeaker                     string   // default "FIRST_SPEAKER_USER"
-	EnableGreetingPrompt             bool
-	BaseURL                          string
+	// VADFrameActivationThreshold is the per-frame speech probability threshold; nil applies the default.
+	VADFrameActivationThreshold *float64 // default 0.4
+	// FirstSpeaker sets who speaks first in the conversation.
+	FirstSpeaker string // default "FIRST_SPEAKER_USER"
+	// EnableGreetingPrompt enables an initial greeting prompt.
+	EnableGreetingPrompt bool
+	// BaseURL overrides the Ultravox API base URL; empty uses the default.
+	BaseURL string
 }
 
-// Realtime is the Ultravox model descriptor.
+// Realtime is a configured Ultravox speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
-	Model  string
+	// Model is the resolved Ultravox model id.
+	Model string
+	// Voice is the resolved voice used for synthesized speech.
 	Voice  string
 	params map[string]string
 }
 
-// NewRealtime builds a Realtime from opts.
+// NewRealtime returns an Ultravox Realtime model configured from opts.
 func NewRealtime(opts RealtimeOptions) *Realtime {
 	inputSR := opts.InputSampleRate
 	if inputSR == 0 {
@@ -56,7 +76,7 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 		"input_sample_rate":      strconv.Itoa(inputSR),
 		"output_sample_rate":     strconv.Itoa(outputSR),
 		"client_buffer_size_ms":  strconv.Itoa(bufSize),
-		"enable_greeting_prompt": boolStr(opts.EnableGreetingPrompt),
+		"enable_greeting_prompt": zrt.BoolStr(opts.EnableGreetingPrompt),
 	}
 	if opts.BaseURL != "" {
 		params["base_url"] = opts.BaseURL
@@ -70,7 +90,6 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 	if opts.TimeExceededMessage != "" {
 		params["time_exceeded_message"] = opts.TimeExceededMessage
 	}
-	// VAD knobs with defaults (800 / 600 / 0.4 / FIRST_SPEAKER_USER).
 	params["vad_turn_endpoint_delay_ms"] = strconv.Itoa(zrt.IntOr(opts.VADTurnEndpointDelayMS, 800))
 	params["vad_minimum_turn_duration_ms"] = strconv.Itoa(zrt.IntOr(opts.VADMinimumTurnDurationMS, 600))
 	if opts.VADMinimumInterruptionDurationMS != nil {
@@ -87,11 +106,4 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 // RealtimeInfo implements zrt.RealtimeModel.
 func (r *Realtime) RealtimeInfo() zrt.RealtimeInfo {
 	return zrt.RealtimeInfo{Model: r.Model, Voice: r.Voice, Params: r.params, ResponseModalities: []string{"AUDIO"}}
-}
-
-func boolStr(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }

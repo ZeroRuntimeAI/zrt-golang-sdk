@@ -1,10 +1,13 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -53,7 +56,7 @@ func openGRPCChannel(addr, authToken string) (*grpc.ClientConn, error) {
 	return grpc.NewClient(addr, dialOpts...)
 }
 
-// grpcBridge owns the direct (non-registered) runtime connection for a session.
+// grpcBridge owns the direct gRPC connection for a single session.
 type grpcBridge struct {
 	addr      string
 	agent     Agent
@@ -67,9 +70,10 @@ type grpcBridge struct {
 	sid      string
 	outbound chan *pb.ClientEvent
 
-	mu      sync.Mutex
-	running bool
-	stream  grpc.BidiStreamingClient[pb.ClientEvent, pb.RuntimeEvent]
+	mu           sync.Mutex
+	running      bool
+	serverClosed bool
+	stream       grpc.BidiStreamingClient[pb.ClientEvent, pb.RuntimeEvent]
 
 	customSTTPump *customSTTPump
 	customTTSPump *customTTSPump
@@ -104,7 +108,7 @@ func (b *grpcBridge) createSession(ctx context.Context) (string, error) {
 	cfg := b.buildSessionConfig()
 	resp, err := b.client.CreateSession(ctx, cfg)
 	if err != nil {
-		return "", fmt.Errorf("CreateSession failed: %w", err)
+		return "", fmt.Errorf("create session: %w", err)
 	}
 	if rej := resp.GetRejected(); rej != nil {
 		return "", fmt.Errorf("%w: %s — %s", ErrSessionRejected, rej.GetReason(), rej.GetMessage())
@@ -143,7 +147,10 @@ func (b *grpcBridge) buildSessionConfig() *pb.SessionConfig {
 }
 
 func (b *grpcBridge) destroySession() {
-	if b.client != nil && b.sid != "" {
+	b.mu.Lock()
+	serverClosed := b.serverClosed
+	b.mu.Unlock()
+	if b.client != nil && b.sid != "" && !serverClosed {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		_, err := b.client.DestroySession(ctx, &pb.DestroyRequest{SessionId: b.sid, Reason: "sdk_shutdown"})
 		cancel()
@@ -178,6 +185,16 @@ func (b *grpcBridge) enqueue(ev *pb.ClientEvent) error {
 	}
 }
 
+func (b *grpcBridge) enqueueResult(ev *pb.ClientEvent) {
+	t := time.NewTimer(28 * time.Second)
+	defer t.Stop()
+	select {
+	case b.outbound <- ev:
+	case <-t.C:
+		logger.Warnf("outbound full for 28s — tool result dropped (turn will time out)")
+	}
+}
+
 // ---- sessionTransport implementation ----
 
 func (b *grpcBridge) sendSay(text string, interruptCurrent bool, voice string, interruptible bool) error {
@@ -186,6 +203,9 @@ func (b *grpcBridge) sendSay(text string, interruptCurrent bool, voice string, i
 func (b *grpcBridge) sendCancelGeneration() error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_CancelGeneration{CancelGeneration: &pb.CancelGenerationCmd{}}})
 }
+func (b *grpcBridge) sendSetUserInputEnabled(enabled bool) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SetUserInputEnabled{SetUserInputEnabled: &pb.SetUserInputEnabledCmd{Enabled: enabled}}})
+}
 func (b *grpcBridge) sendGenerate(text string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_Generate{Generate: &pb.GenerateCmd{Text: text}}})
 }
@@ -193,19 +213,25 @@ func (b *grpcBridge) sendUpdateInstructions(s string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateInstructions{UpdateInstructions: &pb.UpdateInstructionsCmd{Instructions: s}}})
 }
 func (b *grpcBridge) sendUpdateTools(tools []*FunctionTool) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: toolSchemasFor(tools)}}})
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateTools{UpdateTools: &pb.UpdateToolsCmd{Tools: buildToolSchemas(tools)}}})
 }
 func (b *grpcBridge) sendUpdateProvider(component, provider string, params map[string]string) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateProvider{UpdateProvider: &pb.UpdateProviderCmd{Component: component, Provider: provider, Params: stringifyMap(params)}}})
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_UpdateProvider{UpdateProvider: &pb.UpdateProviderCmd{Component: component, Provider: provider, Params: copyAnyMap(params)}}})
 }
 func (b *grpcBridge) sendCallTransfer(transferTo, token string) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_CallTransfer{CallTransfer: &pb.CallTransferCmd{TransferTo: transferTo, Token: token}}})
 }
-func (b *grpcBridge) sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PlayBackgroundAudio{PlayBackgroundAudio: &pb.PlayBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), Looping: looping, PlaybackMode: playbackMode}}})
+func (b *grpcBridge) sendPublishMessage(topic, message, optionsJSON, payloadJSON string) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PublishMessage{PublishMessage: &pb.PublishMessageCmd{Topic: topic, Message: message, OptionsJson: optionsJSON, PayloadJson: payloadJSON}}})
 }
-func (b *grpcBridge) sendPreloadBackgroundAudio(url string, volume float64) error {
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PreloadBackgroundAudio{PreloadBackgroundAudio: &pb.PreloadBackgroundAudioCmd{FileUrl: url, Volume: float32(volume)}}})
+func (b *grpcBridge) sendSubscribePubSub(topic string) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SubscribePubsub{SubscribePubsub: &pb.SubscribePubSubCmd{Topic: topic}}})
+}
+func (b *grpcBridge) sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool, audioData []byte) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PlayBackgroundAudio{PlayBackgroundAudio: &pb.PlayBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), Looping: looping, PlaybackMode: playbackMode, AudioData: audioData}}})
+}
+func (b *grpcBridge) sendPreloadBackgroundAudio(url string, volume float64, audioData []byte) error {
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_PreloadBackgroundAudio{PreloadBackgroundAudio: &pb.PreloadBackgroundAudioCmd{FileUrl: url, Volume: float32(volume), AudioData: audioData}}})
 }
 func (b *grpcBridge) sendStopBackgroundAudio() error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_StopBackgroundAudio{StopBackgroundAudio: &pb.StopBackgroundAudioCmd{}}})
@@ -222,22 +248,28 @@ func (b *grpcBridge) sendPushAudioFrame(pcm []byte, sampleRate int) error {
 func (b *grpcBridge) sendSendImage(mimeType string, data []byte) error {
 	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SendImage{SendImage: &pb.SendImageCmd{MimeType: mimeType, Data: data}}})
 }
-func (b *grpcBridge) sendSendMessageWithFrames(text string, frames []frameData) error {
+func (b *grpcBridge) sendSendMessageWithFrames(text string, frames []frameData, numLatestFrames uint32) error {
 	var mf []*pb.MessageFrame
 	for _, f := range frames {
 		mf = append(mf, &pb.MessageFrame{MimeType: f.mimeType, Data: f.data})
 	}
-	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SendMessageWithFrames{SendMessageWithFrames: &pb.SendMessageWithFramesCmd{Text: text, Frames: mf}}})
+	return b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_SendMessageWithFrames{SendMessageWithFrames: &pb.SendMessageWithFramesCmd{Text: text, Frames: mf, NumLatestFrames: numLatestFrames}}})
 }
 
 func (b *grpcBridge) sendToolResult(callID, resultJSON string, isErr bool) {
-	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_ToolResult{ToolResult: &pb.ToolCallResponse{CallId: callID, ResultJson: resultJSON, IsError: isErr}}})
+	b.enqueueResult(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_ToolResult{ToolResult: &pb.ToolCallResponse{CallId: callID, ResultJson: resultJSON, IsError: isErr}}})
 }
 func (b *grpcBridge) sendModifyLLMToken(tokenID uint64, replacement string, drop bool) {
 	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_ModifyLlmToken{ModifyLlmToken: &pb.ModifyLLMTokenCmd{TokenId: tokenID, Replacement: replacement, Drop: drop}}})
 }
 func (b *grpcBridge) sendBeforeLLMResult(requestID, modifiedMessages string, skip bool) {
 	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, RequestId: requestID, Event: &pb.ClientEvent_BeforeLlmResult{BeforeLlmResult: &pb.BeforeLLMResponse{ModifiedMessagesJson: modifiedMessages, SkipTurn: skip}}})
+}
+func (b *grpcBridge) sendSTTHookResult(requestID, modifiedText string, drop bool) {
+	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, RequestId: requestID, Event: &pb.ClientEvent_SttHookResult{SttHookResult: &pb.SttHookResponse{RequestId: requestID, ModifiedText: modifiedText, Drop: drop}}})
+}
+func (b *grpcBridge) sendTTSHookResult(requestID, modifiedText string, drop bool) {
+	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, RequestId: requestID, Event: &pb.ClientEvent_TtsHookResult{TtsHookResult: &pb.TtsHookResponse{RequestId: requestID, ModifiedText: modifiedText, Drop: drop}}})
 }
 func (b *grpcBridge) sendCustomSTTResult(r CustomSTTResult) {
 	_ = b.enqueue(&pb.ClientEvent{SessionId: b.sid, Event: &pb.ClientEvent_CustomSttResult{CustomSttResult: &pb.CustomSttResult{UtteranceId: r.UtteranceID, Text: r.Text, IsFinal: r.IsFinal, Confidence: float32(r.Confidence), Language: r.Language, StartTimeUs: r.StartTimeUS, EndTimeUs: r.EndTimeUS}}})
@@ -286,14 +318,17 @@ func (b *grpcBridge) runEventLoop(ctx context.Context) {
 	}()
 
 	shouldClose := true
-	closeReason := "stream_closed_by_runtime"
+	closeReason := "stream_closed"
 	for {
 		ev, err := stream.Recv()
 		if err != nil {
-			if ctx.Err() == nil {
+			switch {
+			case errors.Is(err, io.EOF):
+				closeReason = "stream_closed"
+			case ctx.Err() == nil:
 				logger.Errorf("gRPC stream error: %v", err)
 				closeReason = "grpc_error"
-			} else {
+			default:
 				shouldClose = false
 			}
 			break
@@ -304,6 +339,9 @@ func (b *grpcBridge) runEventLoop(ctx context.Context) {
 	<-sendDone
 	b.mu.Lock()
 	b.running = false
+	if shouldClose {
+		b.serverClosed = true
+	}
 	b.mu.Unlock()
 	if shouldClose {
 		go func() {
@@ -322,7 +360,15 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 	switch ev := event.GetEvent().(type) {
 	case *pb.RuntimeEvent_ToolCall:
 		tc := ev.ToolCall
-		go executeTool(ctx, b.agent.base().tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(), b.sendToolResult)
+		active := s.ActiveAgent()
+		tools := active.base().tools
+		// Bind the session into ctx so a shared agent resolves this call's session.
+		go executeToolWithFiller(s.bindBus(ctx), tools, tc.GetCallId(), tc.GetToolName(), tc.GetArgumentsJson(),
+			toolFiller(tools, tc.GetToolName()),
+			toolFillerGracePeriod(tools, tc.GetToolName()),
+			// Non-interruptible so the filler plays fully before the tool-result response.
+			func(text string) { _ = b.sendSay(text, false, "", false) },
+			b.sendToolResult, s.interceptToolResult)
 	case *pb.RuntimeEvent_BeforeLlm:
 		go b.handleBeforeLLM(event.GetRequestId(), ev.BeforeLlm)
 	case *pb.RuntimeEvent_LlmTokenForReview:
@@ -331,6 +377,10 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		b.handleCustomSTTAudio(ev.CustomSttAudio)
 	case *pb.RuntimeEvent_CustomTtsSynthesize:
 		b.handleCustomTTSSynthesize(ev.CustomTtsSynthesize)
+	case *pb.RuntimeEvent_SttHook:
+		go b.handleSTTHook(event.GetRequestId(), ev.SttHook)
+	case *pb.RuntimeEvent_TtsHook:
+		go b.handleTTSHook(event.GetRequestId(), ev.TtsHook)
 	case *pb.RuntimeEvent_Error:
 		b.handleError(ev.Error)
 	case *pb.RuntimeEvent_Transcript:
@@ -351,6 +401,11 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		evWarning(s, ev.Warning)
 	case *pb.RuntimeEvent_Metrics:
 		evMetrics(s, ev.Metrics)
+	case *pb.RuntimeEvent_ComponentMetrics:
+		b.handleComponentMetrics(ev.ComponentMetrics)
+		evComponentMetrics(s, ev.ComponentMetrics)
+	case *pb.RuntimeEvent_TurnMetrics:
+		evTurnMetrics(s, ev.TurnMetrics)
 	case *pb.RuntimeEvent_Dtmf:
 		evDTMF(s, ev.Dtmf)
 	case *pb.RuntimeEvent_VisionFrame:
@@ -363,8 +418,8 @@ func (b *grpcBridge) handleRuntimeEvent(ctx context.Context, event *pb.RuntimeEv
 		evSignaling(s, ev.SignalingSessionAssigned.GetSessionId())
 	case *pb.RuntimeEvent_VoicemailDetected:
 		evVoicemail(s, ev.VoicemailDetected)
-	case *pb.RuntimeEvent_A2AMessage:
-		evA2A(s, ev.A2AMessage)
+	case *pb.RuntimeEvent_PubsubMessage:
+		evPubSubMessage(s, ev.PubsubMessage)
 	case *pb.RuntimeEvent_AgentSwitched:
 		evAgentSwitched(s, ev.AgentSwitched)
 	case *pb.RuntimeEvent_KbHits:
@@ -427,7 +482,6 @@ func (b *grpcBridge) handleError(err *pb.ErrorEvent) {
 	}
 	b.session.Emit("runtime_error", payload)
 	for _, h := range b.pipeline.Hooks.errorHooks {
-		h := h
 		safeHook("error", func() { h(payload) })
 	}
 	effectivelyFatal := err.GetIsFatal() || isUnrecoverableAuthError(err.GetComponent(), err.GetMessage())
@@ -438,10 +492,7 @@ func (b *grpcBridge) handleError(err *pb.ErrorEvent) {
 		b.mu.Lock()
 		b.running = false
 		b.mu.Unlock()
-		comp := err.GetComponent()
-		if comp == "" {
-			comp = "runtime"
-		}
+		comp := cmp.Or(err.GetComponent(), "runtime")
 		go b.session.Close(context.Background(), "fatal_error:"+comp)
 	}
 }
@@ -454,6 +505,42 @@ func (b *grpcBridge) handleBeforeLLM(requestID string, blh *pb.BeforeLLMHook) {
 func (b *grpcBridge) handleLLMTokenForReview(t *pb.LLMTokenForReviewEvent) {
 	replacement, drop := runLLMTokenReview(b.pipeline, t.GetText(), t.GetTokenId())
 	b.sendModifyLLMToken(t.GetTokenId(), replacement, drop)
+}
+
+func (b *grpcBridge) handleSTTHook(requestID string, ev *pb.SttHookEvent) {
+	modified, drop := runSTTHook(b.pipeline, ev)
+	b.sendSTTHookResult(requestID, modified, drop)
+}
+
+func (b *grpcBridge) handleTTSHook(requestID string, ev *pb.TtsHookEvent) {
+	modified, drop := runTTSHook(b.pipeline, ev)
+	b.sendTTSHookResult(requestID, modified, drop)
+}
+
+// handleComponentMetrics decodes a per-component metrics event and dispatches it
+// to hooks registered via pipeline.OnMetrics(component, ...).
+func (b *grpcBridge) handleComponentMetrics(cm *pb.ComponentMetricsEvent) {
+	hooks := b.pipeline.Hooks.metricsHooks(cm.GetComponent())
+	if len(hooks) == 0 {
+		return
+	}
+	var metrics map[string]any
+	if cm.GetMetricsJson() != "" {
+		if err := json.Unmarshal([]byte(cm.GetMetricsJson()), &metrics); err != nil {
+			logger.Debugf("component_metrics decode failed: %v", err)
+			return
+		}
+	}
+	for _, h := range hooks {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Errorf("%s metrics hook panicked: %v", cm.GetComponent(), r)
+				}
+			}()
+			h(metrics)
+		}()
+	}
 }
 
 func (b *grpcBridge) handleCustomSTTAudio(msg *pb.CustomSttAudioChunk) {
@@ -525,6 +612,74 @@ func runBeforeLLM(p *Pipeline, blh *pb.BeforeLLMHook) (string, bool) {
 	}
 }
 
+func runSTTHook(p *Pipeline, ev *pb.SttHookEvent) (string, bool) {
+	hook := p.Hooks.sttHook
+	if hook == nil {
+		return "", false
+	}
+	data := STTHookData{Text: ev.GetText(), Language: ev.GetLanguage(), IsFinal: ev.GetIsFinal(), TurnNumber: ev.GetTurnNumber()}
+	resultCh := make(chan *STTHookResult, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Errorf("stt_hook hook panicked: %v", r)
+				resultCh <- nil
+			}
+		}()
+		resultCh <- hook(data)
+	}()
+	select {
+	case res := <-resultCh:
+		if res == nil {
+			return "", false
+		}
+		if res.Drop {
+			return "", true
+		}
+		if res.ModifiedText != "" && res.ModifiedText != ev.GetText() {
+			return res.ModifiedText, false
+		}
+		return "", false
+	case <-time.After(beforeLLMHookTimeout):
+		logger.Warnf("stt_hook hook exceeded %.1fs SDK timeout; using original transcript", beforeLLMHookTimeout.Seconds())
+		return "", false
+	}
+}
+
+func runTTSHook(p *Pipeline, ev *pb.TtsHookEvent) (string, bool) {
+	hook := p.Hooks.ttsHook
+	if hook == nil {
+		return "", false
+	}
+	data := TTSHookData{Text: ev.GetText(), UtteranceID: ev.GetUtteranceId(), Voice: ev.GetVoice()}
+	resultCh := make(chan *TTSHookResult, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Errorf("tts_hook hook panicked: %v", r)
+				resultCh <- nil
+			}
+		}()
+		resultCh <- hook(data)
+	}()
+	select {
+	case res := <-resultCh:
+		if res == nil {
+			return "", false
+		}
+		if res.Drop {
+			return "", true
+		}
+		if res.ModifiedText != "" && res.ModifiedText != ev.GetText() {
+			return res.ModifiedText, false
+		}
+		return "", false
+	case <-time.After(beforeLLMHookTimeout):
+		logger.Warnf("tts_hook hook exceeded %.1fs SDK timeout; using original text", beforeLLMHookTimeout.Seconds())
+		return "", false
+	}
+}
+
 func runLLMTokenReview(p *Pipeline, text string, tokenID uint64) (string, bool) {
 	if hook := p.Hooks.llmStream; hook != nil {
 		repl, drop := hook(text, tokenID)
@@ -546,30 +701,4 @@ func runLLMTokenReview(p *Pipeline, text string, tokenID uint64) (string, bool) 
 		return "", dropped
 	}
 	return cur, dropped
-}
-
-func toolSchemasFor(tools []*FunctionTool) []*pb.ToolSchemaProto {
-	var protos []*pb.ToolSchemaProto
-	for _, t := range tools {
-		if !IsFunctionTool(t) {
-			continue
-		}
-		schema := t.Info.ParametersSchema
-		js := "{}"
-		if schema != nil {
-			if b, err := json.Marshal(schema); err == nil {
-				js = string(b)
-			}
-		}
-		protos = append(protos, &pb.ToolSchemaProto{Name: t.Info.Name, Description: t.Info.Description, ParametersJsonSchema: js})
-	}
-	return protos
-}
-
-func stringifyMap(m map[string]string) map[string]string {
-	out := make(map[string]string, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
 }

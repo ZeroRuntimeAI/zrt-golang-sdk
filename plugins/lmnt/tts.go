@@ -3,22 +3,26 @@ package lmnt
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the LMNT text-to-speech descriptor.
+// TTS is the LMNT text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the LMNT voice.
 	Voice string
+	// Model is the LMNT model.
 	Model string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures an LMNT TTS instance.
 type TTSOptions struct {
 	// APIKey overrides the LMNT_API_KEY environment variable.
 	APIKey string
-	Voice  string // default "ava"
-	Model  string // default "blizzard"
+	// Voice is the LMNT voice. Defaults to "ava".
+	Voice string
+	// Model is the LMNT model. Defaults to "blizzard".
+	Model string
 }
 
-// NewTTS builds a TTS.
+// NewTTS returns an LMNT TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{Voice: zrt.StrOr(opts.Voice, "ava"), Model: zrt.StrOr(opts.Model, "blizzard")}
 	t.InitTTS("lmnt", zrt.APIKeyOr(opts.APIKey, "LMNT_API_KEY"), 24000)
@@ -27,5 +31,5 @@ func NewTTS(opts TTSOptions) *TTS {
 
 // TTSConfig implements zrt.TTS.
 func (t *TTS) TTSConfig() zrt.TTSRuntimeConfig {
-	return zrt.TTSRuntimeConfig{Provider: "lmnt", Voice: t.Voice}
+	return zrt.TTSRuntimeConfig{Provider: "lmnt", Model: t.Model, Voice: t.Voice}
 }

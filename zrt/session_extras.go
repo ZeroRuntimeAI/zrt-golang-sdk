@@ -1,8 +1,10 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -35,12 +37,18 @@ func (s *AgentSession) boundJobCtx() *JobContext { return s.jobCtx }
 // UpdateInterruptConfigOptions configures UpdateInterruptConfig. nil fields are
 // left unchanged.
 type UpdateInterruptConfigOptions struct {
-	Mode                          *string
-	InterruptMinDuration          *float64
-	InterruptMinWords             *int
-	CooldownMS                    *int
+	// Mode is the interruption mode: "VAD_ONLY", "STT_ONLY", or "HYBRID" (case-insensitive).
+	Mode *string
+	// InterruptMinDuration is the minimum speech duration, in seconds, before an interruption is honored.
+	InterruptMinDuration *float64
+	// InterruptMinWords is the minimum number of words before an interruption is honored.
+	InterruptMinWords *int
+	// CooldownMS is the cooldown between interruptions, in milliseconds.
+	CooldownMS *int
+	// FalseInterruptPauseDurationMS is the pause length treated as a false interrupt, in milliseconds.
 	FalseInterruptPauseDurationMS *int
-	ResumeOnFalseInterrupt        *bool
+	// ResumeOnFalseInterrupt resumes the agent's turn after a false interrupt.
+	ResumeOnFalseInterrupt *bool
 }
 
 // UpdateInterruptConfig updates interruption behavior at runtime.
@@ -67,7 +75,7 @@ func (s *AgentSession) UpdateInterruptConfig(ctx context.Context, opts UpdateInt
 		params["false_interrupt_pause_duration_ms"] = strconv.Itoa(*opts.FalseInterruptPauseDurationMS)
 	}
 	if opts.ResumeOnFalseInterrupt != nil {
-		params["resume_on_false_interrupt"] = boolString(*opts.ResumeOnFalseInterrupt)
+		params["resume_on_false_interrupt"] = strconv.FormatBool(*opts.ResumeOnFalseInterrupt)
 	}
 	if len(params) == 0 {
 		return nil
@@ -75,30 +83,22 @@ func (s *AgentSession) UpdateInterruptConfig(ctx context.Context, opts UpdateInt
 	return s.UpdateProvider(ctx, "interrupt", "interrupt", params)
 }
 
-// WarmTransfer is not implemented in the thin SDK (use AgentSwitch for handoff).
+// WarmTransfer is not supported; use AgentSwitch for multi-agent handoff.
 func (s *AgentSession) WarmTransfer(ctx context.Context) error {
 	return fmt.Errorf("%w: AgentSession.WarmTransfer; use AgentSwitch(...) for multi-agent handoff", ErrNotImplemented)
 }
 
-// GetContextHistory returns the locally-cached conversation history (filtered).
-// Use FetchContextHistory to pull the authoritative history from the runtime.
-func (s *AgentSession) GetContextHistory(lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
+// ContextHistory returns the locally-cached conversation history, filtered by
+// the given options. Use FetchContextHistory to pull the authoritative history.
+func (s *AgentSession) ContextHistory(lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
 	s.mu.Lock()
 	source := s.chatHistoryCache
 	if len(source) == 0 && len(s.transcriptMirror) > 0 {
 		source = s.transcriptMirror
 	}
-	snap := make([]map[string]any, len(source))
-	copy(snap, source)
+	snap := slices.Clone(source)
 	s.mu.Unlock()
 	return filterHistory(snap, lastN, includeFunctionCalls, includeSystemMessages)
-}
-
-func boolString(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }
 
 // ---- RecordingManager ----
@@ -170,14 +170,14 @@ func statusString(s map[string]any, key string) string {
 
 // ---- AudioTrack ----
 
-// AudioTrack is a thin handle over the agent's outgoing audio.
+// AudioTrack is a handle to the agent's outgoing audio.
 type AudioTrack struct {
 	session         *AgentSession
 	sampleRate      int
 	lastAudioByteCB func(durationSeconds float64)
 }
 
-// AudioTrack returns the session's audio track (cached).
+// AudioTrack returns the session's outgoing audio track.
 func (s *AgentSession) AudioTrack() *AudioTrack {
 	s.mu.Lock()
 	if s.audioTrackCache != nil {
@@ -186,7 +186,7 @@ func (s *AgentSession) AudioTrack() *AudioTrack {
 		return t
 	}
 	sampleRate := 48000
-	if tts, ok := s.pipeline.TTS.(interface{ SampleRate() int }); ok && s.pipeline.TTS != nil {
+	if tts, ok := s.pipeline.tts.(interface{ SampleRate() int }); ok && s.pipeline.tts != nil {
 		sampleRate = tts.SampleRate()
 	}
 	t := &AudioTrack{session: s, sampleRate: sampleRate}
@@ -226,11 +226,9 @@ func (t *AudioTrack) CanPause() bool {
 	return v
 }
 
-// AddNewBytes pushes a raw PCM frame to the runtime.
+// AddNewBytes sends a raw PCM frame as the agent's outgoing audio.
 func (t *AudioTrack) AddNewBytes(ctx context.Context, pcm []byte, sampleRate int) error {
-	if sampleRate == 0 {
-		sampleRate = t.sampleRate
-	}
+	sampleRate = cmp.Or(sampleRate, t.sampleRate)
 	return t.session.PushAudioFrame(ctx, pcm, sampleRate)
 }
 

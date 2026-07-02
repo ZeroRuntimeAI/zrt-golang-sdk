@@ -39,57 +39,59 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
 
-	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/cartesia"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/deepgram"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/google"
-	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/rnnoise"
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/silero"
 	td "github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/turn_detector"
+	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// Assistant is your agent. Embed zrt.BaseAgent and implement OnEnter/OnExit.
+const agentID = "my-ai-agent"
+
+// Assistant is the agent. Embed zrt.BaseAgent and implement OnEnter/OnExit.
 type Assistant struct{ zrt.BaseAgent }
 
 func (a *Assistant) OnEnter(ctx context.Context) error {
-	_, err := a.Session().Say(ctx, "Hi! How can I help?")
+	_, err := a.Session(ctx).Say(ctx, "Hi! I'm your assistant. Ask me about the weather in any city.")
 	return err
 }
-func (a *Assistant) OnExit(ctx context.Context) error { return nil }
 
-func entrypoint(ctx context.Context, jobCtx *zrt.JobContext) error {
-	agent := &Assistant{BaseAgent: zrt.NewBaseAgent(zrt.AgentOptions{
-		Instructions: "You are a friendly voice assistant. Keep replies short.",
-	})}
+func (a *Assistant) OnExit(ctx context.Context) error {
+	_, err := a.Session(ctx).Say(ctx, "Thanks for calling. Goodbye!")
+	return err
+}
 
+func newAgent() zrt.Agent {
 	pipeline := zrt.NewPipeline(zrt.PipelineOptions{
-		STT: deepgram.NewSTT(deepgram.STTOptions{}),
-		LLM: google.NewLLM(google.LLMOptions{
-			Model: "gemini-2.5-flash", MaxOutputTokens: 8192,
-		}),
-		TTS:          cartesia.NewTTS(cartesia.TTSOptions{}),
-		VAD:          silero.NewVAD(silero.VADOptions{Threshold: zrt.Float64(0.4)}),
-		TurnDetector: td.NewNamoTurnDetectorV1("en", 0.8),
-		Denoise:      rnnoise.New(),
-		EOUConfig:    &zrt.EOUConfig{Mode: "ADAPTIVE", MinMaxSpeechWaitTimeout: []float64{0.1, 0.3}},
-		InterruptConfig: &zrt.InterruptConfig{
-			InterruptMinDuration: 0.5, InterruptMinWords: 2, ResumeOnFalseInterrupt: true,
-		},
+		STT:          deepgram.NewSTT(deepgram.STTOptions{Model: "nova-2-conversationalai"}),
+		LLM:          google.NewLLM(google.LLMOptions{Model: "gemini-3-flash-preview", ThinkingBudget: zrt.Int(0)}),
+		TTS:          cartesia.NewTTS(cartesia.TTSOptions{Model: "sonic-3.5"}),
+		VAD:          silero.NewVAD(silero.VADOptions{}),
+		TurnDetector: td.NewTurnDetector(td.TurnDetectorOptions{Model: td.ModelNamo, Language: "en", Threshold: 0.8}),
 	})
+	return &Assistant{BaseAgent: zrt.NewBaseAgent(zrt.AgentOptions{
+		Name:    "Assistant",
+		AgentID: agentID,
+		Instructions: "You are a friendly voice assistant. Keep replies short and natural."
+		Pipeline: pipeline
+	})}
+}
 
-	session := zrt.NewAgentSession(agent, pipeline, zrt.AgentSessionOptions{})
-	return session.Start(ctx, jobCtx, zrt.StartOptions{
-		WaitForParticipant: true,
-		RunUntilShutdown:   true,
-	})
+func startSession() {
+	res, err := zrt.Invoke(agentID, zrt.InvokeOptions{Room: &zrt.Room{Playground: zrt.Bool(true)}})
+	if err != nil {
+		log.Printf("invoke failed: %v", err)
+		return
+	}
 }
 
 func main() {
-	jobctx := func() *zrt.JobContext {
-		return zrt.NewJobContext(&zrt.RoomOptions{Name: "Assistant", Playground: true}, nil)
-	}
-	if err := zrt.NewWorkerJob(entrypoint, jobctx, nil).Start(); err != nil {
+
+	if err := zrt.Serve(newAgent(), zrt.ServeOptions{OnReady: startSession}); err != nil {
 		panic(err)
 	}
 }
@@ -103,18 +105,19 @@ go run .
 
 That's it — speech in → your agent → speech out, in real time.
 
-## Examples
-
-Full, runnable examples live in a dedicated repo:
-**[ZeroRuntimeAI/zrt-golang-sdk-examples](https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples)**
-
 ## How it works
 
-| Piece | What it is |
-|---|---|
-| **`zrt.Agent`** | Your behavior — instructions, tools, what it says on enter/exit. Embed `zrt.BaseAgent`. |
-| **`zrt.Pipeline`** | The voice stack: STT → LLM → TTS, plus VAD, turn detection, and denoising. |
-| **`zrt.WorkerJob`** | Runs your agent and connects it to Zero Runtime. |
+| Piece                                     | What it is                                                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zrt.Agent`                               | Your behavior — instructions, tools, what it says on enter/exit. Embed `zrt.BaseAgent` and implement `OnEnter`/`OnExit`. Carries its `Pipeline`. |
+| `zrt.Pipeline`                            | The voice stack: STT (hear) → LLM (think) → TTS (speak), plus VAD, turn detection, denoising.                                                    |
+| `zrt.Serve(agent, ServeOptions{...})`     | Registers the agent and listens for sessions. `SessionOptions` carries per-session features (DTMF, voicemail, wake-up, background audio).        |
+| `zrt.Invoke(agentID, InvokeOptions{...})` | Starts a session for a registered agent (returns a `PlaygroundURL`).                                                                             |
+
+Each example serves its agent and self-invokes one playground session on `OnReady`,
+then prints a joinable URL — just run it and open the printed link.
+
+More: https://github.com/ZeroRuntimeAI/zrt-golang-sdk-examples
 
 ## Give your agent tools
 
@@ -152,7 +155,7 @@ Mix and match — bring the best model for each stage, swap any one in a line.
 Each provider lives in `github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/<name>`:
 
 - **Speech-to-text (STT):** `deepgram`, `assemblyai`, `google`, `azure`, `gladia`, `nvidia`, `sarvamai`
-- **LLM:** `openai`, `google` (Gemini), `anthropic` (Claude), `groq`, `cerebras`, `xai` (Grok), `sarvamai`, `cometapi`
+- **LLM:** `openai`, `google` (Gemini), `anthropic` (Claude), `aws` (Bedrock), `groq`, `cerebras`, `xai` (Grok), `sarvamai`, `cometapi`
 - **Text-to-speech (TTS):** `cartesia`, `elevenlabs`, `google`, `aws`, `azure`, `rime`, `lmnt`, `neuphonic`, `humeai`, `inworldai`, `murfai`, `resemble`, `smallestai`, `speechify`, `cambai`, `papla`, `nvidia`, `sarvamai`, `groq`
 - **Realtime speech-to-speech:** `openai_realtime`, `gemini_realtime` (Gemini Live), `ultravox`, `xai` (realtime), `azure` (Voice Live)
 - **Turn detection:** `turn_detector` / `navana` (Namo) · **VAD:** `silero` · **Denoise:** `rnnoise`
@@ -187,32 +190,63 @@ pipeline.OnEOUDetected(func(prob float64, waitMS uint32, text string) { /* ... *
 pipeline.OnFirstAudioByte(func(ttfbMS, byteCount uint32) { /* ... */ })
 ```
 
-## Registered-agent mode
+## Serve & invoke
 
-For multi-session workers, set `Register: true` on `Options`. The SDK registers
-once and the runtime dispatches sessions to your worker over a single stream:
+For multi-session workers, give your agent an `AgentID` and a pipeline, then
+`Serve` it. `Serve` registers the agent with the ZRT registry over a WebSocket
+connection and listens — it does **not** start a session on its own. Call `Invoke`
+to start one (from anywhere: a script, a CLI, a web handler). Scale out by running
+more `Serve` workers.
 
 ```go
-opts := zrt.NewWorkerOptions()
-opts.Register = true
-opts.AgentID = "my-agent"
-opts.MaxProcesses = 10
-zrt.NewWorkerJob(entrypoint, jobctx, opts).Start()
+// The agent embeds BaseAgent built with AgentOptions{AgentID: "my-agent"}.
+agent := NewAssistant(pipeline)
+
+// Serve registers and blocks. OnReady fires once registration is confirmed
+// call Invoke to kick off a session for local testing.
+zrt.Serve(agent, zrt.ServeOptions{
+    OnReady: func() {
+        res, err := zrt.Invoke("my-agent", zrt.InvokeOptions{})
+        if err == nil && res.PlaygroundURL != "" {
+            fmt.Println("Join the playground:", res.PlaygroundURL)
+        }
+    },
+})
+```
+
+**Per-call isolation.** The example above shares one agent across every concurrent
+session. For stateful agents, set `AgentFactory` so each call gets a fresh agent +
+pipeline — per-call state and pipeline hooks then never collide between concurrent
+calls. `Serve` also sets this call's dispatch data on the agent (`Metadata()`,
+`RoomID()`) before `OnEnter`:
+
+```go
+zrt.Serve(nil, zrt.ServeOptions{
+    AgentFactory: func() zrt.Agent { return NewAssistant(buildPipeline()) },
+    OnReady:      func() { zrt.Invoke("my-agent", zrt.InvokeOptions{}) },
+})
+```
+
+Or invoke from a separate process once the worker is serving:
+
+```go
+res, _ := zrt.Invoke("my-agent", zrt.InvokeOptions{Room: &zrt.Room{RoomID: "existing-room"}})
+fmt.Println("session:", res.SessionID, "worker:", res.WorkerID)
 ```
 
 ## Environment variables
 
-| Var | Purpose |
-|---|---|
-| `ZRT_RUNTIME_ADDRESS` | Runtime gRPC address |
-| `ZRT_AUTH_TOKEN` | Pre-minted auth token |
-| `ZRT_API_KEY` + `ZRT_SECRET_KEY` | Mint a JWT if no token is set |
-| `ZRT_RUNTIME_INSECURE` | `1` to use an insecure (non-TLS) channel |
-| `ZRT_SIGNALING_URL` | Signaling/API base (default `api.videosdk.live`) |
-| `<PROVIDER>_API_KEY` | Provider keys (e.g. `DEEPGRAM_API_KEY`, `CARTESIA_API_KEY`) |
+| Var                              | Purpose                                                     |
+| -------------------------------- | ----------------------------------------------------------- |
+| `ZRT_RUNTIME_ADDRESS`            | Runtime gRPC address                                        |
+| `ZRT_AUTH_TOKEN`                 | Pre-minted auth token                                       |
+| `ZRT_API_KEY` + `ZRT_SECRET_KEY` | Mint a JWT if no token is set                               |
+| `ZRT_RUNTIME_INSECURE`           | `1` to use an insecure (non-TLS) channel                    |
+| `ZRT_SIGNALING_URL`              | Signaling/API base (default `api.videosdk.live`)            |
+| `<PROVIDER>_API_KEY`             | Provider keys (e.g. `DEEPGRAM_API_KEY`, `CARTESIA_API_KEY`) |
 
 ## Contact
 
-support@videosdk.live
+support@zeroruntime.ai
 
 Copyright © 2026 Zujo Tech Pvt Ltd. All rights reserved.

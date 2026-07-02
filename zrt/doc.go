@@ -1,9 +1,8 @@
 // Package zrt is the Go SDK for Zero Runtime (ZRT).
 //
-// You author voice agents — instructions, tools, and logic — and the ZRT cloud
-// runtime executes the real-time speech-to-speech pipeline (media, VAD, turn
-// detection, STT, LLM, TTS) for you. The agent-facing API lives in
-// this package; provider descriptors live under
+// You author voice agents — instructions, tools, and logic — and ZRT runs the
+// real-time speech-to-speech pipeline (media, VAD, turn detection, STT, LLM,
+// TTS). The agent-facing API lives in this package; provider plugins live under
 // github.com/ZeroRuntimeAI/zrt-golang-sdk/plugins/<name>.
 //
 // # Quickstart
@@ -25,10 +24,9 @@
 // # Configuration
 //
 // Provider plugins read their API key from the environment when the Options
-// APIKey field is left empty (for example deepgram reads DEEPGRAM_API_KEY). The
-// runtime endpoint and credentials are read from ZRT_RUNTIME_ADDRESS and
-// ZRT_AUTH_TOKEN (or ZRT_API_KEY + ZRT_SECRET_KEY). See each plugin's Options
-// type for the exact variable it uses.
+// APIKey field is left empty (for example deepgram reads DEEPGRAM_API_KEY).
+// Credentials are read from ZRT_AUTH_TOKEN (or ZRT_API_KEY + ZRT_SECRET_KEY).
+// See each plugin's Options type for the exact variable it uses.
 //
 // # Errors
 //

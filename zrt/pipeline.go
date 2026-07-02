@@ -1,7 +1,9 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
+	"slices"
 	"sync"
 )
 
@@ -15,42 +17,63 @@ var DefaultSTTFilterPatterns = []string{
 
 // CustomSTTAudioChunk is raw audio handed to a custom STT hook.
 type CustomSTTAudioChunk struct {
-	PCM            []byte
-	SampleRate     uint32
-	UtteranceID    string
+	// PCM is the raw PCM audio payload.
+	PCM []byte
+	// SampleRate is the audio sample rate in Hz.
+	SampleRate uint32
+	// UtteranceID identifies the utterance this chunk belongs to.
+	UtteranceID string
+	// EndOfUtterance marks the final chunk of the utterance.
 	EndOfUtterance bool
 }
 
 // CustomSTTResult is a transcript produced by a custom STT hook.
 type CustomSTTResult struct {
+	// UtteranceID identifies the utterance this transcript belongs to.
 	UtteranceID string
-	Text        string
-	IsFinal     bool
-	Confidence  float64
-	Language    string
+	// Text is the transcript text.
+	Text string
+	// IsFinal reports whether this is the final transcript for the utterance.
+	IsFinal bool
+	// Confidence is the recognition confidence, from 0 to 1.
+	Confidence float64
+	// Language is the detected or configured language code.
+	Language string
+	// StartTimeUS is the utterance start time in microseconds.
 	StartTimeUS uint64
-	EndTimeUS   uint64
+	// EndTimeUS is the utterance end time in microseconds.
+	EndTimeUS uint64
 }
 
 // CustomTTSSynthesize is a synthesis request handed to a custom TTS hook.
 type CustomTTSSynthesize struct {
-	Text        string
+	// Text is the text to synthesize.
+	Text string
+	// UtteranceID identifies the utterance this request belongs to.
 	UtteranceID string
-	Voice       string
+	// Voice is the requested voice id.
+	Voice string
 }
 
 // CustomTTSAudioChunk is synthesized audio produced by a custom TTS hook.
 type CustomTTSAudioChunk struct {
-	UtteranceID    string
-	PCM            []byte
-	SampleRate     uint32
+	// UtteranceID identifies the utterance this chunk belongs to.
+	UtteranceID string
+	// PCM is the synthesized PCM audio payload.
+	PCM []byte
+	// SampleRate is the audio sample rate in Hz.
+	SampleRate uint32
+	// EndOfSynthesis marks the final chunk of the synthesized audio.
 	EndOfSynthesis bool
 }
 
 // BeforeLLMData is delivered to a before-LLM hook.
 type BeforeLLMData struct {
-	Messages   []any
+	// Messages is the LLM input messages for the turn.
+	Messages []any
+	// TokenCount is the estimated token count of the input messages.
 	TokenCount uint32
+	// TurnNumber is the current turn number.
 	TurnNumber uint32
 }
 
@@ -73,6 +96,56 @@ type CustomTTSHook func(requests <-chan CustomTTSSynthesize) <-chan CustomTTSAud
 // and whether to drop the token.
 type LLMStreamHook func(text string, tokenID uint64) (replacement string, drop bool)
 
+// STTHookData is the final transcript the runtime offers to the hook
+// before it reaches the LLM (hook mode: real server-side STT + a hook).
+type STTHookData struct {
+	// Text is the transcript text offered to the hook.
+	Text string
+	// Language is the detected or configured language code.
+	Language string
+	// IsFinal reports whether this is the final transcript for the turn.
+	IsFinal bool
+	// TurnNumber is the current turn number.
+	TurnNumber uint32
+}
+
+// STTHookResult is what a STT hook returns. ModifiedText
+// empty (or equal to the original) keeps the transcript; Drop skips the turn.
+type STTHookResult struct {
+	// ModifiedText replaces the transcript; empty (or equal to the original)
+	// keeps it unchanged.
+	ModifiedText string
+	// Drop, if true, skips the turn.
+	Drop bool
+}
+
+// STTHookFunc rewrites a final transcript before the LLM sees it.
+type STTHookFunc func(STTHookData) *STTHookResult
+
+// TTSHookData is a text segment the runtime offers to the hook before the
+// real server-side TTS synthesizes it.
+type TTSHookData struct {
+	// Text is the text segment offered to the hook.
+	Text string
+	// UtteranceID identifies the utterance this segment belongs to.
+	UtteranceID string
+	// Voice is the voice id used for synthesis.
+	Voice string
+}
+
+// TTSHookResult is what a TTS hook returns. ModifiedText empty
+// (or equal to the original) keeps the text; Drop skips synthesizing the segment.
+type TTSHookResult struct {
+	// ModifiedText replaces the segment text; empty (or equal to the original)
+	// keeps it unchanged.
+	ModifiedText string
+	// Drop, if true, skips synthesizing the segment.
+	Drop bool
+}
+
+// TTSHookFunc rewrites a text segment before server-side synthesis.
+type TTSHookFunc func(TTSHookData) *TTSHookResult
+
 // hookNamesAutoEnable lists hook names that are automatically enabled when registered.
 var hookNamesAutoEnable = map[string]bool{"llm": true, "llm_stream": true, "llm_messages": true}
 
@@ -85,6 +158,9 @@ type PipelineHooks struct {
 	llmStream LLMStreamHook
 
 	beforeLLM func(BeforeLLMData) *BeforeLLMResult
+
+	sttHook STTHookFunc
+	ttsHook TTSHookFunc
 
 	generationStarted    []func(turnNumber uint32)
 	generationComplete   []func(turnNumber uint32, wasInterrupted bool)
@@ -108,8 +184,16 @@ type PipelineHooks struct {
 	recordingFailed      []func(status map[string]any)
 	visionFrame          []func(frame map[string]any)
 	audioDelta           []func(frame map[string]any)
+	metrics              map[string][]func(metrics map[string]any)
 
 	registered map[string]bool
+}
+
+// metricsHooks returns the registered metrics callbacks for a component.
+func (h *PipelineHooks) metricsHooks(component string) []func(map[string]any) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.metrics[component]
 }
 
 func (h *PipelineHooks) mark(name string) {
@@ -133,35 +217,56 @@ func (h *PipelineHooks) registeredNames() []string {
 func (h *PipelineHooks) hasSTTStreamHook() bool { return h.customSTT != nil }
 func (h *PipelineHooks) hasTTSStreamHook() bool { return h.customTTS != nil }
 
-// Pipeline configures the voice stack the runtime executes.
+// Pipeline configures the agent's voice stack (STT, LLM, TTS, and related
+// components) and holds its event hooks.
 type Pipeline struct {
 	EventEmitter
 
-	STT          STT
-	LLM          LLMLike
-	TTS          TTS
-	VAD          VAD
-	TurnDetector EOU
-	Denoise      *Denoise
+	stt          STT
+	llm          LLMLike
+	tts          TTS
+	vad          VAD
+	turnDetector EOU
+	denoise      *Denoise
+	avatar       Avatar
 
-	EOUConfig         *EOUConfig
-	InterruptConfig   *InterruptConfig
-	ContextWindow     *ContextWindow
+	// EOUConfig configures end-of-utterance detection; nil uses defaults.
+	EOUConfig *EOUConfig
+	// InterruptConfig configures interruption handling; nil uses defaults.
+	InterruptConfig *InterruptConfig
+	// ContextWindow configures conversation context management; nil uses defaults.
+	ContextWindow *ContextWindow
+	// VoiceMailDetector configures voicemail detection; nil disables it.
 	VoiceMailDetector *VoiceMailDetector
-	RealtimeConfig    *RealtimeConfig
+	// RealtimeConfig configures realtime (speech-to-speech) mode; nil uses defaults.
+	RealtimeConfig *RealtimeConfig
 
-	LLMStreamHookEnabled   bool
+	// LLMStreamHookEnabled enables the per-token LLM stream review hook.
+	LLMStreamHookEnabled bool
+	// LLMStreamHookTimeoutMS bounds the per-token stream hook in milliseconds.
+	// Defaults to 100.
 	LLMStreamHookTimeoutMS int
-	PlaybackGraceMS        int
+	// PlaybackGraceMS is the playback grace period in milliseconds.
+	PlaybackGraceMS int
+	// InactivityTimeoutSeconds is how long the session may go without user
+	// activity before it ends; nil uses the default.
+	InactivityTimeoutSeconds *int
 
-	STTFilterPatterns    []string
+	// STTFilterPatterns are the transcript filter regexes applied by the runtime.
+	STTFilterPatterns []string
+	// STTWordSubstitutions maps recognized words to replacements in transcripts.
 	STTWordSubstitutions map[string]string
 
-	// Sentence buffer knobs (0 -> runtime defaults of 5/3/3).
-	SentenceMinClauseLen   int
+	// Sentence buffering thresholds. Leave a field at 0 to use the default.
+
+	// SentenceMinClauseLen is the minimum clause length for sentence buffering.
+	SentenceMinClauseLen int
+	// SentenceFirstClauseLen is the first-clause length threshold for sentence buffering.
 	SentenceFirstClauseLen int
+	// SentenceMinSentenceLen is the minimum sentence length for sentence buffering.
 	SentenceMinSentenceLen int
 
+	// Hooks holds the pipeline's registered event hooks.
 	Hooks *PipelineHooks
 	agent Agent
 
@@ -174,23 +279,44 @@ const visionFrameBufferMax = 5
 
 // PipelineOptions configures a Pipeline.
 type PipelineOptions struct {
-	STT                    STT
-	LLM                    LLMLike
-	TTS                    TTS
-	VAD                    VAD
-	TurnDetector           EOU
-	Denoise                *Denoise
-	EOUConfig              *EOUConfig
-	InterruptConfig        *InterruptConfig
-	ContextWindow          *ContextWindow
-	VoiceMailDetector      *VoiceMailDetector
-	RealtimeConfig         *RealtimeConfig
-	LLMStreamHookEnabled   bool
+	// STT is the speech-to-text provider; nil disables STT.
+	STT STT
+	// LLM is the language model; nil disables the LLM.
+	LLM LLMLike
+	// TTS is the text-to-speech provider; nil disables TTS.
+	TTS TTS
+	// VAD is the voice-activity detector; nil disables VAD.
+	VAD VAD
+	// TurnDetector is the end-of-utterance detector; nil disables it.
+	TurnDetector EOU
+	// Denoise is the audio denoiser; nil disables denoising.
+	Denoise *Denoise
+	// Avatar is the avatar provider; nil disables the avatar.
+	Avatar Avatar
+	// EOUConfig configures end-of-utterance detection; nil uses defaults.
+	EOUConfig *EOUConfig
+	// InterruptConfig configures interruption handling; nil uses defaults.
+	InterruptConfig *InterruptConfig
+	// ContextWindow configures conversation context management; nil uses defaults.
+	ContextWindow *ContextWindow
+	// VoiceMailDetector configures voicemail detection; nil disables it.
+	VoiceMailDetector *VoiceMailDetector
+	// RealtimeConfig configures realtime (speech-to-speech) mode; nil uses defaults.
+	RealtimeConfig *RealtimeConfig
+	// LLMStreamHookEnabled enables the per-token LLM stream review hook.
+	LLMStreamHookEnabled bool
+	// LLMStreamHookTimeoutMS bounds the per-token stream hook in milliseconds.
+	// Defaults to 100.
 	LLMStreamHookTimeoutMS int
-	PlaybackGraceMS        int
+	// PlaybackGraceMS is the playback grace period in milliseconds.
+	PlaybackGraceMS int
+	// InactivityTimeoutSeconds is how long the session may go without user
+	// activity before it ends. nil uses the default.
+	InactivityTimeoutSeconds *int
 	// STTFilterPatterns overrides the default filter regexes. A nil slice uses
 	// DefaultSTTFilterPatterns; pass an empty (non-nil) slice to disable.
-	STTFilterPatterns    []string
+	STTFilterPatterns []string
+	// STTWordSubstitutions maps recognized words to replacements in transcripts.
 	STTWordSubstitutions map[string]string
 }
 
@@ -198,42 +324,62 @@ type PipelineOptions struct {
 func NewPipeline(opts PipelineOptions) *Pipeline {
 	patterns := opts.STTFilterPatterns
 	if patterns == nil {
-		patterns = append([]string(nil), DefaultSTTFilterPatterns...)
+		patterns = slices.Clone(DefaultSTTFilterPatterns)
 	}
-	timeout := opts.LLMStreamHookTimeoutMS
-	if timeout == 0 {
-		timeout = 100
-	}
+	timeout := cmp.Or(opts.LLMStreamHookTimeoutMS, 100)
 	p := &Pipeline{
-		STT:                    opts.STT,
-		LLM:                    opts.LLM,
-		TTS:                    opts.TTS,
-		VAD:                    opts.VAD,
-		TurnDetector:           opts.TurnDetector,
-		Denoise:                opts.Denoise,
-		EOUConfig:              opts.EOUConfig,
-		InterruptConfig:        opts.InterruptConfig,
-		ContextWindow:          opts.ContextWindow,
-		VoiceMailDetector:      opts.VoiceMailDetector,
-		RealtimeConfig:         opts.RealtimeConfig,
-		LLMStreamHookEnabled:   opts.LLMStreamHookEnabled,
-		LLMStreamHookTimeoutMS: timeout,
-		PlaybackGraceMS:        opts.PlaybackGraceMS,
-		STTFilterPatterns:      patterns,
-		STTWordSubstitutions:   opts.STTWordSubstitutions,
-		Hooks:                  &PipelineHooks{},
+		stt:                      opts.STT,
+		llm:                      opts.LLM,
+		tts:                      opts.TTS,
+		vad:                      opts.VAD,
+		turnDetector:             opts.TurnDetector,
+		denoise:                  opts.Denoise,
+		avatar:                   opts.Avatar,
+		EOUConfig:                opts.EOUConfig,
+		InterruptConfig:          opts.InterruptConfig,
+		ContextWindow:            opts.ContextWindow,
+		VoiceMailDetector:        opts.VoiceMailDetector,
+		RealtimeConfig:           opts.RealtimeConfig,
+		LLMStreamHookEnabled:     opts.LLMStreamHookEnabled,
+		LLMStreamHookTimeoutMS:   timeout,
+		PlaybackGraceMS:          opts.PlaybackGraceMS,
+		InactivityTimeoutSeconds: opts.InactivityTimeoutSeconds,
+		STTFilterPatterns:        patterns,
+		STTWordSubstitutions:     opts.STTWordSubstitutions,
+		Hooks:                    &PipelineHooks{},
 	}
 	return p
 }
 
 func (p *Pipeline) setAgent(a Agent) { p.agent = a }
 
+// STT returns the pipeline's configured speech-to-text provider (nil if unset).
+func (p *Pipeline) STT() STT { return p.stt }
+
+// LLM returns the pipeline's configured language model (nil if unset).
+func (p *Pipeline) LLM() LLMLike { return p.llm }
+
+// TTS returns the pipeline's configured text-to-speech provider (nil if unset).
+func (p *Pipeline) TTS() TTS { return p.tts }
+
+// VAD returns the pipeline's configured voice-activity detector (nil if unset).
+func (p *Pipeline) VAD() VAD { return p.vad }
+
+// TurnDetector returns the pipeline's configured end-of-utterance detector (nil if unset).
+func (p *Pipeline) TurnDetector() EOU { return p.turnDetector }
+
+// Denoise returns the pipeline's configured denoiser (nil if unset).
+func (p *Pipeline) Denoise() *Denoise { return p.denoise }
+
+// Avatar returns the pipeline's configured avatar provider (nil if unset).
+func (p *Pipeline) Avatar() Avatar { return p.avatar }
+
 // ---- hook registration (typed, all on the Pipeline for convenience) ----
 
-// OnCustomSTT registers a custom speech-to-text hook (sets the stt stream hook).
+// OnCustomSTT registers a custom speech-to-text hook for the pipeline.
 func (p *Pipeline) OnCustomSTT(h CustomSTTHook) { p.Hooks.customSTT = h; p.Hooks.mark("stt") }
 
-// OnCustomTTS registers a custom text-to-speech hook (sets the tts stream hook).
+// OnCustomTTS registers a custom text-to-speech hook for the pipeline.
 func (p *Pipeline) OnCustomTTS(h CustomTTSHook) { p.Hooks.customTTS = h; p.Hooks.mark("tts") }
 
 // OnLLMStream registers a per-token LLM review hook.
@@ -243,6 +389,39 @@ func (p *Pipeline) OnLLMStream(h LLMStreamHook) { p.Hooks.llmStream = h; p.Hooks
 func (p *Pipeline) OnBeforeLLM(h func(BeforeLLMData) *BeforeLLMResult) {
 	p.Hooks.beforeLLM = h
 	p.Hooks.mark("llm_messages")
+}
+
+// OnSTTHook registers a hook that rewrites the final transcript before
+// it reaches the LLM. Requires a real server-side STT provider (hook mode).
+func (p *Pipeline) OnSTTHook(h STTHookFunc) {
+	p.Hooks.sttHook = h
+	p.Hooks.mark("stt_hook")
+}
+
+// OnTTSHook registers a hook that rewrites a text segment before the real
+// server-side TTS synthesizes it. Requires a real server-side TTS provider.
+func (p *Pipeline) OnTTSHook(h TTSHookFunc) {
+	p.Hooks.ttsHook = h
+	p.Hooks.mark("tts_hook")
+}
+
+// metricsComponents is the set of components the runtime emits metrics for.
+var metricsComponents = map[string]bool{"stt": true, "llm": true, "tts": true, "eou": true, "realtime": true}
+
+// OnMetrics registers a component-level observability hook. component is one of
+// "stt", "llm", "tts", "eou", "realtime"; the callback receives a per-turn
+// metrics map (latency, TTFB, token counts) emitted by the runtime.
+func (p *Pipeline) OnMetrics(component string, h func(metrics map[string]any)) {
+	if !metricsComponents[component] {
+		logger.Warnf("unknown metrics component %q", component)
+		return
+	}
+	p.Hooks.mu.Lock()
+	if p.Hooks.metrics == nil {
+		p.Hooks.metrics = map[string][]func(map[string]any){}
+	}
+	p.Hooks.metrics[component] = append(p.Hooks.metrics[component], h)
+	p.Hooks.mu.Unlock()
 }
 
 // OnLLMTokenForReview registers a fallback per-token review hook.
@@ -397,19 +576,15 @@ func (p *Pipeline) PushAudioFrame(frame map[string]any) {
 	}
 }
 
-// GetLatestFrames returns up to n most-recent buffered vision frames.
-func (p *Pipeline) GetLatestFrames(n int) []map[string]any {
+// LatestFrames returns up to n most-recent buffered vision frames.
+func (p *Pipeline) LatestFrames(n int) []map[string]any {
 	if n <= 0 {
 		return nil
 	}
 	p.frameMu.Lock()
 	defer p.frameMu.Unlock()
-	if n > len(p.frameBuffer) {
-		n = len(p.frameBuffer)
-	}
-	out := make([]map[string]any, n)
-	copy(out, p.frameBuffer[len(p.frameBuffer)-n:])
-	return out
+	n = min(n, len(p.frameBuffer))
+	return slices.Clone(p.frameBuffer[len(p.frameBuffer)-n:])
 }
 
 func fireFrameHook(h func(map[string]any), frame map[string]any) {
@@ -424,26 +599,29 @@ func fireFrameHook(h func(map[string]any), frame map[string]any) {
 // Config returns the resolved pipeline topology (mode + active components).
 func (p *Pipeline) Config() PipelineConfigInfo {
 	components := map[PipelineComponent]bool{}
-	if p.STT != nil {
+	if p.stt != nil {
 		components[ComponentSTT] = true
 	}
-	if p.LLM != nil {
+	if p.llm != nil {
 		components[ComponentLLM] = true
 	}
-	if p.TTS != nil {
+	if p.tts != nil {
 		components[ComponentTTS] = true
 	}
-	if p.VAD != nil {
+	if p.vad != nil {
 		components[ComponentVAD] = true
 	}
-	if p.TurnDetector != nil {
+	if p.turnDetector != nil {
 		components[ComponentTurnDetector] = true
 	}
-	if p.Denoise != nil {
+	if p.denoise != nil {
 		components[ComponentDenoise] = true
 	}
-	isRealtime := llmIsRealtime(p.LLM) || (p.RealtimeConfig != nil && p.RealtimeConfig.Mode != "")
-	hasSTT, hasLLM, hasTTS := p.STT != nil, p.LLM != nil, p.TTS != nil
+	if p.avatar != nil {
+		components[ComponentAvatar] = true
+	}
+	isRealtime := llmIsRealtime(p.llm) || (p.RealtimeConfig != nil && p.RealtimeConfig.Mode != "")
+	hasSTT, hasLLM, hasTTS := p.stt != nil, p.llm != nil, p.tts != nil
 	if isRealtime {
 		components[ComponentRealtimeModel] = true
 		rtMode := RealtimeModeFullS2S
@@ -487,9 +665,13 @@ func (p *Pipeline) Config() PipelineConfigInfo {
 
 // PipelineConfigInfo describes the resolved pipeline topology.
 type PipelineConfigInfo struct {
-	Mode             PipelineMode
-	RealtimeMode     RealtimeMode
-	IsRealtime       bool
+	// Mode is the resolved pipeline mode.
+	Mode PipelineMode
+	// RealtimeMode is the resolved realtime sub-mode; only meaningful when IsRealtime is true.
+	RealtimeMode RealtimeMode
+	// IsRealtime reports whether the pipeline runs in realtime (speech-to-speech) mode.
+	IsRealtime bool
+	// ActiveComponents is the set of components active in the pipeline.
 	ActiveComponents map[PipelineComponent]bool
 }
 
@@ -498,25 +680,26 @@ func (c PipelineConfigInfo) HasComponent(comp PipelineComponent) bool {
 	return c.ActiveComponents[comp]
 }
 
-// ChangePipeline mutates pipeline slots at runtime (nil values are ignored).
+// ChangePipeline swaps pipeline components at runtime. Nil fields in opts leave
+// the corresponding component unchanged.
 func (p *Pipeline) ChangePipeline(opts PipelineOptions) {
 	if opts.STT != nil {
-		p.STT = opts.STT
+		p.stt = opts.STT
 	}
 	if opts.LLM != nil {
-		p.LLM = opts.LLM
+		p.llm = opts.LLM
 	}
 	if opts.TTS != nil {
-		p.TTS = opts.TTS
+		p.tts = opts.TTS
 	}
 	if opts.VAD != nil {
-		p.VAD = opts.VAD
+		p.vad = opts.VAD
 	}
 	if opts.TurnDetector != nil {
-		p.TurnDetector = opts.TurnDetector
+		p.turnDetector = opts.TurnDetector
 	}
 	if opts.Denoise != nil {
-		p.Denoise = opts.Denoise
+		p.denoise = opts.Denoise
 	}
 }
 

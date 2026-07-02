@@ -2,21 +2,26 @@ package azure
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Azure text-to-speech descriptor.
+// TTS is the Azure text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
-	Voice        string
+	// Voice is the Azure voice name.
+	Voice string
+	// SpeechRegion is the Azure service region.
 	SpeechRegion string
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures an Azure TTS instance.
 type TTSOptions struct {
-	SpeechKey    string
-	SpeechRegion string // default from AZURE_REGION, else "eastus"
-	Voice        string // default "en-US-JennyNeural"
+	// SpeechKey overrides the AZURE_SPEECH_KEY environment variable.
+	SpeechKey string
+	// SpeechRegion is the Azure region. Defaults to AZURE_REGION, or "eastus".
+	SpeechRegion string
+	// Voice is the Azure voice. Defaults to "en-US-JennyNeural".
+	Voice string
 }
 
-// NewTTS builds a TTS.
+// NewTTS returns an Azure TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
 	t := &TTS{
 		Voice:        zrt.StrOr(opts.Voice, "en-US-JennyNeural"),

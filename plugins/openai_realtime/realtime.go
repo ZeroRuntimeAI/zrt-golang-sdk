@@ -7,50 +7,65 @@ import (
 	"github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 )
 
-// TurnDetectionConfig configures turn detection.
+// TurnDetectionConfig controls how the model decides the user has stopped
+// speaking.
 type TurnDetectionConfig struct {
-	Type              string // default "server_vad"
-	Threshold         float64
-	PrefixPaddingMS   int
+	Type string // default "server_vad"
+	// Threshold is the VAD activation threshold. Defaults to 0.5.
+	Threshold float64
+	// PrefixPaddingMS is the audio retained before detected speech, in ms. Defaults to 300.
+	PrefixPaddingMS int
+	// SilenceDurationMS is the trailing silence that ends a turn, in ms. Defaults to 200.
 	SilenceDurationMS int
-	CreateResponse    bool
+	// CreateResponse triggers a model response when a turn ends. Defaults to true.
+	CreateResponse bool
+	// InterruptResponse lets new user speech interrupt an in-progress response. Defaults to true.
 	InterruptResponse bool
 }
 
-// DefaultTurnDetectionConfig returns the default turn detection config.
+// DefaultTurnDetectionConfig returns the default server-VAD turn detection
+// settings.
 func DefaultTurnDetectionConfig() *TurnDetectionConfig {
 	return &TurnDetectionConfig{Type: "server_vad", Threshold: 0.5, PrefixPaddingMS: 300, SilenceDurationMS: 200, CreateResponse: true, InterruptResponse: true}
 }
 
-// InputAudioTranscriptionConfig configures input transcription.
+// InputAudioTranscriptionConfig selects the model used to transcribe the user's
+// speech.
 type InputAudioTranscriptionConfig struct {
 	Model string // default "gpt-4o-mini-transcribe"
 }
 
-// RealtimeOptions configures Realtime.
+// RealtimeOptions configures an OpenAI Realtime model. The zero value is valid;
+// empty and nil fields fall back to the defaults noted below.
 type RealtimeOptions struct {
-	// APIKey overrides the OPENAI_API_KEY environment variable.
+	// APIKey authenticates with OpenAI. Overrides the OPENAI_API_KEY
+	// environment variable.
 	APIKey                  string
 	Model                   string   // default "gpt-4o-realtime-preview"
 	Voice                   string   // default "alloy"
 	Modalities              []string // default ["text","audio"]
 	Temperature             *float64 // default 0.8
 	MaxResponseOutputTokens string   // default "inf"
-	TurnDetection           *TurnDetectionConfig
+	// TurnDetection configures end-of-turn detection. nil = DefaultTurnDetectionConfig.
+	TurnDetection *TurnDetectionConfig
+	// InputAudioTranscription configures user-speech transcription. nil = default "gpt-4o-mini-transcribe".
 	InputAudioTranscription *InputAudioTranscriptionConfig
 	ToolChoice              string // default "auto"
 }
 
-// Realtime is the OpenAI Realtime model descriptor.
+// Realtime is a configured OpenAI Realtime speech-to-speech model.
 type Realtime struct {
 	zrt.BaseRealtime
-	Model      string
-	Voice      string
+	// Model is the resolved OpenAI Realtime model id.
+	Model string
+	// Voice is the resolved output voice name.
+	Voice string
+	// Modalities is the resolved list of response modalities.
 	Modalities []string
 	params     map[string]string
 }
 
-// NewRealtime builds a Realtime from opts.
+// NewRealtime returns an OpenAI Realtime model configured from opts.
 func NewRealtime(opts RealtimeOptions) *Realtime {
 	model := zrt.StrOr(opts.Model, "gpt-4o-realtime-preview")
 	voice := zrt.StrOr(opts.Voice, "alloy")
@@ -80,8 +95,8 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 		params["turn_detection_threshold"] = zrt.FloatStr(td.Threshold)
 		params["turn_detection_prefix_padding_ms"] = strconv.Itoa(td.PrefixPaddingMS)
 		params["turn_detection_silence_duration_ms"] = strconv.Itoa(td.SilenceDurationMS)
-		params["turn_detection_create_response"] = boolStr(td.CreateResponse)
-		params["turn_detection_interrupt_response"] = boolStr(td.InterruptResponse)
+		params["turn_detection_create_response"] = zrt.BoolStr(td.CreateResponse)
+		params["turn_detection_interrupt_response"] = zrt.BoolStr(td.InterruptResponse)
 	}
 	r := &Realtime{Model: model, Voice: voice, Modalities: modalities, params: params}
 	r.Init("openai_realtime", zrt.APIKeyOr(opts.APIKey, "OPENAI_API_KEY"))
@@ -91,11 +106,4 @@ func NewRealtime(opts RealtimeOptions) *Realtime {
 // RealtimeInfo implements zrt.RealtimeModel.
 func (r *Realtime) RealtimeInfo() zrt.RealtimeInfo {
 	return zrt.RealtimeInfo{Model: r.Model, Voice: r.Voice, Params: r.params, ResponseModalities: r.Modalities}
-}
-
-func boolStr(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }

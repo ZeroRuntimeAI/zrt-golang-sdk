@@ -1,40 +1,61 @@
 package zrt
 
-import "context"
+import (
+	"cmp"
+	"context"
+	"slices"
+)
 
 // Agent is the behavior contract: instructions, tools, and lifecycle hooks.
 //
 // Embed BaseAgent in your own type and implement OnEnter/OnExit:
 //
 //	type Assistant struct{ zrt.BaseAgent }
-//	func (a *Assistant) OnEnter(ctx context.Context) error { _, err := a.Session().Say(ctx, "Hi!"); return err }
+//	func (a *Assistant) OnEnter(ctx context.Context) error { _, err := a.Session(ctx).Say(ctx, "Hi!"); return err }
 //	func (a *Assistant) OnExit(ctx context.Context) error  { return nil }
 type Agent interface {
 	// OnEnter is called once the session is live (after any wait-for-participant).
 	OnEnter(ctx context.Context) error
 	// OnExit is called as the session closes.
 	OnExit(ctx context.Context) error
-	// base exposes the embedded BaseAgent to the SDK.
 	base() *BaseAgent
 }
 
 // NamedAgent is an alternate agent definition usable for in-call handoff.
 type NamedAgent struct {
-	AgentID      string
+	// AgentID is the handle used to select this agent during handoff.
+	AgentID string
+	// Instructions are the system instructions for this alternate agent.
 	Instructions string
-	Tools        []*FunctionTool
-	Greeting     string
+	// Tools are the function tools available to this alternate agent.
+	Tools []*FunctionTool
+	// Greeting is this alternate agent's opening line, if any.
+	Greeting string
 }
 
 // AgentOptions configures a BaseAgent.
 type AgentOptions struct {
-	Instructions             string
-	Tools                    []*FunctionTool
-	AgentID                  string
-	MCPServers               []MCPServer
-	InheritContext           bool
-	KnowledgeBase            *KnowledgeBase
-	Greeting                 string
+	// Instructions are the agent's system instructions.
+	Instructions string
+	// Name is the agent's display name; also used as the id fallback.
+	Name string
+	// Pipeline is the agent's voice pipeline.
+	Pipeline *Pipeline
+	// MaxSessionDurationSeconds caps the session length. nil means no cap.
+	MaxSessionDurationSeconds *int
+	// Tools are the function tools available to the agent.
+	Tools []*FunctionTool
+	// AgentID is the agent's registration handle. Defaults to Name, then "Agent".
+	AgentID string
+	// MCPServers are the MCP servers the agent can reach for tools.
+	MCPServers []MCPServer
+	// InheritContext, when true, carries the conversation context into this agent on handoff.
+	InheritContext bool
+	// KnowledgeBase is the retrieval knowledge base for the agent, if any.
+	KnowledgeBase *KnowledgeBase
+	// Greeting is the agent's opening line, if any.
+	Greeting string
+	// GreetingNonInterruptible, when true, plays the greeting without allowing barge-in.
 	GreetingNonInterruptible bool
 	// VoiceSuffix overrides the spoken-style suffix. nil means "not set", which
 	// (with AppendVoiceSuffix) appends the default voice suffix.
@@ -43,28 +64,36 @@ type AgentOptions struct {
 	AppendVoiceSuffix *bool
 	// Alternates are additional named agents for in-call handoff.
 	Alternates []*NamedAgent
-	// ContextWindow configures server-side context management for this agent.
+	// Agents are the agents reachable from this agent via handoff.
+	Agents []Agent
+	// ContextWindow configures context management for this agent.
 	ContextWindow *ContextWindow
 }
 
-// BaseAgent holds an agent's configuration and SDK wiring. Embed it.
+// BaseAgent holds an agent's configuration. Embed it in your agent type.
 type BaseAgent struct {
-	instructions             string
-	tools                    []*FunctionTool
-	id                       string
-	mcpServers               []MCPServer
-	inheritContext           bool
-	knowledgeBase            *KnowledgeBase
-	greeting                 string
-	greetingNonInterruptible bool
-	voiceSuffix              *string
-	appendVoiceSuffix        bool
-	alternates               []*NamedAgent
-	cw                       *ContextWindow
+	instructions              string
+	name                      string
+	pipeline                  *Pipeline
+	maxSessionDurationSeconds *int
+	tools                     []*FunctionTool
+	id                        string
+	mcpServers                []MCPServer
+	inheritContext            bool
+	knowledgeBase             *KnowledgeBase
+	greeting                  string
+	greetingNonInterruptible  bool
+	voiceSuffix               *string
+	appendVoiceSuffix         bool
+	alternates                []*NamedAgent
+	handoffAgents             []Agent
+	cw                        *ContextWindow
 
 	session                  *AgentSession
 	thinkingBackgroundConfig map[string]any
 	preloadBGAudio           [][2]any
+	metadata                 map[string]any
+	roomID                   string
 
 	beforeLLMHook          bool
 	llmStreamHookEnabled   bool
@@ -73,62 +102,123 @@ type BaseAgent struct {
 
 // NewBaseAgent builds a BaseAgent from opts. Embed the result in your agent type.
 func NewBaseAgent(opts AgentOptions) BaseAgent {
-	appendSuffix := true
-	if opts.AppendVoiceSuffix != nil {
-		appendSuffix = *opts.AppendVoiceSuffix
-	}
-	id := opts.AgentID
-	if id == "" {
-		id = "Agent"
-	}
 	return BaseAgent{
-		instructions:             opts.Instructions,
-		tools:                    append([]*FunctionTool(nil), opts.Tools...),
-		id:                       id,
-		mcpServers:               opts.MCPServers,
-		inheritContext:           opts.InheritContext,
-		knowledgeBase:            opts.KnowledgeBase,
-		greeting:                 opts.Greeting,
-		greetingNonInterruptible: opts.GreetingNonInterruptible,
-		voiceSuffix:              opts.VoiceSuffix,
-		appendVoiceSuffix:        appendSuffix,
-		alternates:               opts.Alternates,
-		cw:                       opts.ContextWindow,
-		llmStreamHookTimeoutMS:   100,
+		instructions:              opts.Instructions,
+		name:                      opts.Name,
+		pipeline:                  opts.Pipeline,
+		maxSessionDurationSeconds: opts.MaxSessionDurationSeconds,
+		tools:                     slices.Clone(opts.Tools),
+		id:                        cmp.Or(opts.AgentID, opts.Name, "Agent"),
+		mcpServers:                opts.MCPServers,
+		inheritContext:            opts.InheritContext,
+		knowledgeBase:             opts.KnowledgeBase,
+		greeting:                  opts.Greeting,
+		greetingNonInterruptible:  opts.GreetingNonInterruptible,
+		voiceSuffix:               opts.VoiceSuffix,
+		appendVoiceSuffix:         BoolOr(opts.AppendVoiceSuffix, true),
+		alternates:                opts.Alternates,
+		handoffAgents:             slices.Clone(opts.Agents),
+		cw:                        opts.ContextWindow,
+		llmStreamHookTimeoutMS:    100,
+		metadata:                  map[string]any{},
 	}
 }
+
+// *BaseAgent is itself a usable Agent (default no-op OnEnter/OnExit).
+var _ Agent = (*BaseAgent)(nil)
+
+// NewAgent builds a BaseAgent from opts and returns a pointer to it. The result
+// is usable directly with no-op lifecycle hooks, or embed BaseAgent to override
+// OnEnter/OnExit.
+func NewAgent(opts AgentOptions) *BaseAgent {
+	a := NewBaseAgent(opts)
+	return &a
+}
+
+// OnEnter is the default no-op lifecycle hook; override it by embedding BaseAgent.
+func (a *BaseAgent) OnEnter(ctx context.Context) error { return nil }
+
+// OnExit is the default no-op lifecycle hook; override it by embedding BaseAgent.
+func (a *BaseAgent) OnExit(ctx context.Context) error { return nil }
 
 //lint:ignore U1000 base is called on Agent values throughout the SDK and is satisfied by external types that embed BaseAgent, which staticcheck cannot see in-package.
 func (a *BaseAgent) base() *BaseAgent { return a }
 
-// contextWindow returns the agent's configured context window (nil-safe).
+// contextWindow returns the agent's configured context window (nil if unset).
 func (a *BaseAgent) contextWindow() *ContextWindow { return a.cw }
 
 // Instructions returns the system instructions.
 func (a *BaseAgent) Instructions() string { return a.instructions }
 
-// SetInstructions replaces the system instructions (local copy only; use
-// AgentSession.UpdateInstructions to push to the runtime).
+// SetInstructions replaces the system instructions locally. Use
+// AgentSession.UpdateInstructions to apply them to a live session.
 func (a *BaseAgent) SetInstructions(v string) { a.instructions = v }
 
-// ID returns the agent id.
+// ID returns the agent's registration handle, used by Serve and Invoke. It is
+// derived from AgentOptions.AgentID, then Name.
 func (a *BaseAgent) ID() string { return a.id }
+
+// AgentID is an alias for ID.
+func (a *BaseAgent) AgentID() string { return a.id }
+
+// Name returns the agent's display name (falls back to the id when unset).
+func (a *BaseAgent) Name() string { return cmp.Or(a.name, a.id) }
+
+// Pipeline returns the agent's voice pipeline (nil if it has none).
+func (a *BaseAgent) Pipeline() *Pipeline { return a.pipeline }
+
+// Metadata returns this call's dispatch metadata, set by Serve before OnEnter.
+// It is never nil.
+func (a *BaseAgent) Metadata() map[string]any {
+	if a.metadata == nil {
+		a.metadata = map[string]any{}
+	}
+	return a.metadata
+}
+
+// RoomID returns this call's room id, set by Serve before OnEnter (empty when
+// unknown).
+func (a *BaseAgent) RoomID() string { return a.roomID }
+
+// MaxSessionDurationSeconds returns the per-agent session-duration cap (nil if unset).
+func (a *BaseAgent) MaxSessionDurationSeconds() *int { return a.maxSessionDurationSeconds }
+
+// Greeting returns the agent's opening line, if any.
+func (a *BaseAgent) Greeting() string { return a.greeting }
+
+// InheritContext reports whether this agent inherits the conversation context
+// when handed off to.
+func (a *BaseAgent) InheritContext() bool { return a.inheritContext }
+
+// HandoffAgents returns the agents reachable from this agent via handoff
+// (configured through AgentOptions.Agents).
+func (a *BaseAgent) HandoffAgents() []Agent { return a.handoffAgents }
 
 // Tools returns the registered tools.
 func (a *BaseAgent) Tools() []*FunctionTool { return a.tools }
 
-// UpdateTools replaces the local tool set (use AgentSession.UpdateTools to push).
+// UpdateTools replaces the tool set locally. Use AgentSession.UpdateTools to
+// apply them to a live session.
 func (a *BaseAgent) UpdateTools(tools []*FunctionTool) {
-	a.tools = append([]*FunctionTool(nil), tools...)
+	a.tools = slices.Clone(tools)
 }
 
-// Session returns the bound AgentSession (nil before start).
-func (a *BaseAgent) Session() *AgentSession { return a.session }
+// Session returns the AgentSession this agent is handling for the current call.
+// Pass the ctx from OnEnter, a tool handler, or an event callback so that an
+// agent shared across concurrent sessions resolves the correct one per call.
+// Falls back to the most recently attached session when ctx carries no binding,
+// and is nil before the session starts.
+func (a *BaseAgent) Session(ctx context.Context) *AgentSession {
+	if s := SessionFromContext(ctx); s != nil {
+		return s
+	}
+	return a.session
+}
 
 // Hangup ends the call.
 func (a *BaseAgent) Hangup(ctx context.Context) error {
-	if a.session != nil {
-		return a.session.Hangup(ctx, "manual_hangup")
+	if s := a.Session(ctx); s != nil {
+		return s.Hangup(ctx, "manual_hangup")
 	}
 	return nil
 }
@@ -145,29 +235,35 @@ func (a *BaseAgent) SetThinkingAudio(file string, volume float64) {
 
 // PlayBackgroundAudio plays a background audio file.
 func (a *BaseAgent) PlayBackgroundAudio(ctx context.Context, file string, volume float64, looping bool) error {
-	if a.session == nil || file == "" {
+	s := a.Session(ctx)
+	if s == nil || file == "" {
 		return nil
 	}
-	return a.session.PlayBackgroundAudio(ctx, map[string]any{"file_url": file, "volume": volume, "looping": looping})
+	return s.PlayBackgroundAudio(ctx, map[string]any{"file_url": file, "volume": volume, "looping": looping})
 }
 
 // StopBackgroundAudio stops background audio playback.
 func (a *BaseAgent) StopBackgroundAudio(ctx context.Context) error {
-	if a.session == nil {
+	s := a.Session(ctx)
+	if s == nil {
 		return nil
 	}
-	return a.session.StopBackgroundAudio(ctx)
+	return s.StopBackgroundAudio(ctx)
 }
 
 // PreloadBackgroundAudio preloads a background audio file.
 func (a *BaseAgent) PreloadBackgroundAudio(ctx context.Context, file string, volume float64) error {
-	if a.session == nil || file == "" {
+	s := a.Session(ctx)
+	if s == nil || file == "" {
 		return nil
 	}
-	return a.session.PreloadBackgroundAudio(ctx, map[string]any{"file_url": file, "volume": volume})
+	return s.PreloadBackgroundAudio(ctx, map[string]any{"file_url": file, "volume": volume})
 }
 
-// CaptureFrames returns the latest buffered vision frames (most recent last).
+// CaptureFrames returns up to numFrames of the latest buffered vision frames
+// (most recent last). It reads the most recently attached session, so use it
+// only when this agent handles a single session; otherwise capture frames via
+// Session(ctx) directly.
 func (a *BaseAgent) CaptureFrames(numFrames int) []map[string]any {
 	if numFrames <= 0 {
 		numFrames = 1
@@ -175,5 +271,5 @@ func (a *BaseAgent) CaptureFrames(numFrames int) []map[string]any {
 	if a.session == nil || a.session.pipeline == nil {
 		return nil
 	}
-	return a.session.pipeline.GetLatestFrames(numFrames)
+	return a.session.pipeline.LatestFrames(numFrames)
 }

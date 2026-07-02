@@ -1,15 +1,23 @@
 package zrt
 
-import "os"
+import (
+	"cmp"
+	"os"
+)
 
 // Denoise is a noise-reduction descriptor.
 type Denoise struct {
-	providerName    string
-	ModelID         string
+	providerName string
+	// ModelID is the provider model identifier.
+	ModelID string
+	// ModelSampleRate is the sample rate (Hz) the model expects.
 	ModelSampleRate int
-	ChunkMS         int
-	GatewayToken    string
-	BaseURL         string
+	// ChunkMS is the audio chunk size in milliseconds.
+	ChunkMS int
+	// GatewayToken is the auth token for the denoise gateway.
+	GatewayToken string
+	// BaseURL overrides the denoise gateway base URL.
+	BaseURL string
 
 	hasModelSampleRate bool
 	hasChunkMS         bool
@@ -17,20 +25,24 @@ type Denoise struct {
 
 // DenoiseOptions configures a Denoise descriptor.
 type DenoiseOptions struct {
-	Provider        string
-	ModelID         string
+	// Provider is the denoise provider name (e.g. "rnnoise", "sanas", "aicoustics").
+	Provider string
+	// ModelID is the provider model identifier.
+	ModelID string
+	// ModelSampleRate is the sample rate (Hz) the model expects; nil leaves it unset.
 	ModelSampleRate *int
-	ChunkMS         *int
-	GatewayToken    string
-	BaseURL         string
+	// ChunkMS is the audio chunk size in milliseconds; nil leaves it unset.
+	ChunkMS *int
+	// GatewayToken is the auth token for the denoise gateway. Defaults to the
+	// ZRT_AUTH_TOKEN environment variable.
+	GatewayToken string
+	// BaseURL overrides the denoise gateway base URL.
+	BaseURL string
 }
 
 // NewDenoise builds a Denoise descriptor.
 func NewDenoise(opts DenoiseOptions) *Denoise {
-	gw := opts.GatewayToken
-	if gw == "" {
-		gw = os.Getenv("ZRT_AUTH_TOKEN")
-	}
+	gw := cmp.Or(opts.GatewayToken, os.Getenv("ZRT_AUTH_TOKEN"))
 	d := &Denoise{
 		providerName: opts.Provider,
 		ModelID:      opts.ModelID,
@@ -56,22 +68,16 @@ func DenoiseRNNoise() *Denoise { return NewDenoise(DenoiseOptions{Provider: "rnn
 
 // DenoiseSanas builds a Sanas denoiser.
 func DenoiseSanas(modelID string, sampleRate, chunkMS int, gatewayToken, baseURL string) *Denoise {
-	if modelID == "" {
-		modelID = "VI_G_NC3.0"
-	}
-	if sampleRate == 0 {
-		sampleRate = 16000
-	}
-	if chunkMS == 0 {
-		chunkMS = 20
-	}
+	modelID = cmp.Or(modelID, "VI_G_NC3.0")
+	sampleRate = cmp.Or(sampleRate, 16000)
+	chunkMS = cmp.Or(chunkMS, 20)
 	return NewDenoise(DenoiseOptions{Provider: "sanas", ModelID: modelID, ModelSampleRate: &sampleRate, ChunkMS: &chunkMS, GatewayToken: gatewayToken, BaseURL: baseURL})
 }
 
 // DenoiseAicoustics builds an ai-coustics denoiser.
 func DenoiseAicoustics(modelID string, sampleRate, chunkMS int, gatewayToken, baseURL string) *Denoise {
 	if modelID == "" {
-		modelID = "sparrow-xxs-48khz"
+		modelID = "rook-l-48khz"
 	}
 	if sampleRate == 0 {
 		sampleRate = 48000

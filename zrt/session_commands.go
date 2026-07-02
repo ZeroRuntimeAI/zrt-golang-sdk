@@ -1,9 +1,11 @@
 package zrt
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
@@ -11,27 +13,30 @@ import (
 
 // StartOptions configures AgentSession.Start.
 type StartOptions struct {
-	WaitForParticipant          bool
-	RunUntilShutdown            bool
+	// WaitForParticipant holds OnEnter until a participant joins.
+	WaitForParticipant bool
+	// RunUntilShutdown makes Start block until the session closes.
+	RunUntilShutdown bool
+	// SIPHangupOnShutdown hangs up the SIP call when the session shuts down.
 	SIPHangupOnShutdown         bool
 	WaitForParticipantTimeoutMS int // default 60000
-	WaitForAudioStream          bool
-	RuntimeOptions              map[string]string
-	SessionID                   string
+	// WaitForAudioStream additionally waits for the participant's audio stream before OnEnter.
+	WaitForAudioStream bool
+	// RuntimeOptions passes extra key/value options to the runtime.
+	RuntimeOptions map[string]string
+	// SessionID is an optional caller-chosen session id.
+	SessionID string
 	// RuntimeAddress overrides ZRT_RUNTIME_ADDRESS.
 	RuntimeAddress string
 }
 
-// Start connects the session to the runtime and runs the agent.
+// Start connects the session and runs the agent.
 //
 // jobCtx may be nil for standalone use (a minimal room config is derived). When
-// RunUntilShutdown is true, Start blocks until the session closes.
+// opts.RunUntilShutdown is true, Start blocks until the session closes.
 func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts StartOptions) error {
 	logger.Infof("Starting AgentSession...")
-	timeout := opts.WaitForParticipantTimeoutMS
-	if timeout == 0 {
-		timeout = 60000
-	}
+	timeout := cmp.Or(opts.WaitForParticipantTimeoutMS, 60000)
 	s.mu.Lock()
 	s.agentState = AgentStateStarting
 	s.waitForParticipant = opts.WaitForParticipant
@@ -48,7 +53,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		md := jobCtx.Metadata
 		isSIP := md["sipCallTo"] != nil || md["sipCallFrom"] != nil
 		if ct, ok := md["callType"].(string); ok {
-			isSIP = isSIP || hasPrefixFold(ct, "sip")
+			isSIP = isSIP || strings.HasPrefix(strings.ToLower(ct), "sip")
 		}
 		if isSIP && !s.waitForAudioStreamExplicit {
 			s.mu.Lock()
@@ -79,26 +84,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		logger.Warnf("auto recording config skipped: %v", err)
 	}
 
-	// Registration probe: capture agent + pipeline, then abort before connecting.
-	if jobCtx != nil && jobCtx.registrationProbe {
-		jobCtx.capturedAgent = s.agent
-		jobCtx.capturedPipeline = s.pipeline
-		jobCtx.capturedRecording = s.recording
-		return errRegistrationProbeComplete
-	}
-
-	// Registered-agent mode: bind to the registry instead of opening a channel.
-	if jobCtx != nil && jobCtx.registeredMode {
-		return s.startBound(ctx, jobCtx, opts.RunUntilShutdown)
-	}
-
-	runtimeAddr := opts.RuntimeAddress
-	if runtimeAddr == "" {
-		runtimeAddr = os.Getenv("ZRT_RUNTIME_ADDRESS")
-	}
-	if runtimeAddr == "" {
-		runtimeAddr = "localhost:50051"
-	}
+	runtimeAddr := cmp.Or(opts.RuntimeAddress, os.Getenv("ZRT_RUNTIME_ADDRESS"), "localhost:50051")
 
 	room, err := s.resolveRoomConfig(jobCtx)
 	if err != nil {
@@ -112,6 +98,7 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 	s.transport = bridge
 	sid, err := bridge.createSession(ctx)
 	if err != nil {
+		logger.Errorf("createSession failed — session will not start: %v", err)
 		return err
 	}
 	s.mu.Lock()
@@ -128,8 +115,17 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 		bridge.runEventLoop(ctx)
 	}()
 
+	if isConsoleMode() {
+		return driveConsoleEngine(ctx, s, room)
+	}
+
 	s.awaitParticipantIfNeeded(ctx)
-	if err := s.agent.OnEnter(ctx); err != nil {
+	if s.dtmfHandler != nil {
+		if err := s.SubscribePubSub(ctx, dtmfPubSubTopic, s.onDTMFPubSub); err != nil {
+			logger.Errorf("Failed to subscribe to DTMF pub/sub topic: %v", err)
+		}
+	}
+	if err := s.agent.OnEnter(s.bindBus(ctx)); err != nil {
 		logger.Errorf("on_enter error: %v", err)
 	}
 	if s.wakeUp > 0 && s.onWakeUp != nil {
@@ -147,46 +143,13 @@ func (s *AgentSession) Start(ctx context.Context, jobCtx *JobContext, opts Start
 	return nil
 }
 
-func (s *AgentSession) startBound(ctx context.Context, jobCtx *JobContext, runUntilShutdown bool) error {
-	registry := jobCtx.registeredRegistry
-	sid := jobCtx.registeredSessionID
-	s.mu.Lock()
-	s.sessionID = sid
-	s.registeredSession = sid
-	s.boundRegistry = registry
-	s.transport = &registryTransport{registry: registry, sid: sid}
-	s.agentState = AgentStateIdle
-	s.mu.Unlock()
-	if registry != nil {
-		registry.bindSession(sid, s)
-	}
-	logger.Infof("Bound AgentSession to runtime session %s", sid)
-	s.Emit("agent_state_changed", map[string]any{"state": AgentStateIdle})
-	s.emitMeetingJoinedOnce()
-	s.awaitParticipantIfNeeded(ctx)
-	if err := s.agent.OnEnter(ctx); err != nil {
-		logger.Errorf("on_enter error: %v", err)
-	}
-	if s.wakeUp > 0 && s.onWakeUp != nil {
-		go s.wakeUpWatcher()
-	}
-	if runUntilShutdown {
-		select {
-		case <-s.shutdownCh:
-		case <-ctx.Done():
-		}
-		s.Close(context.Background(), "sdk_close")
-	}
-	return nil
-}
-
 func (s *AgentSession) resolveRoomConfig(jobCtx *JobContext) (roomConfigData, error) {
 	if jobCtx == nil || jobCtx.RoomOptions == nil {
 		return roomConfigData{AgentName: "Agent", SendLogsToDashboard: true}, nil
 	}
 	opts := jobCtx.RoomOptions
 	if opts.RoomID == "" {
-		if _, err := jobCtx.GetRoomID(); err != nil {
+		if _, err := jobCtx.RoomID(); err != nil {
 			logger.Warnf("Auto room creation skipped: %v", err)
 		}
 	}
@@ -194,7 +157,7 @@ func (s *AgentSession) resolveRoomConfig(jobCtx *JobContext) (roomConfigData, er
 	return roomConfigData{
 		RoomID:                      opts.RoomID,
 		AuthToken:                   token,
-		AgentName:                   orDefault(opts.Name, "Agent"),
+		AgentName:                   cmp.Or(opts.Name, "Agent"),
 		AutoEndSession:              opts.AutoEndSession,
 		SessionTimeoutSeconds:       opts.SessionTimeoutSeconds,
 		NoParticipantTimeoutSeconds: opts.NoParticipantTimeoutSeconds,
@@ -214,10 +177,7 @@ func (s *AgentSession) maybeAutoRecording(jobCtx *JobContext) error {
 	}
 	bucket := os.Getenv("ZRT_RECORDING_S3_BUCKET")
 	if bucket != "" {
-		region := os.Getenv("ZRT_RECORDING_S3_REGION")
-		if region == "" {
-			region = "us-east-1"
-		}
+		region := cmp.Or(os.Getenv("ZRT_RECORDING_S3_REGION"), "us-east-1")
 		s.recording = &RecordingConfig{
 			Enabled: true, AutoStart: true, Format: "ogg_opus", ChannelMode: "dual_channel",
 			Storage: &S3StorageConfig{
@@ -245,11 +205,14 @@ func (s *AgentSession) Say(ctx context.Context, message string) (*UtteranceHandl
 
 // SayOptions configures Say.
 type SayOptions struct {
+	// Interruptible allows the caller to interrupt the utterance.
 	Interruptible bool
-	Voice         string
+	// Voice overrides the TTS voice for this utterance; empty uses the pipeline default.
+	Voice string
 }
 
-// SayWith speaks message with options.
+// SayWith speaks message via TTS using opts to control voice and
+// interruptibility, and returns a handle that completes on playback.
 func (s *AgentSession) SayWith(ctx context.Context, message string, opts SayOptions) (*UtteranceHandle, error) {
 	handle := NewUtteranceHandle("", opts.Interruptible)
 	s.mu.Lock()
@@ -272,10 +235,49 @@ func (s *AgentSession) Reply(ctx context.Context, instructions string, waitForPl
 	if t == nil {
 		return handle, ErrSessionNotStarted
 	}
-	if err := t.sendSay(instructions, true, "", true); err != nil {
+	if err := t.sendGenerate(instructions); err != nil {
 		return handle, err
 	}
 	if waitForPlayback {
+		handle.Wait()
+	}
+	return handle, nil
+}
+
+// ReplyOptions configures ReplyWith.
+type ReplyOptions struct {
+	// WaitForPlayback blocks until playback completes before returning.
+	WaitForPlayback bool
+	// Frames attaches image frames to the reply.
+	Frames []MessageFrame
+	// LatestFrames includes this many most-recent buffered vision frames when
+	// Frames is empty.
+	LatestFrames int
+}
+
+// ReplyWith generates a context-aware reply following instructions, with options
+// to attach image frames and wait for playback, and returns its utterance handle.
+func (s *AgentSession) ReplyWith(ctx context.Context, instructions string, opts ReplyOptions) (*UtteranceHandle, error) {
+	handle := NewUtteranceHandle("", true)
+	s.mu.Lock()
+	s.currentUtterance = handle
+	t := s.transport
+	s.mu.Unlock()
+	if t == nil {
+		return handle, ErrSessionNotStarted
+	}
+	if len(opts.Frames) > 0 {
+		if err := s.SendMessageWithFrames(ctx, instructions, opts.Frames); err != nil {
+			return handle, err
+		}
+	} else if opts.LatestFrames > 0 {
+		if err := t.sendSendMessageWithFrames(instructions, nil, uint32(opts.LatestFrames)); err != nil {
+			return handle, err
+		}
+	} else if err := t.sendSay(instructions, true, "", true); err != nil {
+		return handle, err
+	}
+	if opts.WaitForPlayback {
 		handle.Wait()
 	}
 	return handle, nil
@@ -311,7 +313,16 @@ func (s *AgentSession) CancelGeneration(ctx context.Context) error {
 	return nil
 }
 
-// UpdateInstructions updates the agent instructions on the runtime.
+// SetUserInputEnabled enables/disables processing of the caller's audio input
+// (e.g. put the caller on hold while keeping the session alive).
+func (s *AgentSession) SetUserInputEnabled(ctx context.Context, enabled bool) error {
+	if t := s.transportRef(); t != nil {
+		return t.sendSetUserInputEnabled(enabled)
+	}
+	return nil
+}
+
+// UpdateInstructions changes the agent's system instructions on the live session.
 func (s *AgentSession) UpdateInstructions(ctx context.Context, instructions string) error {
 	s.agent.base().instructions = instructions
 	if t := s.transportRef(); t != nil {
@@ -320,7 +331,7 @@ func (s *AgentSession) UpdateInstructions(ctx context.Context, instructions stri
 	return nil
 }
 
-// UpdateTools replaces the agent tools on the runtime.
+// UpdateTools replaces the agent's tools on the live session.
 func (s *AgentSession) UpdateTools(ctx context.Context, tools []*FunctionTool) error {
 	s.agent.base().UpdateTools(tools)
 	if t := s.transportRef(); t != nil {
@@ -357,8 +368,12 @@ func (s *AgentSession) PlayBackgroundAudio(ctx context.Context, config any) erro
 		logger.Warnf("PlayBackgroundAudio: empty file_url — ignored")
 		return nil
 	}
+	fileURL, audioData, err := resolveBGAudioPayload(url)
+	if err != nil {
+		return err
+	}
 	if t := s.transportRef(); t != nil {
-		return t.sendPlayBackgroundAudio(url, volume, looping, playbackMode)
+		return t.sendPlayBackgroundAudio(fileURL, volume, looping, playbackMode, audioData)
 	}
 	return nil
 }
@@ -370,8 +385,12 @@ func (s *AgentSession) PreloadBackgroundAudio(ctx context.Context, config any) e
 		logger.Warnf("PreloadBackgroundAudio: empty file_url — ignored")
 		return nil
 	}
+	fileURL, audioData, err := resolveBGAudioPayload(url)
+	if err != nil {
+		return err
+	}
 	if t := s.transportRef(); t != nil {
-		return t.sendPreloadBackgroundAudio(url, volume)
+		return t.sendPreloadBackgroundAudio(fileURL, volume, audioData)
 	}
 	return nil
 }
@@ -408,28 +427,26 @@ func (s *AgentSession) StopRecording(ctx context.Context) error {
 	return nil
 }
 
-// PushAudioFrame pushes a raw PCM frame to the runtime.
+// PushAudioFrame sends a raw PCM frame as the agent's audio. sampleRate
+// defaults to 48000 when zero.
 func (s *AgentSession) PushAudioFrame(ctx context.Context, pcm []byte, sampleRate int) error {
 	if len(pcm) == 0 {
 		return nil
 	}
-	if sampleRate == 0 {
-		sampleRate = 48000
-	}
+	sampleRate = cmp.Or(sampleRate, 48000)
 	if t := s.transportRef(); t != nil {
 		return t.sendPushAudioFrame(pcm, sampleRate)
 	}
 	return nil
 }
 
-// SendImage sends an image to the runtime (data must be encoded JPEG/PNG bytes).
+// SendImage sends an image into the conversation. data must be encoded JPEG/PNG
+// bytes; mimeType defaults to image/jpeg when empty.
 func (s *AgentSession) SendImage(ctx context.Context, data []byte, mimeType string) error {
 	if len(data) == 0 {
 		return nil
 	}
-	if mimeType == "" {
-		mimeType = "image/jpeg"
-	}
+	mimeType = cmp.Or(mimeType, "image/jpeg")
 	if t := s.transportRef(); t != nil {
 		return t.sendSendImage(mimeType, data)
 	}
@@ -438,25 +455,39 @@ func (s *AgentSession) SendImage(ctx context.Context, data []byte, mimeType stri
 
 // MessageFrame is an image frame for SendMessageWithFrames.
 type MessageFrame struct {
+	// MimeType is the image MIME type; defaults to image/jpeg when empty.
 	MimeType string
-	Data     []byte
+	// Data is the encoded image bytes (JPEG/PNG).
+	Data []byte
+}
+
+// MessageFramesFromCaptured converts frames returned by Agent.CaptureFrames into
+// MessageFrames ready for SendMessageWithFrames or ReplyWith. Frames with no
+// usable bytes are skipped, and a missing or empty MIME type defaults to image/jpeg.
+func MessageFramesFromCaptured(frames []map[string]any) []MessageFrame {
+	out := make([]MessageFrame, 0, len(frames))
+	for _, f := range frames {
+		data, _ := f["data"].([]byte)
+		if len(data) == 0 {
+			continue
+		}
+		mime, _ := f["mime_type"].(string)
+		out = append(out, MessageFrame{MimeType: cmp.Or(mime, "image/jpeg"), Data: data})
+	}
+	return out
 }
 
 // SendMessageWithFrames sends a text message with image frames.
 func (s *AgentSession) SendMessageWithFrames(ctx context.Context, message string, frames []MessageFrame) error {
 	var fd []frameData
 	for _, f := range frames {
-		mt := f.MimeType
-		if mt == "" {
-			mt = "image/jpeg"
-		}
-		fd = append(fd, frameData{mimeType: mt, data: f.Data})
+		fd = append(fd, frameData{mimeType: cmp.Or(f.MimeType, "image/jpeg"), data: f.Data})
 	}
 	if message == "" && len(fd) == 0 {
 		return nil
 	}
 	if t := s.transportRef(); t != nil {
-		return t.sendSendMessageWithFrames(message, fd)
+		return t.sendSendMessageWithFrames(message, fd, 0)
 	}
 	return nil
 }
@@ -521,9 +552,12 @@ func (s *AgentSession) Close(ctx context.Context, reason string) error {
 	}
 
 	_, _ = s.FetchContextHistory(ctx, 0, false, false)
-	if err := s.agent.OnExit(ctx); err != nil {
+	if err := s.agent.OnExit(s.bindBus(ctx)); err != nil {
 		logger.Errorf("on_exit error: %v", err)
 	}
+	// Remove from the SessionBus only after OnExit/shutdown callbacks have run, so the
+	// session still resolves from context during teardown.
+	sessionBusUnregister(s.busID)
 	if bridge != nil {
 		bridge.destroySession()
 	}
@@ -539,17 +573,20 @@ func (s *AgentSession) Close(ctx context.Context, reason string) error {
 	return nil
 }
 
-// Leave closes the session with reason "sdk_leave".
+// Leave ends the session and disconnects the agent.
 func (s *AgentSession) Leave(ctx context.Context) error { return s.Close(ctx, "sdk_leave") }
 
-// Hangup closes the session.
+// Hangup ends the call and closes the session. The reason is recorded on the
+// close (defaults to "manual_hangup" when empty).
 func (s *AgentSession) Hangup(ctx context.Context, reason string) error {
-	return s.Close(ctx, "manual_hangup")
+	return s.Close(ctx, cmp.Or(reason, "manual_hangup"))
 }
 
 // ---- context history ----
 
-// FetchContextHistory fetches conversation history from the runtime.
+// FetchContextHistory returns the conversation history. Pass lastN > 0 to limit
+// to the most-recent messages, and the include flags to keep function-call and
+// system messages. Falls back to the local cache when the session is not started.
 func (s *AgentSession) FetchContextHistory(ctx context.Context, lastN int, includeFunctionCalls, includeSystemMessages bool) ([]map[string]any, error) {
 	if s.SessionID() == "" {
 		return filterHistory(s.chatHistoryCache, lastN, includeFunctionCalls, includeSystemMessages), nil
@@ -565,13 +602,37 @@ func (s *AgentSession) FetchContextHistory(ctx context.Context, lastN int, inclu
 	}
 	var full []map[string]any
 	for _, m := range resp.GetMessages() {
-		full = append(full, map[string]any{"role": m.GetRole(), "content": m.GetContent(), "message_id": m.GetMessageId()})
+		full = append(full, contextMessageToMap(m))
 	}
 	s.chatHistoryCache = full
 	return filterHistory(full, lastN, includeFunctionCalls, includeSystemMessages), nil
 }
 
-// RemoveMessage removes a message from the runtime context.
+func contextMessageToMap(m *pb.ContextMessageProto) map[string]any {
+	images := []map[string]any{}
+	for _, img := range m.GetImages() {
+		images = append(images, map[string]any{"url": img.GetUrl(), "detail": img.GetDetail()})
+	}
+	toolCalls := []map[string]any{}
+	for _, tc := range m.GetToolCalls() {
+		toolCalls = append(toolCalls, map[string]any{
+			"call_id":        tc.GetCallId(),
+			"name":           tc.GetName(),
+			"arguments_json": tc.GetArgumentsJson(),
+		})
+	}
+	return map[string]any{
+		"role":         m.GetRole(),
+		"content":      m.GetContent(),
+		"message_id":   m.GetMessageId(),
+		"images":       images,
+		"tool_calls":   toolCalls,
+		"tool_call_id": m.GetToolCallId(),
+	}
+}
+
+// RemoveMessage removes a message from the conversation context by id. Returns
+// true if the message was removed.
 func (s *AgentSession) RemoveMessage(ctx context.Context, messageID string) bool {
 	if messageID == "" || s.SessionID() == "" {
 		return false
@@ -593,6 +654,75 @@ func (s *AgentSession) RemoveMessage(ctx context.Context, messageID string) bool
 	}
 	s.chatHistoryCache = kept
 	return resp.GetSuccess()
+}
+
+// InjectMessage appends a message to the conversation context. Returns true on success.
+func (s *AgentSession) InjectMessage(ctx context.Context, message ChatMessage) bool {
+	if s.SessionID() == "" {
+		logger.Warnf("InjectMessage: no active session id yet; skipping")
+		return false
+	}
+	t := s.transportRef()
+	if t == nil || t.stub() == nil {
+		logger.Warnf("InjectMessage: no runtime stub available; skipping")
+		return false
+	}
+	pm := &pb.ContextMessageProto{Role: string(message.Role), Content: message.Content, MessageId: message.MessageID}
+	for _, img := range message.Images {
+		pm.Images = append(pm.Images, &pb.ImageContentProto{Url: img.URL, Detail: img.Detail})
+	}
+	resp, err := t.stub().InjectMessage(ctx, &pb.InjectMessageRequest{SessionId: s.SessionID(), Message: pm})
+	if err != nil {
+		logger.Errorf("InjectMessage RPC failed: %v", err)
+		return false
+	}
+	if !resp.GetSuccess() {
+		logger.Warnf("InjectMessage rejected by runtime: %s", resp.GetError())
+		return false
+	}
+	logger.Debugf("InjectMessage ok (role=%s, total_messages=%d)", message.Role, resp.GetTotalMessages())
+	return true
+}
+
+// InjectContext appends every message of a ChatContext to the conversation
+// context, in order. Returns true if every message was injected successfully.
+func (s *AgentSession) InjectContext(ctx context.Context, cc *ChatContext) bool {
+	if cc == nil {
+		return true
+	}
+	ok := true
+	for _, m := range cc.Messages() {
+		if !s.InjectMessage(ctx, m) {
+			ok = false
+		}
+	}
+	return ok
+}
+
+// FetchChatContext returns the latest conversation history as a typed
+// *ChatContext. Pass lastN > 0 to limit the number of most-recent messages.
+// Returns an empty context if the session is not started or the fetch fails.
+func (s *AgentSession) FetchChatContext(ctx context.Context, lastN int) *ChatContext {
+	if s.SessionID() == "" {
+		logger.Warnf("FetchChatContext: no active session id yet; returning empty context")
+		return &ChatContext{}
+	}
+	t := s.transportRef()
+	if t == nil || t.stub() == nil {
+		logger.Warnf("FetchChatContext: no runtime stub available; returning empty context")
+		return &ChatContext{}
+	}
+	var ln uint32
+	if lastN > 0 {
+		ln = uint32(lastN)
+	}
+	resp, err := t.stub().GetContext(ctx, &pb.GetContextRequest{SessionId: s.SessionID(), LastN: ln})
+	if err != nil {
+		logger.Errorf("GetContext RPC failed: %v", err)
+		return &ChatContext{}
+	}
+	logger.Debugf("FetchChatContext: runtime returned %d message(s) (total_messages=%d)", len(resp.GetMessages()), resp.GetTotalMessages())
+	return ChatContextFromContextMessages(resp.GetMessages())
 }
 
 func filterHistory(history []map[string]any, lastN int, includeFunctionCalls, includeSystemMessages bool) []map[string]any {
@@ -649,7 +779,7 @@ func (s *AgentSession) wakeUpWatcher() {
 			s.mu.Unlock()
 			if maxAttempts > 0 && count > maxAttempts {
 				s.Emit("wake_up_exceeded", map[string]any{"attempts": count})
-				go s.Close(context.Background(), "wake_up_exceeded")
+				go s.Hangup(context.Background(), "wake_up_exceeded")
 				return
 			}
 			func() {
@@ -673,7 +803,7 @@ func (s *AgentSession) awaitParticipantIfNeeded(ctx context.Context) {
 	wantAudio := s.waitForAudioStream
 	present := s.participantPresent
 	audioActive := s.audioStreamActive
-	timeout := time.Duration(maxInt(s.waitForParticipantTimeout, 1)) * time.Millisecond
+	timeout := time.Duration(max(s.waitForParticipantTimeout, 1)) * time.Millisecond
 	s.mu.Unlock()
 	if !want {
 		return
@@ -766,6 +896,35 @@ func extractBGAudioArgs(config any) (url string, volume float64, looping, playba
 	return "", 1.0, false, false
 }
 
+// maxBGAudioBytes caps inline background-audio payloads at 16 MiB.
+const maxBGAudioBytes = 16 * 1024 * 1024
+
+// resolveBGAudioPayload turns a background-audio source into a (fileURL, audioData) pair.
+//   - http(s):// URLs are forwarded as-is with no bytes.
+//   - A local file path is read into bytes (≤16 MiB), returned with an empty URL.
+//   - Anything else is treated as an opaque/remote URL with no bytes.
+func resolveBGAudioPayload(url string) (fileURL string, audioData []byte, err error) {
+	if url == "" {
+		return "", nil, nil
+	}
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		return url, nil, nil
+	}
+	info, statErr := os.Stat(url)
+	if statErr != nil || info.IsDir() {
+		// not a local file — treat as an opaque URL
+		return url, nil, nil
+	}
+	if info.Size() > maxBGAudioBytes {
+		return "", nil, fmt.Errorf("background audio file %q is %d bytes, exceeds the %d-byte (16 MiB) limit", url, info.Size(), maxBGAudioBytes)
+	}
+	data, readErr := os.ReadFile(url)
+	if readErr != nil {
+		return "", nil, readErr
+	}
+	return "", data, nil
+}
+
 func firstString(m map[string]any, keys ...string) string {
 	for _, k := range keys {
 		if v, ok := m[k].(string); ok && v != "" {
@@ -773,39 +932,6 @@ func firstString(m map[string]any, keys ...string) string {
 		}
 	}
 	return ""
-}
-
-func hasPrefixFold(s, prefix string) bool {
-	if len(s) < len(prefix) {
-		return false
-	}
-	return equalFold(s[:len(prefix)], prefix)
-}
-
-func equalFold(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := 0; i < len(a); i++ {
-		ca, cb := a[i], b[i]
-		if 'A' <= ca && ca <= 'Z' {
-			ca += 'a' - 'A'
-		}
-		if 'A' <= cb && cb <= 'Z' {
-			cb += 'a' - 'A'
-		}
-		if ca != cb {
-			return false
-		}
-	}
-	return true
-}
-
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func printPlaygroundURL(room roomConfigData) {
@@ -816,10 +942,7 @@ func printPlaygroundURL(room roomConfigData) {
 	if !enabled || room.RoomID == "" || room.AuthToken == "" {
 		return
 	}
-	base := os.Getenv("ZRT_PLAYGROUND_URL")
-	if base == "" {
-		base = "https://playground.videosdk.live/cli"
-	}
+	base := cmp.Or(os.Getenv("ZRT_PLAYGROUND_URL"), "https://playground.zeroruntime.ai/cli")
 	logger.Infof("Agent started in playground mode")
 	// Playground mode is an explicit, dev-facing opt-in and the URL is meant to be
 	// opened in a browser, so the full token is printed (it is unusable truncated).

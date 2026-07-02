@@ -33,3 +33,7 @@ profile.out
 .vscode/
 *.swp
 .DS_Store
+examples/
+tests/
+.env
+*.log

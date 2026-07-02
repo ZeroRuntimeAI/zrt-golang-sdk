@@ -2,6 +2,7 @@ package zrt
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -9,7 +10,9 @@ import (
 	pb "github.com/ZeroRuntimeAI/zrt-golang-sdk/internal/pb"
 )
 
-// roomConfigData carries the resolved room settings into config building.
+const dtmfPubSubTopic = "DTMF_EVENT"
+
+// roomConfigData holds the resolved room settings for a session.
 type roomConfigData struct {
 	RoomID                      string
 	AuthToken                   string
@@ -31,40 +34,50 @@ type frameData struct {
 	data     []byte
 }
 
-// sessionTransport abstracts the outbound channel (direct gRPC bridge or the
-// registered-agent registry), so AgentSession command methods don't branch.
+// sessionTransport is the outbound channel used by AgentSession command methods.
 type sessionTransport interface {
 	sendSay(text string, interruptCurrent bool, voice string, interruptible bool) error
 	sendCancelGeneration() error
+	sendSetUserInputEnabled(enabled bool) error
 	sendGenerate(text string) error
 	sendUpdateInstructions(s string) error
 	sendUpdateTools(tools []*FunctionTool) error
 	sendUpdateProvider(component, provider string, params map[string]string) error
 	sendCallTransfer(transferTo, token string) error
-	sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool) error
-	sendPreloadBackgroundAudio(url string, volume float64) error
+	sendPlayBackgroundAudio(url string, volume float64, looping, playbackMode bool, audioData []byte) error
+	sendPreloadBackgroundAudio(url string, volume float64, audioData []byte) error
 	sendStopBackgroundAudio() error
 	sendRecordingStart(cfg *RecordingConfig) error
 	sendRecordingStop() error
 	sendPushAudioFrame(pcm []byte, sampleRate int) error
 	sendSendImage(mimeType string, data []byte) error
-	sendSendMessageWithFrames(text string, frames []frameData) error
+	sendSendMessageWithFrames(text string, frames []frameData, numLatestFrames uint32) error
+	sendPublishMessage(topic, message, optionsJSON, payloadJSON string) error
+	sendSubscribePubSub(topic string) error
 	stub() pb.AgentRuntimeClient
 	sessionID() string
 }
 
 // AgentSessionOptions configures an AgentSession.
 type AgentSessionOptions struct {
-	WakeUp            int
+	// WakeUp is the seconds of caller silence before a wake-up prompt fires; 0 disables it.
+	WakeUp int
+	// WakeUpMaxAttempts is the maximum number of wake-up prompts before giving up.
 	WakeUpMaxAttempts int
-	OnWakeUp          func()
-	BackgroundAudio   any
-	DTMFHandler       *DTMFHandler
+	// OnWakeUp is called when a wake-up fires.
+	OnWakeUp func()
+	// BackgroundAudio configures ambient audio played during the session.
+	BackgroundAudio any
+	// DTMFHandler dispatches received DTMF digits.
+	DTMFHandler *DTMFHandler
+	// VoiceMailDetector detects and reacts to voicemail systems on the call.
 	VoiceMailDetector *VoiceMailDetector
-	Recording         *RecordingConfig
+	// Recording configures call recording for the session.
+	Recording *RecordingConfig
 }
 
-// AgentSession runs an agent against the ZRT runtime.
+// AgentSession runs an agent with its pipeline and exposes the commands and
+// events of a live voice session.
 type AgentSession struct {
 	EventEmitter
 
@@ -126,14 +139,22 @@ type AgentSession struct {
 	wakeUpReset chan struct{}
 
 	shutdownCallbacks    []func()
-	boundRegistry        *agentRegistry
-	registeredSession    string
 	meetingJoinedEmitted bool
 	jobCtx               *JobContext
 	audioTrackCache      *AudioTrack
+	agentsByID           map[string]Agent
+	alternateIDs         map[string]bool
+	handoffs             []AgentHandoff
+	// busID lets a shared agent resolve this session per-call from context (see session_bus.go).
+	busID string
+	// a2a* track the active agent's A2A subscription so a handoff can re-point it.
+	a2aSubscribed bool
+	a2aUnsub      func()
+	a2aTopic      string
 }
 
-// NewAgentSession creates a session for agent + pipeline.
+// NewAgentSession creates a session that runs agent with pipeline. Call Start to
+// connect it and begin the call.
 func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) *AgentSession {
 	s := &AgentSession{
 		agent:             agent,
@@ -155,9 +176,14 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 		wakeUpReset:       make(chan struct{}, 1),
 	}
 	close(s.synthesisDone) // starts "done"
+	// Register so a shared agent can resolve this session per-call from context;
+	// agent.base().session below is the no-binding fallback.
+	s.busID = sessionBusNewID()
+	sessionBusRegister(s.busID, s)
 	agent.base().session = s
+	s.seedHandoffRegistry(agent)
 	pipeline.setAgent(agent)
-	for _, comp := range []any{pipeline.STT, pipeline.LLM, pipeline.TTS, pipeline.VAD, pipeline.TurnDetector} {
+	for _, comp := range []any{pipeline.stt, pipeline.llm, pipeline.tts, pipeline.vad, pipeline.turnDetector} {
 		if ss, ok := comp.(sessionSettable); ok && comp != nil {
 			ss.setSession(s)
 		}
@@ -186,7 +212,6 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 	s.On("synthesis_interrupted", func(any) { s.markSynthesisDone() })
 	s.On("participant_joined", func(any) { s.markParticipantArrived() })
 	s.On("stream_enabled", func(payload any) { s.markAudioStreamActive(payload) })
-	// transcript mirror (for GetContextHistory fallback).
 	s.On("transcript_preflight", func(p any) { s.mirrorUserTranscript(p) })
 	s.On("user_turn_end", func(p any) { s.mirrorUserTranscript(p) })
 	s.On("generation_complete", func(p any) { s.mirrorAgentGeneration(p) })
@@ -195,6 +220,40 @@ func NewAgentSession(agent Agent, pipeline *Pipeline, opts AgentSessionOptions) 
 	s.On("synthesis_interrupted", func(any) { s.autoStopThinkingAudio() })
 	s.On("agent_turn_end", func(any) { s.autoStopThinkingAudio() })
 	return s
+}
+
+func (s *AgentSession) onDTMFPubSub(msg PubSubMessage) {
+	h := s.dtmfHandler
+	if h == nil {
+		return
+	}
+	payload, ok := msg.Payload.(map[string]any)
+	if !ok {
+		return
+	}
+	raw, ok := payload["number"]
+	if !ok || raw == nil {
+		raw = payload["digit"]
+	}
+	digit := dtmfDigitString(raw)
+	if digit == "" {
+		return
+	}
+	h.dispatch(digit)
+}
+
+func dtmfDigitString(v any) string {
+	switch n := v.(type) {
+	case string:
+		return strings.TrimSpace(n)
+	case float64:
+		if n == float64(int64(n)) {
+			return strconv.FormatInt(int64(n), 10)
+		}
+		return strings.TrimSpace(strconv.FormatFloat(n, 'f', -1, 64))
+	default:
+		return ""
+	}
 }
 
 func (s *AgentSession) mirrorUserTranscript(payload any) {
@@ -291,7 +350,7 @@ func (s *AgentSession) AgentState() AgentState {
 	return s.agentState
 }
 
-// SessionID returns the runtime session id (empty before start).
+// SessionID returns the session id, or empty before the session has started.
 func (s *AgentSession) SessionID() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -308,8 +367,9 @@ func (s *AgentSession) SignalingSessionID() string {
 // Pipeline returns the session's pipeline.
 func (s *AgentSession) Pipeline() *Pipeline { return s.pipeline }
 
-// Agent returns the session's agent.
-func (s *AgentSession) Agent() Agent { return s.agent }
+// Agent returns the session's active agent (the most recent handoff target, or
+// the agent the session started with).
+func (s *AgentSession) Agent() Agent { return s.ActiveAgent() }
 
 // CurrentUtterance returns the in-flight utterance handle (may be nil).
 func (s *AgentSession) CurrentUtterance() *UtteranceHandle {
@@ -325,7 +385,8 @@ func (s *AgentSession) IsSynthesizing() bool {
 	return s.isSynthesizing
 }
 
-// TTSCapabilities returns the runtime-reported TTS capabilities (may be nil).
+// TTSCapabilities returns the active TTS provider's reported capabilities, or
+// nil if none are available.
 func (s *AgentSession) TTSCapabilities() map[string]any {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -417,7 +478,7 @@ func (s *AgentSession) updateAgentState(state AgentState) {
 	}
 	s.mu.Unlock()
 	if changed && (state == AgentStateListening || state == AgentStateIdle || state == AgentStateSpeaking || state == AgentStateThinking) {
-		s.resetWakeUpTimer()
+		s.restartWakeUpTimer()
 	}
 	s.Emit("agent_state_changed", map[string]any{"state": state})
 }
@@ -464,6 +525,10 @@ func (s *AgentSession) resetWakeUpTimer() {
 	s.mu.Lock()
 	s.wakeUpCount = 0
 	s.mu.Unlock()
+	s.restartWakeUpTimer()
+}
+
+func (s *AgentSession) restartWakeUpTimer() {
 	select {
 	case s.wakeUpReset <- struct{}{}:
 	default:
@@ -473,7 +538,6 @@ func (s *AgentSession) resetWakeUpTimer() {
 func closeOnce(ch *chan struct{}) {
 	select {
 	case <-*ch:
-		// already closed
 	default:
 		close(*ch)
 	}

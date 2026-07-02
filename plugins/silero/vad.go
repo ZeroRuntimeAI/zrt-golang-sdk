@@ -3,35 +3,46 @@ package silero
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// VAD is the Silero VAD descriptor.
+// VAD is a Silero voice-activity-detection engine.
 type VAD struct {
 	zrt.BaseVAD
-	Threshold          float64
-	StopThreshold      float64
-	MinSpeechDuration  float64
+	// Threshold is the speech-start probability threshold.
+	Threshold float64
+	// StopThreshold is the speech-end probability threshold.
+	StopThreshold float64
+	// MinSpeechDuration is the minimum speech length in seconds to emit a segment.
+	MinSpeechDuration float64
+	// MinSilenceDuration is the minimum silence length in seconds to end a segment.
 	MinSilenceDuration float64
-	PaddingDuration    float64
-	MaxBufferedSpeech  float64
-	InputSampleRate    int
-	SmoothingFactor    float64
-	ForceCPU           bool
-	MinVolume          float64
+	// PaddingDuration is the audio padding around detected speech, in seconds.
+	PaddingDuration float64
+	// MaxBufferedSpeech is the maximum buffered speech length, in seconds.
+	MaxBufferedSpeech float64
+	// InputSampleRate is the sample rate of incoming audio, in Hz.
+	InputSampleRate int
+	// SmoothingFactor is the exponential smoothing factor for speech probability.
+	SmoothingFactor float64
+	// ForceCPU forces inference to run on the CPU.
+	ForceCPU bool
+	// MinVolume is the minimum input volume gate.
+	MinVolume float64
 }
 
 // VADOptions configures VAD. Nil pointers use default values.
 type VADOptions struct {
-	Threshold           *float64 // default 0.4
-	StartThreshold      *float64 // overrides Threshold
-	EndThreshold        *float64 // overrides StopThreshold
-	StopThreshold       *float64 // default 0.25
-	MinSpeechDuration   *float64 // default 0.3
-	MinSilenceDuration  *float64 // default 0.4
-	PaddingDuration     *float64 // default 0.5
-	MaxBufferedSpeech   *float64 // default 60.0
-	SampleRate          int      // default 16000
-	InputSampleRate     *int     // default 48000
-	ModelSampleRate     *int     // overrides SampleRate
-	SmoothingFactor     *float64 // default 0.35
+	Threshold          *float64 // default 0.4
+	StartThreshold     *float64 // overrides Threshold
+	EndThreshold       *float64 // overrides StopThreshold
+	StopThreshold      *float64 // default 0.25
+	MinSpeechDuration  *float64 // default 0.3
+	MinSilenceDuration *float64 // default 0.4
+	PaddingDuration    *float64 // default 0.5
+	MaxBufferedSpeech  *float64 // default 60.0
+	SampleRate         int      // default 16000
+	InputSampleRate    *int     // default 48000
+	ModelSampleRate    *int     // overrides SampleRate
+	SmoothingFactor    *float64 // default 0.35
+	// ForceCPU forces inference to run on the CPU.
 	ForceCPU            bool
 	MinVolume           float64 // default 0.0
 	EnergyFilterEnabled *bool   // default true

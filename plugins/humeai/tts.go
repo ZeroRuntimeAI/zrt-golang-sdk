@@ -3,22 +3,26 @@ package humeai
 
 import "github.com/ZeroRuntimeAI/zrt-golang-sdk/zrt"
 
-// TTS is the Hume AI text-to-speech descriptor.
+// TTS is the Hume AI text-to-speech provider.
 type TTS struct {
 	zrt.BaseTTS
+	// Voice is the Hume AI voice.
 	Voice string
+	// Speed scales the speaking rate.
 	Speed float64
 }
 
-// TTSOptions configures TTS.
+// TTSOptions configures a Hume AI TTS instance.
 type TTSOptions struct {
 	// APIKey overrides the HUMEAI_API_KEY environment variable.
 	APIKey string
-	Voice  string  // default "Serene Assistant"
-	Speed  float64 // default 1.0
+	// Voice is the Hume AI voice. Defaults to "Serene Assistant".
+	Voice string
+	// Speed scales the speaking rate. Defaults to 1.0.
+	Speed float64
 }
 
-// NewTTS builds a TTS.
+// NewTTS returns a Hume AI TTS configured from opts.
 func NewTTS(opts TTSOptions) *TTS {
 	speed := opts.Speed
 	if speed == 0 {

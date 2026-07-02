@@ -1,9 +1,12 @@
 package zrt
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -31,25 +34,51 @@ var envKeyMap = map[string][]string{
 	"SARVAMAI_API_KEY":          {"sarvamai", "sarvam"},
 	"COMETAPI_API_KEY":          {"cometapi", "comet"},
 	"COMETAPI_BASE_URL":         {"cometapi_base_url"},
+	"ANAM_API_KEY":              {"anam"},
+	"SIMLI_API_KEY":             {"simli"},
+	"AZURE_OPENAI_API_KEY":      {"azure_openai"},
+	"HUMEAI_API_KEY":            {"humeai"},
+	"INWORLDAI_API_KEY":         {"inworldai"},
+	"LMNT_API_KEY":              {"lmnt"},
+	"RIME_API_KEY":              {"rime"},
+	"SMALLESTAI_API_KEY":        {"smallestai"},
+	"SPEECHIFY_API_KEY":         {"speechify"},
+	"CAMBAI_API_KEY":            {"cambai"},
+	"MURFAI_API_KEY":            {"murfai"},
+	"NEUPHONIC_API_KEY":         {"neuphonic"},
+	"PAPLA_API_KEY":             {"papla"},
+	"RESEMBLE_API_KEY":          {"resemble"},
 }
 
 // knobMap lists the per-provider tuning knobs serialized into credentials.
 var knobMap = map[string][]string{
-	"cartesia":   {"model", "language", "speed", "volume", "emotion", "max_buffer_delay_ms", "pronunciation_dict_id", "enable_word_timestamps"},
-	"deepgram":   {"smart_format", "punctuate", "filler_words", "profanity_filter", "numerals", "tag", "keywords", "keyterm", "redact", "interim_results", "diarize", "base_url"},
-	"silero":     {"smoothing_factor", "min_volume"},
-	"elevenlabs": {"model", "stability", "similarity_boost", "style", "use_speaker_boost", "apply_text_normalization", "enable_word_timestamps"},
-	"anthropic":  {"thinking_budget"},
-	"gemini":     {"thinking_budget", "include_thoughts", "top_p", "top_k", "presence_penalty", "frequency_penalty", "seed"},
-	"openai":     {"top_p", "frequency_penalty", "presence_penalty", "seed", "response_format", "tool_choice", "parallel_tool_calls"},
-	"sarvamai":   {"model", "language", "streaming", "pitch", "pace", "loudness", "temperature", "preprocessing", "bitrate"},
-	"google":     {"language", "voice", "speaking_rate", "pitch"},
+	"cartesia":     {"model", "language", "speed", "volume", "emotion", "max_buffer_delay_ms", "pronunciation_dict_id", "enable_word_timestamps"},
+	"deepgram":     {"endpointing", "smart_format", "punctuate", "filler_words", "profanity_filter", "numerals", "tag", "keywords", "keyterm", "redact", "interim_results", "diarize", "base_url", "tts_stream", "tts_encoding"},
+	"silero":       {"smoothing_factor", "min_volume"},
+	"elevenlabs":   {"model", "stability", "similarity_boost", "style", "use_speaker_boost", "apply_text_normalization", "enable_word_timestamps", "speed", "language", "enable_ssml_parsing", "tts_stream"},
+	"anthropic":    {"top_p", "top_k", "stop_sequences", "thinking_budget"},
+	"gemini":       {"thinking_budget", "include_thoughts", "top_p", "top_k", "presence_penalty", "frequency_penalty", "seed"},
+	"openai":       {"top_p", "frequency_penalty", "presence_penalty", "seed", "response_format", "tool_choice", "parallel_tool_calls", "stop", "user", "reasoning_effort", "verbosity", "streaming", "wss_url", "store", "tts_stream", "speed"},
+	"cerebras":     {"top_p", "seed", "stop", "user", "tool_choice"},
+	"groq":         {"top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort", "reasoning_format", "service_tier"},
+	"cometapi":     {"base_url", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format"},
+	"xai":          {"top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort", "prompt_cache_key", "service_tier"},
+	"azure_openai": {"endpoint", "api_version", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort"},
+	"sarvamai":     {"model", "language", "streaming", "pitch", "pace", "loudness", "temperature", "preprocessing", "bitrate", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "user", "tool_choice", "parallel_tool_calls", "response_format", "reasoning_effort", "wiki_grounding"},
+	"smallestai":   {"tts_stream", "model", "language", "speed"},
+	"navana":       {"customer_id"},
+	"google":       {"language", "voice", "speaking_rate", "pitch", "tts_stream", "tts_service_account_json"},
+	"bedrock":      {"top_p", "top_k", "stop_sequences", "tool_choice", "cache_system", "cache_tools", "strip_thinking", "text_tool_calls", "additional_request_fields"},
 }
 
 // sttKnobMap lists the per-provider STT-specific tuning knobs.
 var sttKnobMap = map[string][]string{
-	"sarvamai":   {"mode", "translation", "prompt", "high_vad_sensitivity", "flush_signals", "input_sample_rate", "output_sample_rate"},
-	"google_stt": {"punctuate", "profanity_filter"},
+	"sarvamai":         {"mode", "translation", "prompt", "high_vad_sensitivity", "flush_signals", "input_sample_rate", "output_sample_rate", "input_audio_codec", "vad_signals", "positive_speech_threshold", "negative_speech_threshold", "min_speech_frames", "first_turn_min_speech_frames", "pre_speech_pad_frames", "interrupt_min_speech_frames"},
+	"google_stt":       {"service_account_json", "project_id", "location", "stream", "audio_channel_count", "interim_results", "punctuate", "profanity_filter", "enable_spoken_punctuation", "enable_spoken_emojis", "enable_word_time_offsets", "enable_word_confidence", "max_alternatives", "enable_voice_activity_events", "speech_start_timeout", "speech_end_timeout", "min_speaker_count", "max_speaker_count", "min_confidence_threshold"},
+	"assemblyai":       {"output_sample_rate", "encoding", "format_turns", "end_of_turn_confidence_threshold", "min_end_of_turn_silence_when_confident", "max_turn_silence", "keyterms_prompt", "language_detection", "base_url"},
+	"cartesia_stt":     {"input_sample_rate", "output_sample_rate", "encoding", "cartesia_version", "min_volume", "max_silence_duration_secs", "base_url"},
+	"openai_stt":       {"stream", "input_sample_rate", "output_sample_rate", "prompt", "turn_detection", "vad_threshold", "vad_prefix_padding_ms", "vad_silence_duration_ms", "noise_reduction", "response_format", "base_url"},
+	"azure_openai_stt": {"endpoint", "deployment", "api_version", "stream", "input_sample_rate", "output_sample_rate", "prompt", "temperature", "response_format", "turn_detection"},
 }
 
 // DefaultVoiceSuffix is appended to instructions unless overridden.
@@ -66,8 +95,7 @@ func floatStr(f float64) string {
 	return s
 }
 
-// serializeKnob applies the general knob serialization rules. ok=false means
-// the value should be skipped (nil / empty string).
+// serializeKnob stringifies a knob value. ok=false means skip it (nil / empty string).
 func serializeKnob(v any) (string, bool) {
 	switch x := v.(type) {
 	case nil:
@@ -107,38 +135,6 @@ func serializeKnob(v any) (string, bool) {
 	}
 }
 
-// serializeSTTKnob applies the simpler STT_KNOB_MAP serialization (bool or str).
-func serializeSTTKnob(v any) (string, bool) {
-	switch x := v.(type) {
-	case nil:
-		return "", false
-	case string:
-		if x == "" {
-			return "", false
-		}
-		return x, true
-	case bool:
-		if x {
-			return "true", true
-		}
-		return "false", true
-	case int:
-		return strconv.Itoa(x), true
-	case int32:
-		return strconv.FormatInt(int64(x), 10), true
-	case int64:
-		return strconv.FormatInt(x, 10), true
-	case uint32:
-		return strconv.FormatUint(uint64(x), 10), true
-	case float32:
-		return floatStr(float64(x)), true
-	case float64:
-		return floatStr(x), true
-	default:
-		return fmt.Sprintf("%v", x), true
-	}
-}
-
 // ---- provider config builders ----
 
 func buildSTTConfig(stt STT) *pb.STTProviderConfig {
@@ -146,16 +142,24 @@ func buildSTTConfig(stt STT) *pb.STTProviderConfig {
 		return &pb.STTProviderConfig{}
 	}
 	c := stt.STTConfig()
-	endpointing := c.EndpointingMs
-	if endpointing == 0 {
-		endpointing = 50
-	}
-	return &pb.STTProviderConfig{
+	cfg := &pb.STTProviderConfig{
 		Provider:      c.Provider,
 		Model:         c.Model,
 		Language:      c.Language,
-		EndpointingMs: endpointing,
+		EndpointingMs: cmp.Or(c.EndpointingMs, 50),
 	}
+	if info := stt.InferenceInfo(); info.IsInference {
+		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
+	}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.STTProviderConfig{
+			Provider:      fb.Provider,
+			Model:         fb.Model,
+			Language:      fb.Language,
+			EndpointingMs: cmp.Or(fb.EndpointingMs, 50),
+		})
+	}
+	return cfg
 }
 
 func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
@@ -169,12 +173,23 @@ func buildLLMConfig(llm LLM) *pb.LLMProviderConfig {
 		Temperature:     c.Temperature,
 		MaxOutputTokens: c.MaxOutputTokens,
 	}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.LLMProviderConfig{
+			Provider:        fb.Provider,
+			Model:           fb.Model,
+			Temperature:     fb.Temperature,
+			MaxOutputTokens: fb.MaxOutputTokens,
+		})
+	}
 	if llm.ProviderName() == "gemini" {
 		if ge, ok := llm.(GeminiExtrasProvider); ok {
 			if extras := buildGeminiLLMExtras(ge.GeminiLLMExtras()); extras != nil {
 				cfg.GeminiExtras = extras
 			}
 		}
+	}
+	if info := llm.InferenceInfo(); info.IsInference {
+		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
 	}
 	return cfg
 }
@@ -222,7 +237,10 @@ func buildTTSConfig(tts TTS) *pb.TTSProviderConfig {
 		return &pb.TTSProviderConfig{}
 	}
 	c := tts.TTSConfig()
-	cfg := &pb.TTSProviderConfig{Provider: c.Provider, Voice: c.Voice}
+	cfg := &pb.TTSProviderConfig{Provider: c.Provider, Model: c.Model, Language: c.Language, Voice: c.Voice}
+	for _, fb := range c.Fallbacks {
+		cfg.Fallbacks = append(cfg.Fallbacks, &pb.TTSProviderConfig{Provider: fb.Provider, Model: fb.Model, Language: fb.Language, Voice: fb.Voice})
+	}
 	if tts.ProviderName() == "cartesia" {
 		if emb := tts.VoiceEmbedding(); len(emb) > 0 {
 			ve := make([]float32, len(emb))
@@ -232,6 +250,9 @@ func buildTTSConfig(tts TTS) *pb.TTSProviderConfig {
 			cfg.CartesiaExtras = &pb.CartesiaExtras{VoiceEmbedding: ve}
 		}
 	}
+	if info := tts.InferenceInfo(); info.IsInference {
+		cfg.Inference = &pb.InferenceConfig{BaseUrl: info.BaseURL}
+	}
 	return cfg
 }
 
@@ -240,14 +261,8 @@ func buildVADConfig(vad VAD) *pb.VADProviderConfig {
 		return &pb.VADProviderConfig{}
 	}
 	c := vad.VADConfig()
-	stop := c.StopThreshold
-	if stop == 0 {
-		stop = 0.25
-	}
-	smoothing := c.SmoothingFactor
-	if smoothing == 0 {
-		smoothing = 0.35
-	}
+	stop := cmp.Or(c.StopThreshold, 0.25)
+	smoothing := cmp.Or(c.SmoothingFactor, 0.35)
 	return &pb.VADProviderConfig{
 		Threshold:          c.Threshold,
 		MinSpeechMs:        uint32(c.MinSpeechDuration * 1000),
@@ -262,20 +277,15 @@ func buildVADConfig(vad VAD) *pb.VADProviderConfig {
 	}
 }
 
+var interruptModeMap = map[string]string{"VAD_ONLY": "vad_only", "STT_ONLY": "stt_only", "HYBRID": "hybrid"}
+
 func buildInterruptConfig(ic *InterruptConfig) *pb.InterruptConfig {
 	if ic == nil {
 		return &pb.InterruptConfig{Mode: "hybrid", MinDurationMs: 500, MinWords: 2, CooldownMs: 500}
 	}
 	ic.normalize()
-	modeMap := map[string]string{"VAD_ONLY": "vad_only", "STT_ONLY": "stt_only", "HYBRID": "hybrid"}
-	mode := modeMap[ic.Mode]
-	if mode == "" {
-		mode = "hybrid"
-	}
-	pauseMS := ic.FalseInterruptPauseDurationMS
-	if pauseMS == 0 {
-		pauseMS = int(ic.FalseInterruptPauseDuration * 1000)
-	}
+	mode := cmp.Or(interruptModeMap[ic.Mode], "hybrid")
+	pauseMS := cmp.Or(ic.FalseInterruptPauseDurationMS, int(ic.FalseInterruptPauseDuration*1000))
 	return &pb.InterruptConfig{
 		Mode:                          mode,
 		MinDurationMs:                 uint32(ic.InterruptMinDuration * 1000),
@@ -329,7 +339,7 @@ func buildEOUConfig(eou *EOUConfig, turnDetector EOU) *pb.EOUConfig {
 func buildToolSchemas(tools []*FunctionTool) []*pb.ToolSchemaProto {
 	var out []*pb.ToolSchemaProto
 	for _, t := range tools {
-		if t == nil {
+		if !IsFunctionTool(t) {
 			continue
 		}
 		schema := t.Info.ParametersSchema
@@ -345,6 +355,17 @@ func buildToolSchemas(tools []*FunctionTool) []*pb.ToolSchemaProto {
 	}
 	return out
 }
+func resolveContextWindow(agent Agent, p *Pipeline) *ContextWindow {
+	if agent != nil {
+		if cw := agent.base().contextWindow(); cw != nil {
+			return cw
+		}
+	}
+	if p != nil {
+		return p.ContextWindow
+	}
+	return nil
+}
 
 func buildContextWindowConfig(cw *ContextWindow) *pb.ContextWindowConfig {
 	ctx := &pb.ContextWindowConfig{}
@@ -359,6 +380,9 @@ func buildContextWindowConfig(cw *ContextWindow) *pb.ContextWindowConfig {
 	}
 	ctx.KeepRecentTurns = uint32(cw.KeepRecentTurns)
 	ctx.MaxToolCallsPerTurn = uint32(cw.MaxToolCallsPerTurn)
+	if cw.SummaryLLM != nil {
+		ctx.SummaryLlm = buildLLMConfig(cw.SummaryLLM)
+	}
 	return ctx
 }
 
@@ -368,7 +392,31 @@ type inferenceMarked interface {
 	InferenceInfo() InferenceInfo
 }
 
-func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]string {
+func asInference(p Provider) inferenceMarked {
+	if p == nil {
+		return nil
+	}
+	return p
+}
+
+func asInferenceLLM(l LLMLike) inferenceMarked {
+	if l == nil {
+		return nil
+	}
+	if im, ok := l.(inferenceMarked); ok {
+		return im
+	}
+	return nil
+}
+
+type bedrockCredentials interface {
+	AWSRegion() string
+	AWSAccessKeyID() string
+	AWSSecretAccessKey() string
+	AWSSessionToken() string
+}
+
+func buildCredentials(p *Pipeline, sessionOptions map[string]string, agent Agent) map[string]string {
 	creds := map[string]string{}
 	for envVar, keys := range envKeyMap {
 		if v := os.Getenv(envVar); v != "" {
@@ -378,7 +426,7 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 		}
 	}
 	// Provider API keys.
-	for _, prov := range []Provider{asProvider(p.STT), asLLMProvider(p.LLM), asProvider(p.TTS)} {
+	for _, prov := range []Provider{as[Provider](p.stt), as[Provider](p.llm), as[Provider](p.tts), as[Provider](p.avatar)} {
 		if prov == nil {
 			continue
 		}
@@ -388,8 +436,40 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 			}
 		}
 	}
+	if cw := resolveContextWindow(agent, p); cw != nil && cw.SummaryLLM != nil {
+		sl := cw.SummaryLLM
+		if key := sl.APIKey(); key != "" {
+			if name := sl.ProviderName(); name != "" {
+				creds[name] = key
+			}
+		}
+	}
+	if vmd := p.VoiceMailDetector; vmd != nil && vmd.LLM != nil {
+		provider := ""
+		if prov, ok := vmd.LLM.(Provider); ok {
+			provider = prov.ProviderName()
+		}
+		if provider != "" {
+			creds["voicemail_llm_provider"] = provider
+		}
+		if lc, ok := vmd.LLM.(interface{ LLMConfig() LLMRuntimeConfig }); ok {
+			if model := lc.LLMConfig().Model; model != "" {
+				creds["voicemail_llm_model"] = model
+			}
+		}
+		if prov, ok := vmd.LLM.(Provider); ok {
+			if key := prov.APIKey(); provider != "" && key != "" {
+				if _, exists := creds[provider]; !exists {
+					creds[provider] = key
+				}
+			}
+			if info := prov.InferenceInfo(); info.BaseURL != "" {
+				creds["voicemail_llm_inference"] = info.BaseURL
+			}
+		}
+	}
 	// General KNOB_MAP over stt, llm, tts, vad.
-	for _, prov := range []Provider{asProvider(p.STT), asLLMProvider(p.LLM), asProvider(p.TTS), asVADProvider(p.VAD)} {
+	for _, prov := range []Provider{as[Provider](p.stt), as[Provider](p.llm), as[Provider](p.tts), as[Provider](p.vad)} {
 		if prov == nil {
 			continue
 		}
@@ -403,64 +483,80 @@ func buildCredentials(p *Pipeline, sessionOptions map[string]string) map[string]
 			}
 		}
 	}
+	// AWS Bedrock LLM credentials travel as dedicated keys.
+	if bc, ok := p.llm.(bedrockCredentials); ok {
+		for k, v := range map[string]string{
+			"aws_region":            bc.AWSRegion(),
+			"aws_access_key_id":     bc.AWSAccessKeyID(),
+			"aws_secret_access_key": bc.AWSSecretAccessKey(),
+			"aws_session_token":     bc.AWSSessionToken(),
+		} {
+			if v != "" {
+				creds[k] = v
+			}
+		}
+	}
 	// STT_KNOB_MAP.
-	if p.STT != nil {
-		name := p.STT.ProviderName()
-		knobs := p.STT.Knobs()
+	if p.stt != nil {
+		name := p.stt.ProviderName()
+		knobs := p.stt.Knobs()
+		sttBase := strings.TrimSuffix(name, "_stt")
 		for _, knob := range sttKnobMap[name] {
 			if v, ok := knobs[knob]; ok {
-				if s, keep := serializeSTTKnob(v); keep {
-					creds[name+"_stt_"+knob] = s
+				if s, keep := serializeKnob(v); keep {
+					creds[sttBase+"_stt_"+knob] = s
 				}
 			}
 		}
 	}
 	// Denoise credentials.
-	if p.Denoise != nil {
-		denoiseProvider := p.Denoise.ProviderName()
+	if p.denoise != nil {
+		denoiseProvider := p.denoise.ProviderName()
 		if denoiseProvider != "" {
-			token := p.Denoise.GatewayToken
+			token := p.denoise.GatewayToken
 			if token == "" {
 				token = os.Getenv("ZRT_AUTH_TOKEN")
 			}
 			if token != "" {
 				creds["denoise_gateway_token"] = token
 			}
-			if p.Denoise.ModelID != "" {
-				creds["denoise_model"] = p.Denoise.ModelID
+			if p.denoise.ModelID != "" {
+				creds["denoise_model"] = p.denoise.ModelID
 			}
-			if p.Denoise.hasModelSampleRate {
-				creds["denoise_model_sample_rate"] = strconv.Itoa(p.Denoise.ModelSampleRate)
+			if p.denoise.hasModelSampleRate {
+				creds["denoise_model_sample_rate"] = strconv.Itoa(p.denoise.ModelSampleRate)
 			}
-			if p.Denoise.hasChunkMS {
-				creds["denoise_chunk_ms"] = strconv.Itoa(p.Denoise.ChunkMS)
+			if p.denoise.hasChunkMS {
+				creds["denoise_chunk_ms"] = strconv.Itoa(p.denoise.ChunkMS)
 			}
-			if p.Denoise.BaseURL != "" {
-				creds["denoise_base_url"] = p.Denoise.BaseURL
+			if p.denoise.BaseURL != "" {
+				creds["denoise_base_url"] = p.denoise.BaseURL
 			}
 		}
 	}
-	// Dedicated-inference markers.
-	for _, m := range []inferenceMarked{asInference(p.STT), asInferenceLLM(p.LLM), asInference(p.TTS), asInferenceEOU(p.TurnDetector)} {
-		if m == nil {
+	zrtToken := os.Getenv("ZRT_AUTH_TOKEN")
+	if zrtToken == "" {
+		zrtToken = os.Getenv("VIDEOSDK_AUTH_TOKEN")
+	}
+	if zrtToken != "" {
+		creds["zrt_auth_token"] = zrtToken
+	}
+	for _, sc := range []struct {
+		slot string
+		prov inferenceMarked
+	}{{"stt", asInference(p.stt)}, {"llm", asInferenceLLM(p.llm)}, {"tts", asInference(p.tts)}} {
+		if sc.prov == nil {
 			continue
 		}
-		info := m.InferenceInfo()
-		if !info.IsInference {
+		if !sc.prov.InferenceInfo().IsInference {
 			continue
 		}
-		name := m.ProviderName()
-		if name == "" {
-			continue
-		}
-		creds[name+"_inference"] = "true"
-		if info.BaseURL != "" {
-			if _, exists := creds[name+"_base_url"]; !exists {
-				creds[name+"_base_url"] = info.BaseURL
+		if cm, ok := sc.prov.(interface{ InferenceConfigMap() map[string]any }); ok {
+			if m := cm.InferenceConfigMap(); len(m) > 0 {
+				if b, err := json.Marshal(m); err == nil {
+					creds[sc.slot+"_inference_config"] = string(b)
+				}
 			}
-		}
-		if info.Location != "" {
-			creds[name+"_location"] = info.Location
 		}
 	}
 	for k, v := range sessionOptions {
@@ -478,18 +574,31 @@ func buildDenoiseConfig(d *Denoise) *pb.DenoiseConfig {
 	return &pb.DenoiseConfig{Enabled: true, Provider: d.ProviderName()}
 }
 
+func buildAvatarConfig(a Avatar) *pb.AvatarProviderConfig {
+	if a == nil {
+		return &pb.AvatarProviderConfig{Provider: ""}
+	}
+	c := a.AvatarConfig()
+	provider := c.Provider
+	if provider == "" {
+		provider = a.ProviderName()
+	}
+	return &pb.AvatarProviderConfig{
+		Provider:  provider,
+		AvatarId:  c.AvatarID,
+		FaceId:    c.FaceID,
+		Model:     c.Model,
+		IsTrinity: c.IsTrinity,
+		Params:    c.Params,
+	}
+}
+
 func buildVoicemailConfig(v *VoiceMailDetector) *pb.VoicemailConfig {
 	if v == nil {
 		return &pb.VoicemailConfig{Enabled: false}
 	}
-	duration := v.Duration
-	if duration == 0 {
-		duration = 2.0
-	}
-	threshold := v.DetectionThreshold
-	if threshold == 0 {
-		threshold = 1.0
-	}
+	duration := cmp.Or(v.Duration, 2.0)
+	threshold := cmp.Or(v.DetectionThreshold, 1.0)
 	return &pb.VoicemailConfig{
 		Enabled:             true,
 		DetectionThreshold:  float32(threshold),
@@ -511,8 +620,8 @@ var fillerWords = []string{"okay", "ok", "yeah", "yes", "right", "sure", "hmm", 
 var verbalFillers = []string{"Hmm,", "Let me think.", "Sure,", "Okay,"}
 
 func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
-	sttSlot := p.STT
-	ttsSlot := p.TTS
+	sttSlot := p.stt
+	ttsSlot := p.tts
 	// Custom STT/TTS hook placeholders.
 	var sttCfg *pb.STTProviderConfig
 	if sttSlot == nil && p.Hooks != nil && p.Hooks.hasSTTStreamHook() {
@@ -527,27 +636,18 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 		ttsCfg = buildTTSConfig(ttsSlot)
 	}
 
-	minClause := uint32(5)
-	if p.SentenceMinClauseLen != 0 {
-		minClause = uint32(p.SentenceMinClauseLen)
-	}
-	firstClause := uint32(3)
-	if p.SentenceFirstClauseLen != 0 {
-		firstClause = uint32(p.SentenceFirstClauseLen)
-	}
-	minSentence := uint32(3)
-	if p.SentenceMinSentenceLen != 0 {
-		minSentence = uint32(p.SentenceMinSentenceLen)
-	}
+	minClause := uint32(cmp.Or(p.SentenceMinClauseLen, 5))
+	firstClause := uint32(cmp.Or(p.SentenceFirstClauseLen, 3))
+	minSentence := uint32(cmp.Or(p.SentenceMinSentenceLen, 3))
 
 	return &pb.CascadeConfig{
 		Stt:       sttCfg,
-		Llm:       buildLLMConfig(asLLM(p.LLM)),
+		Llm:       buildLLMConfig(as[LLM](p.llm)),
 		Tts:       ttsCfg,
-		Vad:       buildVADConfig(p.VAD),
+		Vad:       buildVADConfig(p.vad),
 		Interrupt: buildInterruptConfig(p.InterruptConfig),
-		Eou:       buildEOUConfig(p.EOUConfig, p.TurnDetector),
-		Denoise:   buildDenoiseConfig(p.Denoise),
+		Eou:       buildEOUConfig(p.EOUConfig, p.turnDetector),
+		Denoise:   buildDenoiseConfig(p.denoise),
 		Voicemail: buildVoicemailConfig(p.VoiceMailDetector),
 		Filler: &pb.FillerConfig{
 			FilterFillerWords:    true,
@@ -566,20 +666,10 @@ func buildCascadeConfig(p *Pipeline) *pb.CascadeConfig {
 			MinSentenceLen: minSentence,
 		},
 		OrchestratorTiming:   &pb.OrchestratorTimingConfig{PollIntervalMs: 10, MaxDrainSecs: 10, TtsDrainGraceMs: 500},
-		SttFilterPatterns:    append([]string(nil), p.STTFilterPatterns...),
-		SttWordSubstitutions: copyStringMap(p.STTWordSubstitutions),
+		SttFilterPatterns:    slices.Clone(p.STTFilterPatterns),
+		SttWordSubstitutions: maps.Clone(p.STTWordSubstitutions),
+		Avatar:               buildAvatarConfig(p.avatar),
 	}
-}
-
-func copyStringMap(m map[string]string) map[string]string {
-	if m == nil {
-		return nil
-	}
-	out := make(map[string]string, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
 }
 
 func llmIsRealtime(llm LLMLike) bool {
@@ -606,10 +696,10 @@ func detectPipelineMode(p *Pipeline) string {
 	case "llm_only":
 		return "llm_only"
 	}
-	llmRealtime := llmIsRealtime(p.LLM)
-	hasSTT := p.STT != nil
-	hasTTS := p.TTS != nil
-	hasLLM := p.LLM != nil
+	llmRealtime := llmIsRealtime(p.llm)
+	hasSTT := p.stt != nil
+	hasTTS := p.tts != nil
+	hasLLM := p.llm != nil
 	switch {
 	case llmRealtime && hasSTT && hasTTS:
 		return "llm_only"
@@ -643,26 +733,20 @@ func detectPipelineMode(p *Pipeline) string {
 func buildRealtimeProviderConfig(p *Pipeline) *pb.RealtimeProviderConfig {
 	var info RealtimeInfo
 	provider := ""
-	if rm, ok := p.LLM.(RealtimeModel); ok {
+	if rm, ok := p.llm.(RealtimeModel); ok {
 		info = rm.RealtimeInfo()
-		provider = info.Provider
-		if provider == "" {
-			provider = rm.ProviderName()
-		}
+		provider = cmp.Or(info.Provider, rm.ProviderName())
 	}
-	params := map[string]string{}
-	for k, v := range info.Params {
-		params[k] = v
-	}
+	params := maps.Clone(info.Params)
 	var modalities []string
 	if p.RealtimeConfig != nil && len(p.RealtimeConfig.ResponseModalities) > 0 {
-		modalities = append([]string(nil), p.RealtimeConfig.ResponseModalities...)
+		modalities = slices.Clone(p.RealtimeConfig.ResponseModalities)
 		if p.RealtimeConfig.Mode == "llm_only" {
 			modalities = []string{"TEXT"}
 		}
 	}
 	if len(modalities) == 0 {
-		modalities = append([]string(nil), info.ResponseModalities...)
+		modalities = slices.Clone(info.ResponseModalities)
 	}
 	detected := detectPipelineMode(p)
 	protoMode := "full_s2s"
@@ -682,10 +766,7 @@ func buildRealtimeProviderConfig(p *Pipeline) *pb.RealtimeProviderConfig {
 		Params:             params,
 	}
 	if (provider == "gemini" || provider == "gemini_live") && info.Vertex != nil && info.Vertex.ProjectID != "" {
-		loc := info.Vertex.Location
-		if loc == "" {
-			loc = "us-central1"
-		}
+		loc := cmp.Or(info.Vertex.Location, "us-central1")
 		vx := &pb.VertexAIConfig{ProjectId: info.Vertex.ProjectID, Location: loc}
 		if info.Vertex.ServiceAccountJSON != "" {
 			vx.ServiceAccountJson = info.Vertex.ServiceAccountJSON
@@ -707,7 +788,7 @@ func buildPipelineConfig(p *Pipeline) *pb.PipelineConfig {
 	case "hybrid_stt":
 		return &pb.PipelineConfig{Mode: "hybrid_stt", Cascade: buildCascadeConfig(p), Realtime: buildRealtimeProviderConfig(p)}
 	case "llm_only":
-		if llmIsRealtime(p.LLM) {
+		if llmIsRealtime(p.llm) {
 			return &pb.PipelineConfig{Mode: "llm_only", Cascade: buildCascadeConfig(p), Realtime: buildRealtimeProviderConfig(p)}
 		}
 		return &pb.PipelineConfig{Mode: "llm_only", Cascade: buildCascadeConfig(p)}
@@ -726,11 +807,7 @@ func buildMCPServerConfigs(a *BaseAgent) []*pb.MCPServerConfig {
 			out = append(out, &pb.MCPServerConfig{Type: "stdio", Command: cmd, Args: args, Env: env})
 		case "http":
 			url, headers := srv.mcpHTTP()
-			env := map[string]string{}
-			for k, v := range headers {
-				env[k] = v
-			}
-			out = append(out, &pb.MCPServerConfig{Type: "http", Url: url, Env: env})
+			out = append(out, &pb.MCPServerConfig{Type: "http", Url: url, Env: maps.Clone(headers)})
 		default:
 			out = append(out, &pb.MCPServerConfig{Type: srv.mcpType()})
 		}
@@ -747,25 +824,13 @@ func buildKnowledgeBaseConfig(a *BaseAgent) *pb.KnowledgeBaseConfig {
 	if cfg == nil {
 		return &pb.KnowledgeBaseConfig{Enabled: true}
 	}
-	provider := cfg.Provider
-	if provider == "" {
-		provider = "custom"
-	}
-	topK := cfg.TopK
-	if topK == 0 {
-		topK = 5
-	}
-	minScore := cfg.MinScore
-	if minScore == 0 {
-		minScore = 0.7
-	}
 	return &pb.KnowledgeBaseConfig{
 		Enabled:   true,
-		Provider:  provider,
+		Provider:  cmp.Or(cfg.Provider, "custom"),
 		IndexName: cfg.IndexName,
-		TopK:      uint32(topK),
-		MinScore:  float32(minScore),
-		Params:    copyStringMap(cfg.Params),
+		TopK:      uint32(cmp.Or(cfg.TopK, 5)),
+		MinScore:  float32(cmp.Or(cfg.MinScore, 0.7)),
+		Params:    maps.Clone(cfg.Params),
 	}
 }
 
@@ -781,10 +846,28 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 		suffixToSend = *a.voiceSuffix
 	}
 	var altProtos []*pb.NamedAgentConfig
-	for _, alt := range a.alternates {
-		if alt == nil || alt.AgentID == "" {
+	seenAlt := map[string]bool{}
+	for _, ag := range a.handoffAgents {
+		if ag == nil {
 			continue
 		}
+		hb := ag.base()
+		if hb.id == "" || seenAlt[hb.id] {
+			continue
+		}
+		seenAlt[hb.id] = true
+		altProtos = append(altProtos, &pb.NamedAgentConfig{
+			AgentId:      hb.id,
+			Instructions: hb.instructions,
+			Tools:        buildToolSchemas(hb.tools),
+			Greeting:     hb.greeting,
+		})
+	}
+	for _, alt := range a.alternates {
+		if alt == nil || alt.AgentID == "" || seenAlt[alt.AgentID] {
+			continue
+		}
+		seenAlt[alt.AgentID] = true
 		altProtos = append(altProtos, &pb.NamedAgentConfig{
 			AgentId:      alt.AgentID,
 			Instructions: alt.Instructions,
@@ -805,23 +888,28 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	autoBeforeLLM := autoEnable["llm"] || autoEnable["llm_messages"]
 	autoLLMStream := autoEnable["llm_stream"]
 	llmStreamEnabled := autoLLMStream || a.llmStreamHookEnabled || (p != nil && p.LLMStreamHookEnabled)
-	timeoutMS := a.llmStreamHookTimeoutMS
-	if timeoutMS == 0 {
-		timeoutMS = 100
-	}
+	timeoutMS := cmp.Or(a.llmStreamHookTimeoutMS, 100)
+	contextWindow := resolveContextWindow(agent, p)
+	// Hook mode: a real server-side STT/TTS provider is configured AND a
+	// stt/tts hook is registered. The runtime then pauses and
+	// asks the SDK to rewrite the transcript / tts text.
+	sttHookEnabled := p != nil && p.stt != nil && p.Hooks != nil && p.Hooks.sttHook != nil
+	ttsHookEnabled := p != nil && p.tts != nil && p.Hooks != nil && p.Hooks.ttsHook != nil
 	return &pb.AgentConfig{
 		AgentId:                  a.id,
 		Instructions:             a.instructions,
 		Tools:                    buildToolSchemas(a.tools),
 		RegisteredHooks:          registeredHooks,
 		BeforeLlmHook:            autoBeforeLLM || a.beforeLLMHook,
-		ContextWindow:            buildContextWindowConfig(a.contextWindow()),
+		ContextWindow:            buildContextWindowConfig(contextWindow),
 		Greeting:                 userGreeting,
 		GreetingNonInterruptible: a.greetingNonInterruptible,
 		AppendVoiceSuffix:        a.appendVoiceSuffix,
 		VoiceSuffix:              suffixToSend,
 		LlmStreamHookEnabled:     llmStreamEnabled,
 		LlmStreamHookTimeoutMs:   uint32(timeoutMS),
+		SttHookEnabled:           sttHookEnabled,
+		TtsHookEnabled:           ttsHookEnabled,
 		Alternates:               altProtos,
 		McpServers:               buildMCPServerConfigs(a),
 		KnowledgeBase:            buildKnowledgeBaseConfig(a),
@@ -829,18 +917,22 @@ func buildAgentConfig(agent Agent, p *Pipeline) *pb.AgentConfig {
 	}
 }
 
+var (
+	recordingFormatMap        = map[string]pb.RecordingFormat{"wav": 0, "ogg_opus": 1, "mp3": 2, "flac": 3}
+	recordingChannelMap       = map[string]pb.RecordingChannelMode{"mixed": 0, "dual_channel": 1}
+	recordingTranscriptFmtMap = map[string]pb.RecordingTranscriptFormat{"json": 0, "srt": 1, "vtt": 2}
+)
+
 func buildRecordingConfig(rec *RecordingConfig) *pb.RecordingConfig {
 	if rec == nil {
 		return &pb.RecordingConfig{Enabled: false}
 	}
-	formatMap := map[string]pb.RecordingFormat{"wav": 0, "ogg_opus": 1, "mp3": 2, "flac": 3}
-	channelMap := map[string]pb.RecordingChannelMode{"mixed": 0, "dual_channel": 1}
 	format := pb.RecordingFormat(1)
-	if v, ok := formatMap[rec.Format]; ok {
+	if v, ok := recordingFormatMap[rec.Format]; ok {
 		format = v
 	}
 	channel := pb.RecordingChannelMode(1)
-	if v, ok := channelMap[rec.ChannelMode]; ok {
+	if v, ok := recordingChannelMap[rec.ChannelMode]; ok {
 		channel = v
 	}
 	cfg := &pb.RecordingConfig{
@@ -854,7 +946,7 @@ func buildRecordingConfig(rec *RecordingConfig) *pb.RecordingConfig {
 		MaxFileSizeMb:      uint32(rec.MaxFileSizeMB),
 		RecordingBeep:      rec.RecordingBeep,
 		RedactDtmf:         rec.RedactDTMF,
-		CustomMetadata:     copyStringMap(rec.CustomMetadata),
+		CustomMetadata:     maps.Clone(rec.CustomMetadata),
 		RecordingName:      rec.RecordingName,
 		RecordingGroup:     rec.RecordingGroup,
 		ApplyDenoise:       rec.ApplyDenoise,
@@ -882,17 +974,16 @@ func buildRecordingConfig(rec *RecordingConfig) *pb.RecordingConfig {
 			MultipartPartSizeMb:  uint32(s.MultipartPartSizeMB),
 			UploadTimeoutSeconds: uint32(s.UploadTimeoutSeconds),
 			MaxRetryAttempts:     uint32(s.MaxRetryAttempts),
-			Tags:                 copyStringMap(s.Tags),
-			UserMetadata:         copyStringMap(s.UserMetadata),
+			Tags:                 maps.Clone(s.Tags),
+			UserMetadata:         maps.Clone(s.UserMetadata),
 			ContentTypeOverride:  s.ContentTypeOverride,
 		}}}
 	}
 	if rec.Transcript != nil {
 		t := rec.Transcript
-		tfMap := map[string]pb.RecordingTranscriptFormat{"json": 0, "srt": 1, "vtt": 2}
 		cfg.Transcript = &pb.RecordingTranscriptConfig{
 			Enabled:               t.Enabled,
-			Format:                tfMap[t.Format],
+			Format:                recordingTranscriptFmtMap[t.Format],
 			IncludeWordTimestamps: t.IncludeWordTimestamps,
 			IncludeConfidence:     t.IncludeConfidence,
 			SpeakerLabels:         t.SpeakerLabels,
@@ -910,108 +1001,42 @@ func buildSessionConfig(p *Pipeline, agent Agent, room roomConfigData, recording
 		Room: &pb.RoomConfig{
 			RoomId:                      room.RoomID,
 			AuthToken:                   room.AuthToken,
-			AgentName:                   orDefault(room.AgentName, "Agent"),
+			AgentName:                   cmp.Or(room.AgentName, "Agent"),
 			AutoEndSession:              room.AutoEndSession,
 			SessionTimeoutSeconds:       uint32(room.SessionTimeoutSeconds),
 			NoParticipantTimeoutSeconds: uint32(room.NoParticipantTimeoutSeconds),
 			AudioListenerEnabled:        room.AudioListenerEnabled,
 			AgentParticipantId:          room.AgentParticipantID,
-			Playground:                  room.Playground,
 			Vision:                      room.Vision,
 			RecordingEnabled:            room.RecordingEnabled,
 			BackgroundAudioEnabled:      room.BackgroundAudioEnabled,
 			SendLogsToDashboard:         true,
 		},
-		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions)},
-		Limits:        &pb.SessionLimits{InactivityTimeoutSeconds: 300},
+		Credentials:   &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions, agent)},
+		Limits:        buildSessionLimits(agent, p),
 		ClientVersion: clientVersionInfo(),
 		Recording:     buildRecordingConfig(recording),
 	}
 }
 
-func buildAgentRegistration(agent Agent, p *Pipeline, agentKind string, maxConcurrent int, authToken string, labels map[string]string, defaultRecording *RecordingConfig, sessionOptions map[string]string) *pb.AgentRegistration {
-	return &pb.AgentRegistration{
-		AgentKind:             agentKind,
-		Agent:                 buildAgentConfig(agent, p),
-		Pipeline:              buildPipelineConfig(p),
-		Credentials:           &pb.CredentialsConfig{ProviderKeys: buildCredentials(p, sessionOptions)},
-		DefaultRecording:      buildRecordingConfig(defaultRecording),
-		MaxConcurrentSessions: uint32(maxConcurrent),
-		Labels:                labels,
-		ClientVersion:         clientVersionInfo(),
-		AuthToken:             authToken,
+func buildSessionLimits(agent Agent, p *Pipeline) *pb.SessionLimits {
+	inactivity := uint32(300)
+	if p != nil && p.InactivityTimeoutSeconds != nil && *p.InactivityTimeoutSeconds > 0 {
+		inactivity = uint32(*p.InactivityTimeoutSeconds)
 	}
+	limits := &pb.SessionLimits{InactivityTimeoutSeconds: inactivity}
+	if agent != nil {
+		if d := agent.base().maxSessionDurationSeconds; d != nil && *d > 0 {
+			limits.MaxSessionDurationSeconds = uint32(*d)
+		}
+	}
+	return limits
 }
 
-func orDefault(v, def string) string {
-	if v == "" {
-		return def
-	}
-	return v
-}
+// ---- type-assertion helper ----
 
-// ---- type-assertion helpers ----
-
-func asProvider(v any) Provider {
-	if v == nil {
-		return nil
-	}
-	if p, ok := v.(Provider); ok {
-		return p
-	}
-	return nil
-}
-
-func asLLMProvider(v LLMLike) Provider {
-	if v == nil {
-		return nil
-	}
-	if p, ok := v.(Provider); ok {
-		return p
-	}
-	return nil
-}
-
-func asVADProvider(v VAD) Provider {
-	if v == nil {
-		return nil
-	}
-	return v
-}
-
-func asLLM(v LLMLike) LLM {
-	if v == nil {
-		return nil
-	}
-	if l, ok := v.(LLM); ok {
-		return l
-	}
-	return nil
-}
-
-func asInference(v any) inferenceMarked {
-	if v == nil {
-		return nil
-	}
-	if m, ok := v.(inferenceMarked); ok {
-		return m
-	}
-	return nil
-}
-
-func asInferenceLLM(v LLMLike) inferenceMarked {
-	if v == nil {
-		return nil
-	}
-	if m, ok := v.(inferenceMarked); ok {
-		return m
-	}
-	return nil
-}
-
-func asInferenceEOU(v EOU) inferenceMarked {
-	if v == nil {
-		return nil
-	}
-	return v
+// as returns v viewed as interface T, or the zero value of T if v does not implement T.
+func as[T any](v any) T {
+	t, _ := v.(T)
+	return t
 }
